@@ -76,21 +76,29 @@ func (s *Service) supplierGetById(w http.ResponseWriter, r *http.Request) {
 
 func (s *Service) supplierAdd(w http.ResponseWriter, r *http.Request) {
 	m := bodyMap(r)
-	id, err := platform.InsertNoFill(s.DB.Chain, "chain_contract_supplier", pick(m, supplierCols...))
+	vals := pick(m, supplierCols...)
+	delete(vals, "id") // @TableId(IdType.AUTO):body id 被忽略,自增
+	id, err := platform.InsertNoFill(s.DB.Chain, "chain_contract_supplier", vals)
 	if err != nil {
 		platform.Unknown(w)
 		return
 	}
-	platform.Success(w, echoEntity(m, supplierFill, id))
+	platform.Success(w, platform.EntityEcho(m, supplierFill, map[string]any{"id": id}))
 }
 
 func (s *Service) supplierUpdateById(w http.ResponseWriter, r *http.Request) {
 	m := bodyMap(r)
-	if _, err := platform.UpdateByIDNoFill(s.DB.Chain, "chain_contract_supplier", m["id"], pick(m, supplierCols...)); err != nil {
+	vals := pick(m, supplierCols...)
+	delete(vals, "id")
+	if len(vals) == 0 {
+		platform.Unknown(w) // MP updateById SET 空 → MybatisPlusException
+		return
+	}
+	if _, err := platform.UpdateByIDNoFill(s.DB.Chain, "chain_contract_supplier", m["id"], vals); err != nil {
 		platform.Unknown(w)
 		return
 	}
-	platform.Success(w, echoEntity(m, supplierFill, nil))
+	platform.Success(w, platform.EntityEcho(m, supplierFill, nil))
 }
 
 func (s *Service) supplierDelBatch(w http.ResponseWriter, r *http.Request) {

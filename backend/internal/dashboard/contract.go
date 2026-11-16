@@ -14,6 +14,10 @@ import (
 // 响应 {htllist:[{contract_type,sumNum}], fslist:[{contract_type,contractNum}]}
 func (s *Service) cttSelectQuantity(w http.ResponseWriter, r *http.Request) {
 	m := bodyMap(r)
+	if m["timeType"] == nil {
+		platform.Unknown(w) // Java `1 == timeType` Integer 拆箱 NPE(行为保持)
+		return
+	}
 	d := s.pick(r)
 	cond := timeTypeCond(m)
 	var args []any

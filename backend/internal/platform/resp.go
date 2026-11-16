@@ -34,9 +34,13 @@ func FailData(w http.ResponseWriter, code int, msg string, data interface{}) {
 }
 
 // NotAuth 403 网关级未授权(前端 http.js 走 HTTP 错误分支弹 toast)。
-// Java 版该响应 HTTP 状态仍是 200、靠 body code 判断,这里保持一致
+// Java 版该响应 HTTP 状态仍是 200、靠 body code 判断,且 body 无 data 键,这里保持一致
 func NotAuth(w http.ResponseWriter) {
-	writeRawCode(w, JsonResult{Success: false, Code: 403, Msg: "请求未授权，访问失败"})
+	writeRawCode(w, struct {
+		Success bool   `json:"success"`
+		Code    int    `json:"code"`
+		Msg     string `json:"msg"`
+	}{false, 403, "请求未授权，访问失败"})
 }
 
 // Unknown 999 与 Java 一致:HTTP 200 + code 999
@@ -49,8 +53,25 @@ func write(w http.ResponseWriter, r JsonResult) {
 	_ = json.NewEncoder(w).Encode(r)
 }
 
-func writeRawCode(w http.ResponseWriter, r JsonResult) {
+func writeRawCode(w http.ResponseWriter, r any) {
 	// 与 Java 一致:HTTP 状态 200,错误码在 body
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	_ = json.NewEncoder(w).Encode(r)
+}
+
+// EntityEcho Java "save/updateById 后 ResultTool.success(实体)" 的响应形状:
+// 实体全键序列化——body 传了用 body 值,没传的键输出 null;extra 覆盖(如 save 回填自增 id)
+func EntityEcho(m map[string]any, keys []string, extra map[string]any) map[string]any {
+	out := make(map[string]any, len(keys)+len(extra))
+	for _, k := range keys {
+		if v, ok := m[k]; ok {
+			out[k] = v
+		} else {
+			out[k] = nil
+		}
+	}
+	for k, v := range extra {
+		out[k] = v
+	}
+	return out
 }
