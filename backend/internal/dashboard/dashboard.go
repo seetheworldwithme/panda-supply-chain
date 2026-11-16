@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"github.com/seetheworldwithme/panda-supply-chain/backend/internal/db"
+	"github.com/seetheworldwithme/panda-supply-chain/backend/internal/platform"
 )
 
 type Service struct {
@@ -46,7 +47,8 @@ func Register(mux *http.ServeMux, s *Service) {
 	post(mux, "/saas-common/chainBasicMainPage/countPriceTrend", s.countPriceTrend)
 	post(mux, "/saas-common/chainBasicEnterprise/ptlist", s.ptlist)
 	post(mux, "/saas-common/chainBasicEnterprise/selectCount", s.entSelectCount)
-	post(mux, "/saas-common/chainBasicEnterprise/getById", s.entGetById)
+	// getById(getEtc)由 authadmin 包注册:企业档案页需要嵌套 pubFlows/urcs 等完整实体形状,
+	// 此处一期简化版(snake 裸行)已删除,避免同路径重复注册
 	post(mux, "/saas-common/chainAreaInfo/selByParent", s.selByParent)
 	post(mux, "/saas-common/upload/getImgByRelId", s.getImgByRelId)
 
@@ -131,34 +133,9 @@ func f64Ptr(m map[string]any, k string) *float64 {
 	return &v
 }
 
-// scanMaps 通用行扫描:列名为键,[]byte 转字符串(nil 保持 null)
+// scanMaps 通用行扫描(转发 platform.ScanMaps,一期遗留别名)
 func scanMaps(rows *sql.Rows) ([]map[string]any, error) {
-	defer rows.Close()
-	cols, err := rows.Columns()
-	if err != nil {
-		return nil, err
-	}
-	var out []map[string]any
-	for rows.Next() {
-		vals := make([]any, len(cols))
-		ptrs := make([]any, len(cols))
-		for i := range vals {
-			ptrs[i] = &vals[i]
-		}
-		if err := rows.Scan(ptrs...); err != nil {
-			return nil, err
-		}
-		m := make(map[string]any, len(cols))
-		for i, c := range cols {
-			if b, ok := vals[i].([]byte); ok {
-				m[c] = string(b)
-			} else {
-				m[c] = vals[i]
-			}
-		}
-		out = append(out, m)
-	}
-	return out, rows.Err()
+	return platform.ScanMaps(rows)
 }
 
 // num 把 driver 返回的 DECIMAL([]byte)/int64/float64 统一转 float64

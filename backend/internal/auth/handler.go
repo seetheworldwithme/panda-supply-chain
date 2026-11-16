@@ -307,3 +307,15 @@ func randomCode() string {
 	n, _ := rand.Int(rand.Reader, big.NewInt(1000000))
 	return fmt.Sprintf("%06d", n.Int64())
 }
+
+// HashPassword BCrypt 加密(组织管理新增/重置用户复用登录同款编码)
+func HashPassword(pw string) string {
+	h, err := bcrypt.GenerateFromPassword([]byte(pw), bcrypt.DefaultCost)
+	if err != nil {
+		return ""
+	}
+	return string(h)
+}
+
+// RandomCode 6 位随机码(验证码/邀请码同源)
+func RandomCode() string { return randomCode() }

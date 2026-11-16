@@ -431,29 +431,6 @@ func (s *Service) entSelectCount(w http.ResponseWriter, r *http.Request) {
 	platform.Success(w, map[string]any{"sumCount": sumCount, "monCount": monCount, "yearCount": yearCount})
 }
 
-// entGetById POST /saas-common/chainBasicEnterprise/getById 企业详情(平台/大屏调用,无租户)。
-// Java MP selectById(平台 tenantId=0 时拦截器跳过)
-func (s *Service) entGetById(w http.ResponseWriter, r *http.Request) {
-	m := bodyMap(r)
-	d := s.pick(r)
-	id := str(m, "id")
-	if id == "" {
-		platform.FailMsg(w, "参数错误")
-		return
-	}
-	rows, err := d.Query("SELECT * FROM chain_basic_enterprise WHERE id = ?", id)
-	if err != nil {
-		platform.Unknown(w)
-		return
-	}
-	ms, _ := scanMaps(rows)
-	if len(ms) == 0 {
-		platform.Success(w, nil)
-		return
-	}
-	platform.Success(w, ms[0])
-}
-
 // selByParent POST /saas-common/chainAreaInfo/selByParent 下级区划(parentCode=0 只查区划,否则限"有企业入驻")。
 // Java ChainAreaInfoServiceImpl.selByParent:66;区划表为公共表无租户
 func (s *Service) selByParent(w http.ResponseWriter, r *http.Request) {

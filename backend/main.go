@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/seetheworldwithme/panda-supply-chain/backend/internal/auth"
+	"github.com/seetheworldwithme/panda-supply-chain/backend/internal/authadmin"
 	"github.com/seetheworldwithme/panda-supply-chain/backend/internal/config"
 	"github.com/seetheworldwithme/panda-supply-chain/backend/internal/dashboard"
 	"github.com/seetheworldwithme/panda-supply-chain/backend/internal/db"
@@ -32,6 +33,7 @@ func main() {
 	authSvc := auth.NewService(database.Chain, kp)
 	menuSvc := menu.NewService(database.Chain)
 	dashSvc := dashboard.NewService(database)
+	adminSvc := authadmin.NewService(database)
 
 	mux := http.NewServeMux()
 
@@ -45,6 +47,9 @@ func main() {
 	// ── saas-auth:菜单/权限 ──
 	mux.HandleFunc("POST /saas-auth/chainAuthMenu/selUserMenus", menuSvc.SelUserMenus)
 	mux.HandleFunc("POST /saas-auth/chainAuthRole/selMenus", menuSvc.SelMenus)
+
+	// ── saas-auth:组织基础管理(角色/菜单/权限分配,二期) ──
+	authadmin.Register(mux, adminSvc)
 
 	// ── saas-common / saas-bill:仪表盘统计(第一期主框架验收面) ──
 	dashboard.Register(mux, dashSvc)

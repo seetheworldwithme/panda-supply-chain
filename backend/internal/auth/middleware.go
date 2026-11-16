@@ -19,8 +19,9 @@ type CurrentUser struct {
 	Account    string
 	Username   string
 	CompanyID  int64
-	Level      int
+	Level       int
 	AccountType string
+	EnterpriseCode string // 对照 Java JWTInfo.enterpriseCode(企业账号才有)
 }
 
 type ctxKey int
@@ -41,6 +42,7 @@ func Middleware(kp *KeyPair, secretDB *sql.DB) func(http.Handler) http.Handler {
 					user.Account = claims.Account
 					user.Username = claims.Username
 					user.CompanyID = parseInt64(claims.CompanyID)
+					user.EnterpriseCode = claims.EnterpriseCode
 				}
 				// 解析失败按无 token 处理,继续走验签/匿名(与 Java 过滤器行为一致)
 			}

@@ -7,6 +7,8 @@ frontend/npm-debug.log*
 backend/bin/
 backend/keys/
 backend/*.log
+backend/data/
+backend/public/uploads/
 
 # 环境与凭据（严禁入库）
 .env
