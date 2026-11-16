@@ -55,9 +55,24 @@ func main() {
 		_, _ = w.Write([]byte("ok"))
 	})
 
-	handler := auth.Middleware(kp, database.Chain)(mux)
+	handler := cors(auth.Middleware(kp, database.Chain)(mux))
 	log.Printf("云管理 Go 后端监听 :%s (chain=%s)", cfg.Port, maskDSN(cfg.ChainDSN))
 	log.Fatal(http.ListenAndServe(":"+cfg.Port, handler))
+}
+
+// cors 对照 Java 网关的跨域放行:前端各端口直连 8765,允许任意来源与所需请求头
+func cors(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		h := w.Header()
+		h.Set("Access-Control-Allow-Origin", "*")
+		h.Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		h.Set("Access-Control-Allow-Headers", "Authorization, Content-Type, applytype, Signature, AuthorizationId, BatchNumber, routeName, X-Requested-With")
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
 }
 
 // maskDSN 日志里隐藏 DSN 中的密码段(约定不把凭据写进日志)
