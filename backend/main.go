@@ -17,6 +17,7 @@ import (
 	"github.com/seetheworldwithme/panda-supply-chain/backend/internal/db"
 	"github.com/seetheworldwithme/panda-supply-chain/backend/internal/logistics"
 	"github.com/seetheworldwithme/panda-supply-chain/backend/internal/menu"
+	"github.com/seetheworldwithme/panda-supply-chain/backend/internal/warehouse"
 )
 
 func main() {
@@ -73,6 +74,10 @@ func main() {
 	// ── saas-bill 全服务(五期票据;chainBill 统计 7 条与 chainBillRate 2 条自 dashboard 移交精确实现) ──
 	billSvc := bill.NewService(database)
 	bill.Register(mux, billSvc)
+
+	// ── saas-warehouse 全服务 + saas-common 剩余(六期掌上煤炭运营) ──
+	whSvc := warehouse.NewService(database)
+	warehouse.Register(mux, whSvc)
 
 	// 健康检查
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, r *http.Request) {

@@ -43,6 +43,39 @@ func ScanMaps(rows *sql.Rows) ([]map[string]any, error) {
 	return out, rows.Err()
 }
 
+// ScanMapsCols 同 ScanMaps,另返回列标签原始顺序(实体整形需要"后列覆盖前列"语义)
+func ScanMapsCols(rows *sql.Rows) ([]map[string]any, []string, error) {
+	defer rows.Close()
+	cols, err := rows.Columns()
+	if err != nil {
+		return nil, nil, err
+	}
+	var out []map[string]any
+	for rows.Next() {
+		vals := make([]any, len(cols))
+		ptrs := make([]any, len(cols))
+		for i := range vals {
+			ptrs[i] = &vals[i]
+		}
+		if err := rows.Scan(ptrs...); err != nil {
+			return nil, nil, err
+		}
+		m := make(map[string]any, len(cols))
+		for i, c := range cols {
+			switch t := vals[i].(type) {
+			case []byte:
+				m[c] = string(t)
+			case time.Time:
+				m[c] = t.Format("2006-01-02 15:04:05")
+			default:
+				m[c] = vals[i]
+			}
+		}
+		out = append(out, m)
+	}
+	return out, cols, rows.Err()
+}
+
 // SortedKeys map 键排序(稳定 SQL 列序)
 func SortedKeys(m map[string]any) []string {
 	ks := make([]string, 0, len(m))
