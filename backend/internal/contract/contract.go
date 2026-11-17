@@ -643,7 +643,6 @@ func (s *Service) saveChildren(r *http.Request, d *sql.DB, m map[string]any, id 
 		strconv.FormatInt(u.CompanyID, 10), strconv.FormatInt(u.UserID, 10), u.Username, content, 1)
 }
 
-
 // updateById = updateContractById + controller:controller 忽略 service 返回值,恒
 // ResultTool.success(请求实体)——602/"保存失败"只阻断落库,响应一律 200 实体回显。
 // service 校验链:`body.isPayOnline!=null && body.isPayOnline && cc.isPayOnline && cc.createUserId!=uid`
@@ -860,6 +859,15 @@ func (s *Service) delBatch(w http.ResponseWriter, r *http.Request) {
 		s.removeContract(d, id)
 	}
 	platform.Success(w, "删除成功")
+}
+
+// ShapeContractRows 导出 ChainContract 行形状(四期物流 bill.getContracts/selRelContracts 复用,
+// 与主控制器 getContracts 完全同源,避免形状逻辑复制)
+func ShapeContractRows(rows []map[string]any) []map[string]any {
+	if rows == nil {
+		rows = []map[string]any{}
+	}
+	return shapeContract(rows)
 }
 
 // delOnce = 按条件一键删:先 allEq(maps)(null→IS NULL)校验 chain_contract 有行,

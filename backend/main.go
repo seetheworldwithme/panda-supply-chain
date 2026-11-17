@@ -13,6 +13,7 @@ import (
 	"github.com/seetheworldwithme/panda-supply-chain/backend/internal/contract"
 	"github.com/seetheworldwithme/panda-supply-chain/backend/internal/dashboard"
 	"github.com/seetheworldwithme/panda-supply-chain/backend/internal/db"
+	"github.com/seetheworldwithme/panda-supply-chain/backend/internal/logistics"
 	"github.com/seetheworldwithme/panda-supply-chain/backend/internal/menu"
 )
 
@@ -36,6 +37,7 @@ func main() {
 	dashSvc := dashboard.NewService(database)
 	adminSvc := authadmin.NewService(database)
 	contractSvc := contract.NewService(database)
+	logisticsSvc := logistics.NewService(database)
 
 	mux := http.NewServeMux()
 
@@ -58,6 +60,9 @@ func main() {
 
 	// ── saas-contract 全服务 + saas-common esign DB 层(三期合同) ──
 	contract.Register(mux, contractSvc)
+
+	// ── saas-logistics 全服务(四期物流;统计 3 条已由 dashboard 注册) ──
+	logistics.Register(mux, logisticsSvc)
 
 	// 健康检查
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, r *http.Request) {

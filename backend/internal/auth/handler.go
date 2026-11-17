@@ -19,11 +19,12 @@ import (
 )
 
 // Service 登录族接口。对照 Java:
-//   /login                    Spring Security formLogin → UserServiceImpl + LoginSuccessHandler
-//   /screenLogin              ScreenAuthenticationFilter(大屏账号)
-//   /code/phone               短信验证码(本地 SendMsg=false → 明文返回,不发真短信)
-//   /code/image               大屏图形验证码(前端仅 DPLogin 使用,Java 版实际校验已注释,此处同不校验)
-//   /chainAuthUser/updatePwd  修改密码(BCrypt 原密码校验)
+//
+//	/login                    Spring Security formLogin → UserServiceImpl + LoginSuccessHandler
+//	/screenLogin              ScreenAuthenticationFilter(大屏账号)
+//	/code/phone               短信验证码(本地 SendMsg=false → 明文返回,不发真短信)
+//	/code/image               大屏图形验证码(前端仅 DPLogin 使用,Java 版实际校验已注释,此处同不校验)
+//	/chainAuthUser/updatePwd  修改密码(BCrypt 原密码校验)
 type Service struct {
 	DB  *sql.DB // chain 库
 	KP  *KeyPair
@@ -101,14 +102,21 @@ func (s *Service) hasRole(userID int64) bool {
 }
 
 // loginTokens 构造登录成功响应 data。分支照 LoginSuccessHandler:
-//   level>1: username=account, companyName=username(显示名)
-//   level=2: username=显示名, companyName=启辰智链(applytype=zjjg 时 云账务后台系统)
+//
+//	level>1: username=account, companyName=username(显示名)
+//	level=2: username=显示名, companyName=启辰智链(applytype=zjjg 时 云账务后台系统)
 func (s *Service) loginTokens(u *chainAuthUser, applyType string) (map[string]interface{}, error) {
+	enterpriseCode := ""
+	if u.CompanyID.Valid && u.CompanyID.Int64 > 0 {
+		// enterpriseCode 五要素(四期 getSystemCode 依赖;照 Java userInfoHelper 取企业表)
+		_ = s.DB.QueryRow("SELECT enterprise_code FROM chain_basic_enterprise WHERE id = ?", u.CompanyID.Int64).Scan(&enterpriseCode)
+	}
 	token, err := s.KP.Generate(JWTClaims{
-		Account:   u.Account,
-		Username:  u.Username,
-		UserID:    fmt.Sprintf("%d", u.ID),
-		CompanyID: fmt.Sprintf("%d", u.CompanyID.Int64),
+		Account:        u.Account,
+		Username:       u.Username,
+		UserID:         fmt.Sprintf("%d", u.ID),
+		CompanyID:      fmt.Sprintf("%d", u.CompanyID.Int64),
+		EnterpriseCode: enterpriseCode,
 	})
 	if err != nil {
 		return nil, err

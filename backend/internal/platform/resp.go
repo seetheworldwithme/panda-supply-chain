@@ -43,9 +43,12 @@ func NotAuth(w http.ResponseWriter) {
 	}{false, 403, "请求未授权，访问失败"})
 }
 
-// Unknown 999 与 Java 一致:HTTP 200 + code 999
+// Unknown 999 与 Java 一致:body code 999;HTTP 状态照 Java GlobalExceptionHandler
+// @ResponseStatus(INTERNAL_SERVER_ERROR) → 500(8765 实测,四期物流对比期校准)
 func Unknown(w http.ResponseWriter) {
-	writeRawCode(w, JsonResult{Success: false, Code: 999, Msg: "失败", Data: "系统发生未知错误，请稍后重试。"})
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.WriteHeader(http.StatusInternalServerError)
+	_ = json.NewEncoder(w).Encode(JsonResult{Success: false, Code: 999, Msg: "失败", Data: "系统发生未知错误，请稍后重试。"})
 }
 
 func write(w http.ResponseWriter, r JsonResult) {
