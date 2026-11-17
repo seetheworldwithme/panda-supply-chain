@@ -72,7 +72,15 @@ func (e *ent) shape(rows []map[string]any) []map[string]any {
 	out := make([]map[string]any, 0, len(rows))
 	for _, row := range rows {
 		cam := platform.Camelize(row)
-		m := e.baseMap(cam)
+		m := make(map[string]any, len(e.keys))
+		for _, k := range e.keys {
+			if v, ok := cam[k]; ok {
+				m[k] = v
+			} else {
+				m[k] = nil
+			}
+		}
+		e.decorate(m)
 		out = appendRow(out, m, row)
 	}
 	return out
@@ -102,29 +110,15 @@ func (e *ent) shapeRows(rows []map[string]any, cols []string) []map[string]any {
 		for _, c := range cols {
 			m[camelCol(c)] = row[c]
 		}
+		// 只保留实体键(DB 外列被 Java 实体映射丢弃,如 bus_package.is_default)
+		filtered := make(map[string]any, len(e.keys))
 		for _, k := range e.keys {
-			if _, ok := m[k]; !ok {
-				m[k] = nil
-			}
+			filtered[k] = m[k]
 		}
-		e.decorate(m)
-		out = appendRow(out, m, row)
+		e.decorate(filtered)
+		out = appendRow(out, filtered, row)
 	}
 	return out
-}
-
-// baseMap 无序版键回填(遗留)
-func (e *ent) baseMap(cam map[string]any) map[string]any {
-	m := make(map[string]any, len(e.keys))
-	for _, k := range e.keys {
-		if v, ok := cam[k]; ok {
-			m[k] = v
-		} else {
-			m[k] = nil
-		}
-	}
-	e.decorate(m)
-	return m
 }
 
 // decorate 按实体字段 Java 类型整形(实体字段类型驱动:String←int 列转字符串、
