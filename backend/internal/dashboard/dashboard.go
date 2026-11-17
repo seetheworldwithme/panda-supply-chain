@@ -63,10 +63,7 @@ func Register(mux *http.ServeMux, s *Service) {
 	post(mux, "/saas-bill/chainBillRate/getSumPrice", s.rateGetSumPrice)
 	post(mux, "/saas-bill/chainBillRate/countMonBuses", s.rateCountMonBuses)
 
-	// ── saas-capital ──
-	post(mux, "/saas-capital/chainCapitalSettlement/selectQuantity", s.settSelectQuantity)
-	post(mux, "/saas-capital/chainCapitalSettlement/countSett", s.settCountSett)
-	post(mux, "/saas-capital/chainCapitalDetailed/countDetail", s.detailCountDetail)
+	// ── saas-capital:三条统计已移交 capital 包精确版(五期),dashboard 不再注册 ──
 
 	// ── saas-contract ──
 	post(mux, "/saas-contract/chainContract/selectQuantity", s.cttSelectQuantity)
@@ -248,4 +245,18 @@ func timeCond(m map[string]any, col string) (string, []any) {
 		args = append(args, s)
 	}
 	return strings.Join(cond, ""), args
+}
+
+// timeTypeCond timeType 1本月 2上月 3近半年 4本年(无条件),对照各 Java service selectQuat
+// (原 capital.go 迁出后留此供 contract.go 使用)
+func timeTypeCond(m map[string]any) string {
+	switch str(m, "timeType") {
+	case "1":
+		return " AND month = DATE_FORMAT(CURDATE(), '%Y-%m')"
+	case "2":
+		return " AND month = DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 1 MONTH), '%Y-%m')"
+	case "3":
+		return " AND concat(month, '-01') BETWEEN date_sub(now(), INTERVAL 6 MONTH) AND now()"
+	}
+	return ""
 }

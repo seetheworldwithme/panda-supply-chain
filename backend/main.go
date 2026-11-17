@@ -9,6 +9,7 @@ import (
 
 	"github.com/seetheworldwithme/panda-supply-chain/backend/internal/auth"
 	"github.com/seetheworldwithme/panda-supply-chain/backend/internal/authadmin"
+	"github.com/seetheworldwithme/panda-supply-chain/backend/internal/capital"
 	"github.com/seetheworldwithme/panda-supply-chain/backend/internal/config"
 	"github.com/seetheworldwithme/panda-supply-chain/backend/internal/contract"
 	"github.com/seetheworldwithme/panda-supply-chain/backend/internal/dashboard"
@@ -63,6 +64,10 @@ func main() {
 
 	// ── saas-logistics 全服务(四期物流;统计 3 条已由 dashboard 注册) ──
 	logistics.Register(mux, logisticsSvc)
+
+	// ── saas-capital 全服务(五期资金;统计 selectQuantity/countSett/countDetail 由 dashboard 注册) ──
+	capitalSvc := capital.NewService(database)
+	capital.Register(mux, capitalSvc)
 
 	// 健康检查
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, r *http.Request) {
