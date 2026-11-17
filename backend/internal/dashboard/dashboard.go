@@ -52,16 +52,7 @@ func Register(mux *http.ServeMux, s *Service) {
 	post(mux, "/saas-common/chainAreaInfo/selByParent", s.selByParent)
 	post(mux, "/saas-common/upload/getImgByRelId", s.getImgByRelId)
 
-	// ── saas-bill:chainBill / chainBillRate ──
-	post(mux, "/saas-bill/chainBill/selJxzb", s.selJxzb)
-	post(mux, "/saas-bill/chainBill/selZeroTax", s.selZeroTax)
-	post(mux, "/saas-bill/chainBill/selectBusCount", s.selectBusCount)
-	post(mux, "/saas-bill/chainBill/countTaxRate", s.countTaxRate)
-	post(mux, "/saas-bill/chainBill/countBuses", s.billCountBuses)
-	post(mux, "/saas-bill/chainBill/countMonBuses", s.billCountMonBuses)
-	post(mux, "/saas-bill/chainBill/countPtTax", s.countPtTax)
-	post(mux, "/saas-bill/chainBillRate/getSumPrice", s.rateGetSumPrice)
-	post(mux, "/saas-bill/chainBillRate/countMonBuses", s.rateCountMonBuses)
+	// ── saas-bill:chainBill/chainBillRate 统计 9 条已移交 bill 包精确实现(五期) ──
 
 	// ── saas-capital:三条统计已移交 capital 包精确版(五期),dashboard 不再注册 ──
 
