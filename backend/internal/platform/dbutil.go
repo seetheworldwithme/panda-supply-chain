@@ -1,8 +1,10 @@
 // Package platform - dbutil.go MyBatis-Plus 内置方法的 Go 等价物。
 // 二期组织基础接口大量依赖 MP 的 getById/save/updateById/removeById/removeByIds/
 // list(QueryWrapper.allEq)/saveBatch/updateBatchById/removeByMap,此处统一翻译。
-// 约定:列名只接受 ^[a-z_][a-z0-9_]*$(防列名注入,与 Java 端 allEq 直拼键名的行为差异是刻意收紧);
-// 值一律参数化。时间列由调用方按 Java MP 自动填充行为显式带上(create_time/update_time)。
+// 约定:列名只接受 ^[a-z_][a-zA-Z0-9_]*$(防列名注入;chain_capital_bkcall.msgText、
+// chain_capital_transinfo.orderSubtype 等库内驼峰列放行,与 Java 端 allEq 直拼键名的
+// 行为差异是刻意收紧);值一律参数化。时间列由调用方按 Java MP 自动填充行为显式带上
+// (create_time/update_time)。
 package platform
 
 import (
@@ -13,7 +15,7 @@ import (
 	"time"
 )
 
-var colRe = regexp.MustCompile(`^[a-z_][a-z0-9_]*$`)
+var colRe = regexp.MustCompile(`^[a-z_][a-zA-Z0-9_]*$`)
 
 // CheckCols 校验列名合法(非法直接 panic 语义错误,编程期即暴露)
 func CheckCols(cols []string) {

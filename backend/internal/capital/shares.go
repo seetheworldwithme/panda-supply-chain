@@ -53,3 +53,26 @@ func echoOf(ent *entShape, m map[string]any, extra map[string]any) map[string]an
 	}
 	return out
 }
+
+// writeVals body 实体 → 入库列(Underscore 基础上处理 renames 反向:msgtext→msgText、
+// ordersubtype→orderSubtype 等驼峰列)
+func writeVals(ent *entShape, m map[string]any) map[string]any {
+	u := platform.Underscore(m)
+	out := make(map[string]any, len(u)+len(ent.renames))
+	for k, v := range u {
+		out[k] = v
+	}
+	for camelCol, jsonKey := range ent.renames {
+		// Underscore 产物(msg_text)与原名/小写键一并让位驼峰列
+		snake := platform.Underscore(map[string]any{camelCol: nil})
+		for k := range snake {
+			delete(out, k)
+		}
+		delete(out, camelCol)
+		delete(out, strings.ToLower(camelCol))
+		if v, ok := m[jsonKey]; ok {
+			out[camelCol] = v
+		}
+	}
+	return out
+}

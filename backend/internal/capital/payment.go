@@ -6,7 +6,6 @@ package capital
 
 import (
 	"database/sql"
-	"encoding/json"
 	"io"
 	"net/http"
 	"strings"
@@ -114,24 +113,9 @@ func (s *Service) payBillInfo(w http.ResponseWriter, r *http.Request) {
 	platform.FailData(w, 602, "订单查询异常", nil)
 }
 
-// payTransMsgCallBack 招行回调:裸 JSONObject {msgNbr, rtnCode:"SUC0000", rtnText:"接收成功"}。
-// Java rbody 取自网关塞的 attribute;Go 用原始 body。企业无商户号场景 8765 侧行为以实测为准。
+// payTransMsgCallBack 招行回调:rbody 取自网关塞的 request attribute,本地直连(无网关
+// filter)时 Java 侧 attr null → .toString() NPE → 恒 999(8765 实测),照实复刻。
 func (s *Service) payTransMsgCallBack(w http.ResponseWriter, r *http.Request) {
-	raw, _ := io.ReadAll(r.Body)
-	var callObj map[string]any
-	_ = json.Unmarshal(raw, &callObj)
-	if callObj == nil {
-		platform.Unknown(w) // parseObject 异常路径
-		return
-	}
-	bkcall := bodyMap(r)
-	_ = bkcall
-	// 本地无有效回调链路(数据库无招商商户),按原版分支产出应答报文
-	res := map[string]any{
-		"msgNbr":  callObj["msgNbr"],
-		"rtnCode": "SUC0000",
-		"rtnText": "接收成功",
-	}
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	_ = json.NewEncoder(w).Encode(res)
+	_, _ = io.ReadAll(r.Body)
+	platform.Unknown(w)
 }

@@ -44,7 +44,7 @@ var entBkcall = entShape{
 		"msgText", "create_time", "update_time",
 		"remark1", "remark2", "remark3", "remark4", "remark5"},
 	decimals: []string{"order_amt", "trans_amt", "bck_amt"},
-	renames:  map[string]string{"msgtext": "msgtext"},
+	renames:  map[string]string{"msgText": "msgtext"}, // JSON 键全小写(lombok getter)
 	carriers: []string{"searchStr", "page", "ids"},
 	fillIns:  true,
 }
@@ -60,6 +60,7 @@ var entTransinfo = entShape{
 		"payer_bank_flag", "create_time", "update_time",
 		"remark1", "remark2", "remark3", "remark4", "remark5"},
 	decimals: []string{"pay_money"},
+	renames:  map[string]string{"orderSubtype": "ordersubtype"}, // JSON 键全小写
 	carriers: []string{"searchStr", "page", "ids", "transType", "startTime", "endTime"},
 	fillIns:  true,
 }
@@ -195,13 +196,8 @@ func (s *Service) smallCtl(w http.ResponseWriter, r *http.Request, def smallDef)
 		m := bodyMap(r)
 		ids, ok := m["ids"].([]any)
 		if !ok {
-			// MP removeByIds(null) → 999?四期实证:removeByIds 空集合 → 短路 200;
-			// null → CollectionUtils.emptyIfNull? MP 3.4.2 removeByIds(null) NPE → 999。
-			if _, has := m["ids"]; !has || m["ids"] == nil {
-				platform.Unknown(w)
-				return
-			}
-			platform.Unknown(w)
+			// MP removeByIds:null/缺失 → 内部短路 0 行 → 200 "删除成功"(8765 实测)
+			platform.Success(w, "删除成功")
 			return
 		}
 		if len(ids) == 0 {
@@ -254,13 +250,12 @@ func (s *Service) smallListByPage(w http.ResponseWriter, r *http.Request, d *sql
 		args = append(args, searchStrLike(m))
 		shape = def.ent.rows
 	case "chainCapitalAccounts":
-		// searchSql 尾随 and:ownerType null → 语法错恒 999
-		if v, has := m["ownerType"]; !has || v == nil {
-			platform.Unknown(w)
-			return
+		// searchSql 基础串自带尾随 "and ":ownerType null 时为 "where 1=1 and  CONCAT..."(合法)
+		where := "where 1=1 and "
+		if v, has := m["ownerType"]; has && v != nil {
+			where += "owner_type = ? and "
+			args = append(args, v)
 		}
-		where := "where 1=1 and owner_type = ? and "
-		args = append(args, m["ownerType"])
 		like := searchStrLike(m)
 		q = "select * from chain_capital_accounts " + where + "CONCAT(IFNULL(account_name, ''), IFNULL(account_number, '')) like ? order by create_time desc"
 		countQ = "SELECT count(1) FROM chain_capital_accounts " + where + "CONCAT(IFNULL(account_name, ''), IFNULL(account_number, '')) like ?"
@@ -317,9 +312,10 @@ func (s *Service) smallListByPage(w http.ResponseWriter, r *http.Request, d *sql
 	case "chainCapitalCount":
 		where := "where 1=1 "
 		if v, ok := m["createTime"]; ok && v != nil && strings.TrimSpace(str(m, "createTime")) != "" {
-			t, err := parseLocalDateTime(str(m, "createTime"))
+			// @JsonFormat 空格 pattern:只收 "yyyy-MM-dd HH:mm:ss"
+			t, err := time.ParseInLocation("2006-01-02 15:04:05", str(m, "createTime"), time.Local)
 			if err != nil {
-				platform.Unknown(w) // LocalDateTime 绑定失败 → 999
+				platform.Unknown(w) // 绑定失败 → 999
 				return
 			}
 			where += " and create_time like ?"
@@ -334,8 +330,8 @@ func (s *Service) smallListByPage(w http.ResponseWriter, r *http.Request, d *sql
 		platform.Unknown(w)
 		return
 	case "chainCapitalDetailSettlement":
-		// %${searchStr}% 原生内插:null → "null" 字面
-		ss := "%null%"
+		// %${searchStr}% 原生内插:null → 空串(四期实证 MyBatis ${null} 输出 "")
+		ss := "%%"
 		if v, ok := m["searchStr"]; ok && v != nil {
 			ss = "%" + str(m, "searchStr") + "%"
 		}
@@ -389,7 +385,7 @@ func getSqlReflect(m map[string]any, ent *entShape, excluded map[string]bool) (s
 // smallAdd 标准骨架 add:Bkcall/Transinfo 恒 data=null,其余回显
 func (s *Service) smallAdd(w http.ResponseWriter, r *http.Request, d *sql.DB, def smallDef) {
 	m := bodyMap(r)
-	vals := pick(m, def.ent.cols...)
+	vals := writeVals(def.ent, m)
 	delete(vals, "id")
 	delete(vals, "create_time")
 	delete(vals, "update_time")
@@ -421,7 +417,7 @@ func (s *Service) smallUpdateById(w http.ResponseWriter, r *http.Request, d *sql
 		platform.Unknown(w)
 		return
 	}
-	vals := pick(m, def.ent.cols...)
+	vals := writeVals(def.ent, m)
 	delete(vals, "id")
 	delete(vals, "create_time")
 	delete(vals, "update_time")

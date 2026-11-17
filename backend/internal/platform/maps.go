@@ -60,17 +60,17 @@ func IPage(records []map[string]any, total, current, size int64) map[string]any 
 	}
 	pages := (total + size - 1) / size
 	return map[string]any{
-		"records":         records,
-		"total":           total,
-		"size":            size,
-		"current":         current,
-		"orders":          []any{},
+		"records":          records,
+		"total":            total,
+		"size":             size,
+		"current":          current,
+		"orders":           []any{},
 		"optimizeCountSql": true,
-		"hitCount":        false,
-		"countId":         nil,
-		"maxLimit":        nil,
-		"searchCount":     true,
-		"pages":           pages,
+		"hitCount":         false,
+		"countId":          nil,
+		"maxLimit":         nil,
+		"searchCount":      true,
+		"pages":            pages,
 	}
 }
 
