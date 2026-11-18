@@ -5,6 +5,7 @@ package warehouse
 
 import (
 	"database/sql"
+	"fmt"
 	"math/rand/v2"
 	"net/http"
 	"os"
@@ -224,18 +225,12 @@ func (s *Service) rrGenerateAmount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	d := s.pick(r)
-	ranges, err := queryRows(d, "SELECT min_amount, max_amount FROM bus_red_envelope_range WHERE receive_type=? LIMIT 2", typeValue)
-	if err != nil || len(ranges) != 1 || ranges[0]["min_amount"] == nil || ranges[0]["max_amount"] == nil {
-		platform.Unknown(w)
-		return
-	}
-	low, high := int64(num(ranges[0]["min_amount"])), int64(num(ranges[0]["max_amount"]))
-	if low < -2147483648 || high > 2147483647 || high < low || high-low >= 2147483647 {
+	amount, err := randomRedAmount(d, typeValue)
+	if err != nil {
 		platform.Unknown(w)
 		return
 	}
 	now := time.Now().Format("2006-01-02 15:04:05")
-	amount := low + rand.Int64N(high-low+1)
 	vals := map[string]any{"user_id": currentUser(r).UserID, "receive_type": typeValue, "create_amount": amount, "is_write_off": false, "create_time": now, "update_time": now}
 	id, err := platform.Insert(d, "bus_red_money_clog", vals)
 	if err != nil {
@@ -245,6 +240,32 @@ func (s *Service) rrGenerateAmount(w http.ResponseWriter, r *http.Request) {
 	vals["id"] = id
 	result := platform.EntityEcho(platform.Camelize(vals), entBusRedMoneyClog.keys, map[string]any{"receiveType": jsonNumberInt64(int64(num(typeValue)))})
 	platform.Success(w, result)
+}
+
+// randomRedAmount matches the inclusive integer bounds and getOne behavior.
+func randomRedAmount(db interface {
+	Query(string, ...any) (*sql.Rows, error)
+}, receiveType any) (int64, error) {
+	rows, err := db.Query("SELECT min_amount, max_amount FROM bus_red_envelope_range WHERE receive_type=? LIMIT 2", receiveType)
+	if err != nil {
+		return 0, err
+	}
+	defer rows.Close()
+	var min, max sql.NullInt64
+	if !rows.Next() {
+		return 0, fmt.Errorf("missing reward bounds")
+	}
+	if err := rows.Scan(&min, &max); err != nil {
+		return 0, err
+	}
+	if rows.Next() || rows.Err() != nil || !min.Valid || !max.Valid {
+		return 0, fmt.Errorf("invalid reward bounds")
+	}
+	low, high := min.Int64, max.Int64
+	if low < -2147483648 || high > 2147483647 || high < low || high-low >= 2147483647 {
+		return 0, fmt.Errorf("invalid integer reward range")
+	}
+	return low + rand.Int64N(high-low+1), nil
 }
 
 // Withdrawal writes only after a successful merchant transfer. The vendor

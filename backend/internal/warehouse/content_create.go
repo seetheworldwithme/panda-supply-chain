@@ -1,6 +1,7 @@
 package warehouse
 
 import (
+	"database/sql"
 	"net/http"
 
 	"github.com/seetheworldwithme/panda-supply-chain/backend/internal/platform"
@@ -9,6 +10,7 @@ import (
 func init() {
 	addExtra(func(mux *http.ServeMux, s *Service) {
 		mux.HandleFunc("POST /saas-warehouse/busOpinion/add", authGuard(s.addOpinion))
+		mux.HandleFunc("POST /saas-warehouse/busOpinion/updateById", authGuard(s.updateOpinion))
 		mux.HandleFunc("POST /saas-warehouse/busVideos/add", authGuard(s.addVideo))
 	})
 }
@@ -94,5 +96,64 @@ func (s *Service) addVideo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// Review SMS belongs to the external notification adapter.
+	platform.Success(w, nil)
+}
+
+// updateOpinion follows the approval transaction. Java creates a reward
+// generation record and then creates a second one with the same amount for
+// the withdrawal attempt. The external transfer remains disabled.
+func (s *Service) updateOpinion(w http.ResponseWriter, r *http.Request) {
+	body, ok := bodyMapStrict(w, r)
+	if !ok {
+		return
+	}
+	if !entBusOpinion.validateBody(body) {
+		platform.Unknown(w)
+		return
+	}
+	tx, err := s.pick(r).BeginTx(r.Context(), nil)
+	if err != nil {
+		platform.Unknown(w)
+		return
+	}
+	defer tx.Rollback()
+	var before sql.NullInt64
+	id := body["id"]
+	if err := tx.QueryRowContext(r.Context(), "SELECT status FROM bus_opinion WHERE id=? FOR UPDATE", id).Scan(&before); err != nil || !before.Valid {
+		platform.Unknown(w)
+		return
+	}
+	vals := pick(body, entBusOpinion.dbcols)
+	delete(vals, "id")
+	if err := platform.TxUpdateByID(tx, "bus_opinion", id, vals); err != nil {
+		platform.Unknown(w)
+		return
+	}
+	if before.Int64 == 0 {
+		status, valid := bindVal("i", body["status"])
+		if !valid || status == nil {
+			platform.Unknown(w)
+			return
+		}
+		if num(status) == 1 {
+			const opinionReward = 7
+			amount, err := randomRedAmount(tx, opinionReward)
+			if err != nil {
+				platform.Unknown(w)
+				return
+			}
+			reward := map[string]any{"user_id": currentUser(r).UserID, "receive_type": opinionReward, "create_amount": amount, "is_write_off": false}
+			for i := 0; i < 2; i++ {
+				if _, err := platform.TxInsert(tx, "bus_red_money_clog", reward); err != nil {
+					platform.Unknown(w)
+					return
+				}
+			}
+		}
+	}
+	if err := tx.Commit(); err != nil {
+		platform.Unknown(w)
+		return
+	}
 	platform.Success(w, nil)
 }

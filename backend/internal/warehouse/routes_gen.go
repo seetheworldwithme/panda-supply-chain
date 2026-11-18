@@ -32,7 +32,7 @@ var tplCtls = []tplCtl{
 	{"/busMyBill", entBusMyBill, 'A', true, false, false, false, []string{}},
 	{"/busNotice", entBusNotice, 'A', true, false, false, false, []string{"/getById", "/listByPage"}},
 	{"/busNoticeMx", entBusNoticeMx, 'A', true, false, false, false, []string{}},
-	{"/busOpinion", entBusOpinion, 'B', true, false, false, false, []string{"/add"}},
+	{"/busOpinion", entBusOpinion, 'B', true, false, false, false, []string{"/add", "/updateById"}},
 	{"/busOrder", entBusOrder, 'A', true, false, false, false, []string{"/listByPage", "/getById"}},
 	{"/busPackage", entBusPackage, 'A', true, false, false, false, []string{}},
 	{"/busPageLog", entBusPageLog, 'C', true, false, false, true, []string{}},
