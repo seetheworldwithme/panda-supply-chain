@@ -110,15 +110,50 @@ func (e *ent) shapeRows(rows []map[string]any, cols []string) []map[string]any {
 		for _, c := range cols {
 			m[camelCol(c)] = row[c]
 		}
-		// 只保留实体键(DB 外列被 Java 实体映射丢弃,如 bus_package.is_default)
+		// MyBatis property lookup ignores case and underscores. Do not pair keys/dbcols
+		// by index: transient fields may appear between persistent properties.
+		fold := func(k string) string { return strings.ToLower(strings.ReplaceAll(k, "_", "")) }
+		byProperty := make(map[string]any, len(cols))
+		for _, c := range cols { byProperty[fold(c)] = row[c] }
 		filtered := make(map[string]any, len(e.keys))
 		for _, k := range e.keys {
-			filtered[k] = m[k]
+			if v, ok := m[k]; ok { filtered[k] = v } else { filtered[k] = byProperty[fold(k)] }
 		}
 		e.decorate(filtered)
+		// Jackson getter 命名输出(实测:dAshContent→dashContent、pType→ptype、dY→dy)
+		if len(filtered) > 0 {
+			rn := make(map[string]any, len(filtered))
+			for k, v := range filtered {
+				rn[jacksonName(k)] = v
+			}
+			filtered = rn
+		}
 		out = appendRow(out, filtered, row)
 	}
 	return out
+}
+
+// jacksonName Jackson getter 命名:先首字母大写(getX 的 X),再前导大写串逐个小写,
+// 遇"大写后跟小写"止于该字母(实测:dAshContent→dashContent、pType→ptype、dY→dy、
+// fCokeCharacteristics→fcokeCharacteristics、pAshcontent→pashcontent、isPtSearch→isPtSearch)
+func jacksonName(k string) string {
+	if k == "" {
+		return k
+	}
+	b := []byte(k)
+	if b[0] >= 'a' && b[0] <= 'z' {
+		b[0] -= 32
+	}
+	for i := 0; i < len(b); i++ {
+		if b[i] < 'A' || b[i] > 'Z' {
+			break
+		}
+		b[i] += 32
+		if i+1 < len(b) && (b[i+1] < 'A' || b[i+1] > 'Z') {
+			break
+		}
+	}
+	return string(b)
 }
 
 // decorate 按实体字段 Java 类型整形(实体字段类型驱动:String←int 列转字符串、
@@ -151,6 +186,10 @@ func (e *ent) decorate(m map[string]any) {
 		case "d":
 			if s, ok := v.(string); ok && s != "" {
 				m[k] = json.Number(s)
+			}
+		case "f": // Java Double 字段:最短表示,整数补 .0(实测 0→"0.0"、1540→"1540.0")
+			if _, ok := v.(json.Number); !ok {
+				m[k] = vidDoubleJson(num(v))
 			}
 		case "b":
 			m[k] = num(v) != 0
@@ -261,6 +300,17 @@ func (e *ent) getSql(m map[string]any) (string, []any, bool) {
 // "" 对非 String 一律绑 null;失败面:数字字段非数字串、日期字段坏格式、
 // Boolean 收数字/数组、标量字段收对象等。
 func bindVal(kind string, v any) (any, bool) {
+ if n, ok := v.(json.Number); ok {
+  switch kind {
+  case "s", "d":
+   if _,err:=strconv.ParseFloat(n.String(),64);err!=nil {return nil,false}; return n.String(),true
+  case "i", "l":
+   if _,err:=strconv.ParseInt(n.String(),10,64);err!=nil {return nil,false}; return n.String(),true
+  case "b":
+   f,err:=strconv.ParseFloat(n.String(),64);return f!=0,err==nil
+  default: return nil,false
+  }
+ }
 	switch kind {
 	case "s":
 		switch t := v.(type) {
@@ -665,7 +715,11 @@ func (s *Service) tplDelBatch(w http.ResponseWriter, r *http.Request, e *ent, wi
 // tplUpdBatch 对照 /updBatch:MP updateBatchById(逐行非空子集+fill);空数组短路成功
 func (s *Service) tplUpdBatch(w http.ResponseWriter, r *http.Request, e *ent) {
 	var items []any
-	_ = json.NewDecoder(r.Body).Decode(&items)
+	// Java @RequestBody List<T>:对象体({})Jackson 绑定失败 → 999(实测)
+	if err := json.NewDecoder(r.Body).Decode(&items); err != nil {
+		platform.Unknown(w)
+		return
+	}
 	for _, it := range items {
 		em, _ := it.(map[string]any)
 		if em == nil {

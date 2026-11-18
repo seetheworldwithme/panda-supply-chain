@@ -1,0 +1,1144 @@
+[
+ [
+  "/saas-warehouse/busMember/list",
+  {}
+ ],
+ [
+  "/saas-warehouse/busMember/listByPage",
+  {}
+ ],
+ [
+  "/saas-warehouse/busMember/listByPage",
+  {
+   "page": {
+    "current": 1,
+    "size": 3
+   }
+  }
+ ],
+ [
+  "/saas-warehouse/busMember/listByPage",
+  {
+   "page": {
+    "current": 1,
+    "size": 3
+   },
+   "searchStr": ""
+  }
+ ],
+ [
+  "/saas-warehouse/busMember/getById",
+  {
+   "id": 1
+  }
+ ],
+ [
+  "/saas-warehouse/busMember/getById",
+  {
+   "id": 99977799
+  }
+ ],
+ [
+  "/saas-warehouse/busMember/deleteById",
+  {
+   "id": 99977799
+  }
+ ],
+ [
+  "/saas-warehouse/busMember/delBatch",
+  {
+   "ids": []
+  }
+ ],
+ [
+  "/saas-warehouse/busMember/importExcel",
+  {}
+ ],
+ [
+  "/saas-warehouse/busUserMember/list",
+  {}
+ ],
+ [
+  "/saas-warehouse/busUserMember/listByPage",
+  {}
+ ],
+ [
+  "/saas-warehouse/busUserMember/listByPage",
+  {
+   "page": {
+    "current": 1,
+    "size": 3
+   }
+  }
+ ],
+ [
+  "/saas-warehouse/busUserMember/listByPage",
+  {
+   "page": {
+    "current": 1,
+    "size": 3
+   },
+   "searchStr": ""
+  }
+ ],
+ [
+  "/saas-warehouse/busUserMember/getById",
+  {
+   "id": 1
+  }
+ ],
+ [
+  "/saas-warehouse/busUserMember/getById",
+  {
+   "id": 99977799
+  }
+ ],
+ [
+  "/saas-warehouse/busUserMember/deleteById",
+  {
+   "id": 99977799
+  }
+ ],
+ [
+  "/saas-warehouse/busUserMember/delBatch",
+  {
+   "ids": []
+  }
+ ],
+ [
+  "/saas-warehouse/busUserMember/importExcel",
+  {}
+ ],
+ [
+  "/saas-warehouse/busScoreLog/list",
+  {}
+ ],
+ [
+  "/saas-warehouse/busScoreLog/listByPage",
+  {}
+ ],
+ [
+  "/saas-warehouse/busScoreLog/listByPage",
+  {
+   "page": {
+    "current": 1,
+    "size": 3
+   }
+  }
+ ],
+ [
+  "/saas-warehouse/busScoreLog/listByPage",
+  {
+   "page": {
+    "current": 1,
+    "size": 3
+   },
+   "searchStr": ""
+  }
+ ],
+ [
+  "/saas-warehouse/busScoreLog/getById",
+  {
+   "id": 1
+  }
+ ],
+ [
+  "/saas-warehouse/busScoreLog/getById",
+  {
+   "id": 99977799
+  }
+ ],
+ [
+  "/saas-warehouse/busScoreLog/deleteById",
+  {
+   "id": 99977799
+  }
+ ],
+ [
+  "/saas-warehouse/busScoreLog/delBatch",
+  {
+   "ids": []
+  }
+ ],
+ [
+  "/saas-warehouse/busScoreLog/importExcel",
+  {}
+ ],
+ [
+  "/saas-warehouse/busScoreExchangeLog/list",
+  {}
+ ],
+ [
+  "/saas-warehouse/busScoreExchangeLog/listByPage",
+  {}
+ ],
+ [
+  "/saas-warehouse/busScoreExchangeLog/listByPage",
+  {
+   "page": {
+    "current": 1,
+    "size": 3
+   }
+  }
+ ],
+ [
+  "/saas-warehouse/busScoreExchangeLog/listByPage",
+  {
+   "page": {
+    "current": 1,
+    "size": 3
+   },
+   "searchStr": ""
+  }
+ ],
+ [
+  "/saas-warehouse/busScoreExchangeLog/getById",
+  {
+   "id": 1
+  }
+ ],
+ [
+  "/saas-warehouse/busScoreExchangeLog/getById",
+  {
+   "id": 99977799
+  }
+ ],
+ [
+  "/saas-warehouse/busScoreExchangeLog/deleteById",
+  {
+   "id": 99977799
+  }
+ ],
+ [
+  "/saas-warehouse/busScoreExchangeLog/delBatch",
+  {
+   "ids": []
+  }
+ ],
+ [
+  "/saas-warehouse/busScoreExchangeLog/importExcel",
+  {}
+ ],
+ [
+  "/saas-warehouse/busScoreExchangeLog/listByPage",
+  {
+   "page": {
+    "current": 1,
+    "size": 3
+   },
+   "startTime": "2023-01-01",
+   "endTime": "2023-12-31"
+  }
+ ],
+ [
+  "/saas-warehouse/busScoreExchangeLog/listByPage",
+  {
+   "page": {
+    "current": 1,
+    "size": 3
+   },
+   "startTime": "bad"
+  }
+ ],
+ [
+  "/saas-warehouse/busScorePro/list",
+  {}
+ ],
+ [
+  "/saas-warehouse/busScorePro/listByPage",
+  {}
+ ],
+ [
+  "/saas-warehouse/busScorePro/listByPage",
+  {
+   "page": {
+    "current": 1,
+    "size": 3
+   }
+  }
+ ],
+ [
+  "/saas-warehouse/busScorePro/listByPage",
+  {
+   "page": {
+    "current": 1,
+    "size": 3
+   },
+   "searchStr": ""
+  }
+ ],
+ [
+  "/saas-warehouse/busScorePro/getById",
+  {
+   "id": 1
+  }
+ ],
+ [
+  "/saas-warehouse/busScorePro/getById",
+  {
+   "id": 99977799
+  }
+ ],
+ [
+  "/saas-warehouse/busScorePro/deleteById",
+  {
+   "id": 99977799
+  }
+ ],
+ [
+  "/saas-warehouse/busScorePro/delBatch",
+  {
+   "ids": []
+  }
+ ],
+ [
+  "/saas-warehouse/busScorePro/importExcel",
+  {}
+ ],
+ [
+  "/saas-warehouse/busScoreRule/list",
+  {}
+ ],
+ [
+  "/saas-warehouse/busScoreRule/listByPage",
+  {}
+ ],
+ [
+  "/saas-warehouse/busScoreRule/listByPage",
+  {
+   "page": {
+    "current": 1,
+    "size": 3
+   }
+  }
+ ],
+ [
+  "/saas-warehouse/busScoreRule/listByPage",
+  {
+   "page": {
+    "current": 1,
+    "size": 3
+   },
+   "searchStr": ""
+  }
+ ],
+ [
+  "/saas-warehouse/busScoreRule/getById",
+  {
+   "id": 1
+  }
+ ],
+ [
+  "/saas-warehouse/busScoreRule/getById",
+  {
+   "id": 99977799
+  }
+ ],
+ [
+  "/saas-warehouse/busScoreRule/deleteById",
+  {
+   "id": 99977799
+  }
+ ],
+ [
+  "/saas-warehouse/busScoreRule/delBatch",
+  {
+   "ids": []
+  }
+ ],
+ [
+  "/saas-warehouse/busScoreRule/importExcel",
+  {}
+ ],
+ [
+  "/saas-warehouse/busUserScore/list",
+  {}
+ ],
+ [
+  "/saas-warehouse/busUserScore/listByPage",
+  {}
+ ],
+ [
+  "/saas-warehouse/busUserScore/listByPage",
+  {
+   "page": {
+    "current": 1,
+    "size": 3
+   }
+  }
+ ],
+ [
+  "/saas-warehouse/busUserScore/listByPage",
+  {
+   "page": {
+    "current": 1,
+    "size": 3
+   },
+   "searchStr": ""
+  }
+ ],
+ [
+  "/saas-warehouse/busUserScore/getById",
+  {
+   "id": 1
+  }
+ ],
+ [
+  "/saas-warehouse/busUserScore/getById",
+  {
+   "id": 99977799
+  }
+ ],
+ [
+  "/saas-warehouse/busUserScore/deleteById",
+  {
+   "id": 99977799
+  }
+ ],
+ [
+  "/saas-warehouse/busUserScore/delBatch",
+  {
+   "ids": []
+  }
+ ],
+ [
+  "/saas-warehouse/busUserScore/importExcel",
+  {}
+ ],
+ [
+  "/saas-warehouse/busRedEnvelopeBatch/list",
+  {}
+ ],
+ [
+  "/saas-warehouse/busRedEnvelopeBatch/listByPage",
+  {}
+ ],
+ [
+  "/saas-warehouse/busRedEnvelopeBatch/listByPage",
+  {
+   "page": {
+    "current": 1,
+    "size": 3
+   }
+  }
+ ],
+ [
+  "/saas-warehouse/busRedEnvelopeBatch/listByPage",
+  {
+   "page": {
+    "current": 1,
+    "size": 3
+   },
+   "searchStr": ""
+  }
+ ],
+ [
+  "/saas-warehouse/busRedEnvelopeBatch/getById",
+  {
+   "id": 1
+  }
+ ],
+ [
+  "/saas-warehouse/busRedEnvelopeBatch/getById",
+  {
+   "id": 99977799
+  }
+ ],
+ [
+  "/saas-warehouse/busRedEnvelopeBatch/deleteById",
+  {
+   "id": 99977799
+  }
+ ],
+ [
+  "/saas-warehouse/busRedEnvelopeBatch/delBatch",
+  {
+   "ids": []
+  }
+ ],
+ [
+  "/saas-warehouse/busRedEnvelopeBatch/importExcel",
+  {}
+ ],
+ [
+  "/saas-warehouse/busRedEnvelopeDetail/list",
+  {}
+ ],
+ [
+  "/saas-warehouse/busRedEnvelopeDetail/listByPage",
+  {}
+ ],
+ [
+  "/saas-warehouse/busRedEnvelopeDetail/listByPage",
+  {
+   "page": {
+    "current": 1,
+    "size": 3
+   }
+  }
+ ],
+ [
+  "/saas-warehouse/busRedEnvelopeDetail/listByPage",
+  {
+   "page": {
+    "current": 1,
+    "size": 3
+   },
+   "searchStr": ""
+  }
+ ],
+ [
+  "/saas-warehouse/busRedEnvelopeDetail/getById",
+  {
+   "id": 1
+  }
+ ],
+ [
+  "/saas-warehouse/busRedEnvelopeDetail/getById",
+  {
+   "id": 99977799
+  }
+ ],
+ [
+  "/saas-warehouse/busRedEnvelopeDetail/deleteById",
+  {
+   "id": 99977799
+  }
+ ],
+ [
+  "/saas-warehouse/busRedEnvelopeDetail/delBatch",
+  {
+   "ids": []
+  }
+ ],
+ [
+  "/saas-warehouse/busRedEnvelopeDetail/importExcel",
+  {}
+ ],
+ [
+  "/saas-warehouse/busRedEnvelopeRange/list",
+  {}
+ ],
+ [
+  "/saas-warehouse/busRedEnvelopeRange/listByPage",
+  {}
+ ],
+ [
+  "/saas-warehouse/busRedEnvelopeRange/listByPage",
+  {
+   "page": {
+    "current": 1,
+    "size": 3
+   }
+  }
+ ],
+ [
+  "/saas-warehouse/busRedEnvelopeRange/listByPage",
+  {
+   "page": {
+    "current": 1,
+    "size": 3
+   },
+   "searchStr": ""
+  }
+ ],
+ [
+  "/saas-warehouse/busRedEnvelopeRange/getById",
+  {
+   "id": 1
+  }
+ ],
+ [
+  "/saas-warehouse/busRedEnvelopeRange/getById",
+  {
+   "id": 99977799
+  }
+ ],
+ [
+  "/saas-warehouse/busRedEnvelopeRange/deleteById",
+  {
+   "id": 99977799
+  }
+ ],
+ [
+  "/saas-warehouse/busRedEnvelopeRange/delBatch",
+  {
+   "ids": []
+  }
+ ],
+ [
+  "/saas-warehouse/busRedEnvelopeRange/importExcel",
+  {}
+ ],
+ [
+  "/saas-warehouse/busRedEnvelopeRecord/list",
+  {}
+ ],
+ [
+  "/saas-warehouse/busRedEnvelopeRecord/listByPage",
+  {}
+ ],
+ [
+  "/saas-warehouse/busRedEnvelopeRecord/listByPage",
+  {
+   "page": {
+    "current": 1,
+    "size": 3
+   }
+  }
+ ],
+ [
+  "/saas-warehouse/busRedEnvelopeRecord/listByPage",
+  {
+   "page": {
+    "current": 1,
+    "size": 3
+   },
+   "searchStr": ""
+  }
+ ],
+ [
+  "/saas-warehouse/busRedEnvelopeRecord/getById",
+  {
+   "id": 1
+  }
+ ],
+ [
+  "/saas-warehouse/busRedEnvelopeRecord/getById",
+  {
+   "id": 99977799
+  }
+ ],
+ [
+  "/saas-warehouse/busRedEnvelopeRecord/deleteById",
+  {
+   "id": 99977799
+  }
+ ],
+ [
+  "/saas-warehouse/busRedEnvelopeRecord/delBatch",
+  {
+   "ids": []
+  }
+ ],
+ [
+  "/saas-warehouse/busRedEnvelopeRecord/importExcel",
+  {}
+ ],
+ [
+  "/saas-warehouse/busRedEnvelopeRecord/listByPage",
+  {
+   "page": {
+    "current": 1,
+    "size": 3
+   },
+   "startTime": "2023-01-01",
+   "endTime": "2023-12-31"
+  }
+ ],
+ [
+  "/saas-warehouse/busRedEnvelopeRecord/listByPage",
+  {
+   "page": {
+    "current": 1,
+    "size": 3
+   },
+   "startTime": "bad"
+  }
+ ],
+ [
+  "/saas-warehouse/busRedMoneyClog/list",
+  {}
+ ],
+ [
+  "/saas-warehouse/busRedMoneyClog/listByPage",
+  {}
+ ],
+ [
+  "/saas-warehouse/busRedMoneyClog/listByPage",
+  {
+   "page": {
+    "current": 1,
+    "size": 3
+   }
+  }
+ ],
+ [
+  "/saas-warehouse/busRedMoneyClog/listByPage",
+  {
+   "page": {
+    "current": 1,
+    "size": 3
+   },
+   "searchStr": ""
+  }
+ ],
+ [
+  "/saas-warehouse/busRedMoneyClog/getById",
+  {
+   "id": 1
+  }
+ ],
+ [
+  "/saas-warehouse/busRedMoneyClog/getById",
+  {
+   "id": 99977799
+  }
+ ],
+ [
+  "/saas-warehouse/busRedMoneyClog/deleteById",
+  {
+   "id": 99977799
+  }
+ ],
+ [
+  "/saas-warehouse/busRedMoneyClog/delBatch",
+  {
+   "ids": []
+  }
+ ],
+ [
+  "/saas-warehouse/busRedMoneyClog/importExcel",
+  {}
+ ],
+ [
+  "/saas-warehouse/busUserSign/list",
+  {}
+ ],
+ [
+  "/saas-warehouse/busUserSign/listByPage",
+  {}
+ ],
+ [
+  "/saas-warehouse/busUserSign/listByPage",
+  {
+   "page": {
+    "current": 1,
+    "size": 3
+   }
+  }
+ ],
+ [
+  "/saas-warehouse/busUserSign/listByPage",
+  {
+   "page": {
+    "current": 1,
+    "size": 3
+   },
+   "searchStr": ""
+  }
+ ],
+ [
+  "/saas-warehouse/busUserSign/getById",
+  {
+   "id": 1
+  }
+ ],
+ [
+  "/saas-warehouse/busUserSign/getById",
+  {
+   "id": 99977799
+  }
+ ],
+ [
+  "/saas-warehouse/busUserSign/deleteById",
+  {
+   "id": 99977799
+  }
+ ],
+ [
+  "/saas-warehouse/busUserSign/delBatch",
+  {
+   "ids": []
+  }
+ ],
+ [
+  "/saas-warehouse/busUserSign/importExcel",
+  {}
+ ],
+ [
+  "/saas-warehouse/busUserCoupon/list",
+  {}
+ ],
+ [
+  "/saas-warehouse/busUserCoupon/listByPage",
+  {}
+ ],
+ [
+  "/saas-warehouse/busUserCoupon/listByPage",
+  {
+   "page": {
+    "current": 1,
+    "size": 3
+   }
+  }
+ ],
+ [
+  "/saas-warehouse/busUserCoupon/listByPage",
+  {
+   "page": {
+    "current": 1,
+    "size": 3
+   },
+   "searchStr": ""
+  }
+ ],
+ [
+  "/saas-warehouse/busUserCoupon/getById",
+  {
+   "id": 1
+  }
+ ],
+ [
+  "/saas-warehouse/busUserCoupon/getById",
+  {
+   "id": 99977799
+  }
+ ],
+ [
+  "/saas-warehouse/busUserCoupon/deleteById",
+  {
+   "id": 99977799
+  }
+ ],
+ [
+  "/saas-warehouse/busUserCoupon/delBatch",
+  {
+   "ids": []
+  }
+ ],
+ [
+  "/saas-warehouse/busUserCoupon/importExcel",
+  {}
+ ],
+ [
+  "/saas-warehouse/busUserCoupon/listByPage",
+  {
+   "page": {
+    "current": 1,
+    "size": 3
+   },
+   "startTime": "2023-01-01",
+   "endTime": "2023-12-31"
+  }
+ ],
+ [
+  "/saas-warehouse/busUserCoupon/listByPage",
+  {
+   "page": {
+    "current": 1,
+    "size": 3
+   },
+   "startTime": "bad"
+  }
+ ],
+ [
+  "/saas-warehouse/busPackage/list",
+  {}
+ ],
+ [
+  "/saas-warehouse/busPackage/listByPage",
+  {}
+ ],
+ [
+  "/saas-warehouse/busPackage/listByPage",
+  {
+   "page": {
+    "current": 1,
+    "size": 3
+   }
+  }
+ ],
+ [
+  "/saas-warehouse/busPackage/listByPage",
+  {
+   "page": {
+    "current": 1,
+    "size": 3
+   },
+   "searchStr": ""
+  }
+ ],
+ [
+  "/saas-warehouse/busPackage/getById",
+  {
+   "id": 1
+  }
+ ],
+ [
+  "/saas-warehouse/busPackage/getById",
+  {
+   "id": 99977799
+  }
+ ],
+ [
+  "/saas-warehouse/busPackage/deleteById",
+  {
+   "id": 99977799
+  }
+ ],
+ [
+  "/saas-warehouse/busPackage/delBatch",
+  {
+   "ids": []
+  }
+ ],
+ [
+  "/saas-warehouse/busPackage/importExcel",
+  {}
+ ],
+ [
+  "/saas-warehouse/busUserPackage/list",
+  {}
+ ],
+ [
+  "/saas-warehouse/busUserPackage/listByPage",
+  {}
+ ],
+ [
+  "/saas-warehouse/busUserPackage/listByPage",
+  {
+   "page": {
+    "current": 1,
+    "size": 3
+   }
+  }
+ ],
+ [
+  "/saas-warehouse/busUserPackage/listByPage",
+  {
+   "page": {
+    "current": 1,
+    "size": 3
+   },
+   "searchStr": ""
+  }
+ ],
+ [
+  "/saas-warehouse/busUserPackage/getById",
+  {
+   "id": 1
+  }
+ ],
+ [
+  "/saas-warehouse/busUserPackage/getById",
+  {
+   "id": 99977799
+  }
+ ],
+ [
+  "/saas-warehouse/busUserPackage/deleteById",
+  {
+   "id": 99977799
+  }
+ ],
+ [
+  "/saas-warehouse/busUserPackage/delBatch",
+  {
+   "ids": []
+  }
+ ],
+ [
+  "/saas-warehouse/busUserPackage/importExcel",
+  {}
+ ],
+ [
+  "/saas-warehouse/busMemberBenefits/list",
+  {}
+ ],
+ [
+  "/saas-warehouse/busMemberBenefits/listByPage",
+  {}
+ ],
+ [
+  "/saas-warehouse/busMemberBenefits/listByPage",
+  {
+   "page": {
+    "current": 1,
+    "size": 3
+   }
+  }
+ ],
+ [
+  "/saas-warehouse/busMemberBenefits/listByPage",
+  {
+   "page": {
+    "current": 1,
+    "size": 3
+   },
+   "searchStr": ""
+  }
+ ],
+ [
+  "/saas-warehouse/busMemberBenefits/getById",
+  {
+   "id": 1
+  }
+ ],
+ [
+  "/saas-warehouse/busMemberBenefits/getById",
+  {
+   "id": 99977799
+  }
+ ],
+ [
+  "/saas-warehouse/busMemberBenefits/deleteById",
+  {
+   "id": 99977799
+  }
+ ],
+ [
+  "/saas-warehouse/busMemberBenefits/delBatch",
+  {
+   "ids": []
+  }
+ ],
+ [
+  "/saas-warehouse/busMemberBenefits/importExcel",
+  {}
+ ],
+ [
+  "/saas-warehouse/busMemberBenefits/listByPage",
+  {
+   "page": {
+    "current": 1,
+    "size": 3
+   },
+   "startTime": "2023-01-01",
+   "endTime": "2023-12-31"
+  }
+ ],
+ [
+  "/saas-warehouse/busMemberBenefits/listByPage",
+  {
+   "page": {
+    "current": 1,
+    "size": 3
+   },
+   "startTime": "bad"
+  }
+ ],
+ [
+  "/saas-warehouse/busMemberConfig/list",
+  {}
+ ],
+ [
+  "/saas-warehouse/busMemberConfig/listByPage",
+  {}
+ ],
+ [
+  "/saas-warehouse/busMemberConfig/listByPage",
+  {
+   "page": {
+    "current": 1,
+    "size": 3
+   }
+  }
+ ],
+ [
+  "/saas-warehouse/busMemberConfig/listByPage",
+  {
+   "page": {
+    "current": 1,
+    "size": 3
+   },
+   "searchStr": ""
+  }
+ ],
+ [
+  "/saas-warehouse/busMemberConfig/getById",
+  {
+   "id": 1
+  }
+ ],
+ [
+  "/saas-warehouse/busMemberConfig/getById",
+  {
+   "id": 99977799
+  }
+ ],
+ [
+  "/saas-warehouse/busMemberConfig/deleteById",
+  {
+   "id": 99977799
+  }
+ ],
+ [
+  "/saas-warehouse/busMemberConfig/delBatch",
+  {
+   "ids": []
+  }
+ ],
+ [
+  "/saas-warehouse/busMemberConfig/importExcel",
+  {}
+ ],
+ [
+  "/saas-warehouse/busMemberConfig/listByPage",
+  {
+   "page": {
+    "current": 1,
+    "size": 3
+   },
+   "startTime": "2023-01-01",
+   "endTime": "2023-12-31"
+  }
+ ],
+ [
+  "/saas-warehouse/busMemberConfig/listByPage",
+  {
+   "page": {
+    "current": 1,
+    "size": 3
+   },
+   "startTime": "bad"
+  }
+ ],
+ [
+  "/saas-warehouse/busUserMember/selUserMemberInfo",
+  {}
+ ],
+ [
+  "/saas-warehouse/busUserMember/selUserMemberInfo",
+  {
+   "userId": 7625
+  }
+ ],
+ [
+  "/saas-warehouse/busScoreLog/exchangeRecords",
+  {
+   "page": {
+    "current": 1,
+    "size": 3
+   }
+  }
+ ],
+ [
+  "/saas-warehouse/busScoreLog/exchangeRecords",
+  {}
+ ],
+ [
+  "/saas-warehouse/busRedEnvelopeRecord/totoalMoney",
+  {}
+ ],
+ [
+  "/saas-warehouse/busUserSign/searchSignDate",
+  {}
+ ],
+ [
+  "/saas-warehouse/busUserSign/searchSignDate",
+  {
+   "userId": 7625
+  }
+ ],
+ [
+  "/saas-warehouse/busRedEnvelopeRecord/generateAmount",
+  {
+   "type": 5
+  }
+ ],
+ [
+  "/saas-warehouse/busRedEnvelopeRecord/receiveAmount",
+  {}
+ ]
+]

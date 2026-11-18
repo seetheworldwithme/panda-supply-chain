@@ -1,0 +1,1022 @@
+[
+ [
+  "/saas-warehouse/busTag/list",
+  {}
+ ],
+ [
+  "/saas-warehouse/busTag/list",
+  {
+   "remark1": "x"
+  }
+ ],
+ [
+  "/saas-warehouse/busTag/list",
+  {
+   "signName": 1
+  }
+ ],
+ [
+  "/saas-warehouse/busTag/listByPage",
+  {}
+ ],
+ [
+  "/saas-warehouse/busTag/listByPage",
+  {
+   "page": {
+    "current": 1,
+    "size": 3
+   }
+  }
+ ],
+ [
+  "/saas-warehouse/busTag/listByPage",
+  {
+   "page": {
+    "current": 1,
+    "size": 3
+   },
+   "searchStr": ""
+  }
+ ],
+ [
+  "/saas-warehouse/busTag/listByPage",
+  {
+   "page": {
+    "current": 2,
+    "size": 3
+   },
+   "searchStr": "标签"
+  }
+ ],
+ [
+  "/saas-warehouse/busTag/listByPage",
+  {
+   "page": {
+    "current": 1,
+    "size": 3
+   },
+   "signName": "0"
+  }
+ ],
+ [
+  "/saas-warehouse/busTag/listByPage",
+  {
+   "page": {
+    "current": 1,
+    "size": 3
+   },
+   "id": 1
+  }
+ ],
+ [
+  "/saas-warehouse/busTag/listByPage",
+  {
+   "page": {
+    "current": 1,
+    "size": 3
+   },
+   "signName": 123
+  }
+ ],
+ [
+  "/saas-warehouse/busTag/listByPage",
+  {
+   "page": {
+    "current": 1,
+    "size": 3
+   },
+   "id": "abc"
+  }
+ ],
+ [
+  "/saas-warehouse/busTag/getById",
+  {
+   "id": 5
+  }
+ ],
+ [
+  "/saas-warehouse/busTag/getById",
+  {
+   "id": 99977799
+  }
+ ],
+ [
+  "/saas-warehouse/busTag/getById",
+  {}
+ ],
+ [
+  "/saas-warehouse/busTag/deleteById",
+  {
+   "id": 99977799
+  }
+ ],
+ [
+  "/saas-warehouse/busTag/delBatch",
+  {
+   "ids": []
+  }
+ ],
+ [
+  "/saas-warehouse/busTag/delBatch",
+  {}
+ ],
+ [
+  "/saas-warehouse/busProTag/list",
+  {}
+ ],
+ [
+  "/saas-warehouse/busProTag/list",
+  {
+   "tagType": 1
+  }
+ ],
+ [
+  "/saas-warehouse/busProTag/list",
+  {
+   "proType": "1"
+  }
+ ],
+ [
+  "/saas-warehouse/busProTag/listByPage",
+  {}
+ ],
+ [
+  "/saas-warehouse/busProTag/listByPage",
+  {
+   "page": {
+    "current": 1,
+    "size": 3
+   }
+  }
+ ],
+ [
+  "/saas-warehouse/busProTag/listByPage",
+  {
+   "page": {
+    "current": 1,
+    "size": 3
+   },
+   "searchStr": ""
+  }
+ ],
+ [
+  "/saas-warehouse/busProTag/getById",
+  {
+   "id": 14
+  }
+ ],
+ [
+  "/saas-warehouse/busProTag/getById",
+  {
+   "id": 99977799
+  }
+ ],
+ [
+  "/saas-warehouse/busProTag/deleteById",
+  {
+   "id": 99977799
+  }
+ ],
+ [
+  "/saas-warehouse/busProTag/delBatch",
+  {
+   "ids": []
+  }
+ ],
+ [
+  "/saas-warehouse/busBigProdect/list",
+  {}
+ ],
+ [
+  "/saas-warehouse/busBigProdect/listByPage",
+  {}
+ ],
+ [
+  "/saas-warehouse/busBigProdect/listByPage",
+  {
+   "page": {
+    "current": 1,
+    "size": 3
+   }
+  }
+ ],
+ [
+  "/saas-warehouse/busBigProdect/listByPage",
+  {
+   "page": {
+    "current": 1,
+    "size": 3
+   },
+   "searchStr": ""
+  }
+ ],
+ [
+  "/saas-warehouse/busBigProdect/getById",
+  {
+   "id": 1
+  }
+ ],
+ [
+  "/saas-warehouse/busBigProdect/deleteById",
+  {
+   "id": 99977799
+  }
+ ],
+ [
+  "/saas-warehouse/busBigProdect/delBatch",
+  {
+   "ids": []
+  }
+ ],
+ [
+  "/saas-warehouse/busDelProduct/list",
+  {}
+ ],
+ [
+  "/saas-warehouse/busDelProduct/listByPage",
+  {}
+ ],
+ [
+  "/saas-warehouse/busDelProduct/listByPage",
+  {
+   "page": {
+    "current": 1,
+    "size": 3
+   }
+  }
+ ],
+ [
+  "/saas-warehouse/busDelProduct/listByPage",
+  {
+   "page": {
+    "current": 1,
+    "size": 3
+   },
+   "searchStr": ""
+  }
+ ],
+ [
+  "/saas-warehouse/busDelProduct/listByPage",
+  {
+   "page": {
+    "current": 1,
+    "size": 3
+   },
+   "startTime": "2023-01-01",
+   "endTime": "2023-12-31"
+  }
+ ],
+ [
+  "/saas-warehouse/busDelProduct/listByPage",
+  {
+   "page": {
+    "current": 1,
+    "size": 3
+   },
+   "startTime": "bad"
+  }
+ ],
+ [
+  "/saas-warehouse/busDelProduct/getById",
+  {
+   "id": 99977799
+  }
+ ],
+ [
+  "/saas-warehouse/busDelProduct/deleteById",
+  {
+   "id": 99977799
+  }
+ ],
+ [
+  "/saas-warehouse/busDelProduct/delBatch",
+  {
+   "ids": []
+  }
+ ],
+ [
+  "/saas-warehouse/busUserClickPro/list",
+  {}
+ ],
+ [
+  "/saas-warehouse/busUserClickPro/listByPage",
+  {}
+ ],
+ [
+  "/saas-warehouse/busUserClickPro/listByPage",
+  {
+   "page": {
+    "current": 1,
+    "size": 3
+   }
+  }
+ ],
+ [
+  "/saas-warehouse/busUserClickPro/listByPage",
+  {
+   "page": {
+    "current": 1,
+    "size": 3
+   },
+   "searchStr": ""
+  }
+ ],
+ [
+  "/saas-warehouse/busUserClickPro/getById",
+  {
+   "id": 6856
+  }
+ ],
+ [
+  "/saas-warehouse/busUserClickPro/deleteById",
+  {
+   "id": 99977799
+  }
+ ],
+ [
+  "/saas-warehouse/busUserClickPro/delBatch",
+  {
+   "ids": []
+  }
+ ],
+ [
+  "/saas-warehouse/busUserCare/list",
+  {}
+ ],
+ [
+  "/saas-warehouse/busUserCare/listByPage",
+  {}
+ ],
+ [
+  "/saas-warehouse/busUserCare/listByPage",
+  {
+   "page": {
+    "current": 1,
+    "size": 3
+   }
+  }
+ ],
+ [
+  "/saas-warehouse/busUserCare/listByPage",
+  {
+   "page": {
+    "current": 1,
+    "size": 3
+   },
+   "searchStr": ""
+  }
+ ],
+ [
+  "/saas-warehouse/busUserCare/getById",
+  {
+   "id": 58
+  }
+ ],
+ [
+  "/saas-warehouse/busUserCare/deleteById",
+  {
+   "id": 99977799
+  }
+ ],
+ [
+  "/saas-warehouse/busUserCare/delBatch",
+  {
+   "ids": []
+  }
+ ],
+ [
+  "/saas-warehouse/busProCollection/list",
+  {}
+ ],
+ [
+  "/saas-warehouse/busProCollection/listByPage",
+  {}
+ ],
+ [
+  "/saas-warehouse/busProCollection/listByPage",
+  {
+   "page": {
+    "current": 1,
+    "size": 3
+   }
+  }
+ ],
+ [
+  "/saas-warehouse/busProCollection/listByPage",
+  {
+   "page": {
+    "current": 1,
+    "size": 3
+   },
+   "searchStr": ""
+  }
+ ],
+ [
+  "/saas-warehouse/busProCollection/getById",
+  {
+   "id": 20
+  }
+ ],
+ [
+  "/saas-warehouse/busProCollection/deleteById",
+  {
+   "id": 99977799
+  }
+ ],
+ [
+  "/saas-warehouse/busProCollection/delBatch",
+  {
+   "ids": []
+  }
+ ],
+ [
+  "/saas-warehouse/busTag/importExcel",
+  {}
+ ],
+ [
+  "/saas-warehouse/busProTag/importExcel",
+  {}
+ ],
+ [
+  "/saas-warehouse/busBigProdect/importExcel",
+  {}
+ ],
+ [
+  "/saas-warehouse/busProCollection/listPro",
+  {}
+ ],
+ [
+  "/saas-warehouse/busProCollection/listPro",
+  {
+   "userId": 582
+  }
+ ],
+ [
+  "/saas-warehouse/busProCollection/proByPage",
+  {
+   "page": {
+    "current": 1,
+    "size": 3
+   },
+   "searchStr": ""
+  }
+ ],
+ [
+  "/saas-warehouse/busProCollection/proByPage",
+  {
+   "page": {
+    "current": 1,
+    "size": 3
+   }
+  }
+ ],
+ [
+  "/saas-warehouse/busProCollection/selLikeCount",
+  {
+   "elId": 3
+  }
+ ],
+ [
+  "/saas-warehouse/busProCollection/selLikeCount",
+  {}
+ ],
+ [
+  "/saas-warehouse/busProCollection/cancelCollection",
+  {}
+ ],
+ [
+  "/saas-warehouse/busProCollection/cancelCollection",
+  {
+   "proId": 99977799
+  }
+ ],
+ [
+  "/saas-warehouse/busProCollection/cancelCollection",
+  {
+   "elId": 99977799
+  }
+ ],
+ [
+  "/saas-warehouse/busBigProdect/allProductType",
+  {}
+ ],
+ [
+  "/saas-warehouse/busBigProdect/allProductType",
+  {
+   "parentId": 1
+  }
+ ],
+ [
+  "/saas-warehouse/busBigProdect/allProductType",
+  {
+   "fstProId": "0"
+  }
+ ],
+ [
+  "/saas-warehouse/busBigProdect/allProductType",
+  {
+   "searchType": 1
+  }
+ ],
+ [
+  "/saas-warehouse/busBigProdect/allThirdType",
+  {}
+ ],
+ [
+  "/saas-warehouse/busBigProdect/allThirdType",
+  {
+   "isGroupSearch": 1,
+   "groupId": 405
+  }
+ ],
+ [
+  "/saas-warehouse/busBigProdect/allThirdType",
+  {
+   "wareIdentity": 1
+  }
+ ],
+ [
+  "/saas-warehouse/busBigProdect/list",
+  {
+   "fstProId": "0"
+  }
+ ],
+ [
+  "/saas-warehouse/busBigProdect/list",
+  {
+   "parentId": ",0,"
+  }
+ ],
+ [
+  "/saas-warehouse/busBigProdect/list",
+  {
+   "searchType": 1
+  }
+ ],
+ [
+  "/saas-warehouse/busBigProdect/list",
+  {}
+ ],
+ [
+  "/saas-warehouse/busBigProdect/list",
+  {
+   "fst_pro_id": "0"
+  }
+ ],
+ [
+  "/saas-warehouse/busBigProdect/list",
+  {
+   "parent_id": "1"
+  }
+ ],
+ [
+  "/saas-warehouse/busBigProdect/allProductType",
+  {
+   "productName": "煤"
+  }
+ ],
+ [
+  "/saas-warehouse/busProCollection/listPro",
+  {
+   "searchStr": "1"
+  }
+ ],
+ [
+  "/saas-warehouse/busProLog/selBuserData",
+  {}
+ ],
+ [
+  "/saas-warehouse/busProLog/selBuserData",
+  {
+   "userId": 427
+  }
+ ],
+ [
+  "/saas-warehouse/busProLog/selBuserTeamData",
+  {}
+ ],
+ [
+  "/saas-warehouse/busProLog/selBuserTeamData",
+  {
+   "wareIdentity": 1
+  }
+ ],
+ [
+  "/saas-warehouse/busProLog/selBuserTeamData",
+  {
+   "startTime": "2023-01-01",
+   "endTime": "2023-12-31"
+  }
+ ],
+ [
+  "/saas-warehouse/busProLog/selProShare",
+  {}
+ ],
+ [
+  "/saas-warehouse/busProLog/selProShare",
+  {
+   "proId": 126
+  }
+ ],
+ [
+  "/saas-warehouse/busProLog/selProShare",
+  {
+   "page": {
+    "current": 1,
+    "size": 3
+   },
+   "proId": 126
+  }
+ ],
+ [
+  "/saas-warehouse/busProLog/selProShareTimes",
+  {
+   "proId": 126
+  }
+ ],
+ [
+  "/saas-warehouse/busProLog/selProShareTimes",
+  {}
+ ],
+ [
+  "/saas-warehouse/busProLog/selVisisted",
+  {}
+ ],
+ [
+  "/saas-warehouse/busProLog/selVisisted",
+  {
+   "userId": 427,
+   "startTime": "2023-01-01"
+  }
+ ],
+ [
+  "/saas-warehouse/busProLog/selCountByUser",
+  {
+   "operateObj": 4,
+   "operateType": 7
+  }
+ ],
+ [
+  "/saas-warehouse/busProLog/selCountByUser",
+  {}
+ ],
+ [
+  "/saas-warehouse/busProLog/selVisitedPop",
+  {
+   "page": {
+    "current": 1,
+    "size": 3
+   },
+   "searchStr": ""
+  }
+ ],
+ [
+  "/saas-warehouse/busProLog/selVisitedData",
+  {
+   "selType": 1,
+   "page": {
+    "current": 1,
+    "size": 3
+   }
+  }
+ ],
+ [
+  "/saas-warehouse/busProLog/selVisitedData",
+  {
+   "selType": 2,
+   "page": {
+    "current": 1,
+    "size": 3
+   }
+  }
+ ],
+ [
+  "/saas-warehouse/busProLog/selVisitedData",
+  {
+   "selType": 3,
+   "page": {
+    "current": 1,
+    "size": 3
+   }
+  }
+ ],
+ [
+  "/saas-warehouse/busProLog/selVisitedData",
+  {
+   "page": {
+    "current": 1,
+    "size": 3
+   }
+  }
+ ],
+ [
+  "/saas-warehouse/busProLog/selVisitedData",
+  {
+   "selType": 4
+  }
+ ],
+ [
+  "/saas-warehouse/busProLog/selCallData",
+  {
+   "userPhone": "13800000000",
+   "proId": 126
+  }
+ ],
+ [
+  "/saas-warehouse/busProLog/selCallData",
+  {
+   "userPhone": "13934568608"
+  }
+ ],
+ [
+  "/saas-warehouse/busProLog/listByPage",
+  {
+   "page": {
+    "current": 1,
+    "size": 2
+   },
+   "searchStr": ""
+  }
+ ],
+ [
+  "/saas-warehouse/busProduct/list",
+  {}
+ ],
+ [
+  "/saas-warehouse/busProduct/list",
+  {
+   "three_pro_id": "888"
+  }
+ ],
+ [
+  "/saas-warehouse/busProduct/list",
+  {
+   "three_pro_id": "999"
+  }
+ ],
+ [
+  "/saas-warehouse/busProduct/list",
+  {
+   "three_pro_id": 888
+  }
+ ],
+ [
+  "/saas-warehouse/busProduct/list",
+  {
+   "status": 1
+  }
+ ],
+ [
+  "/saas-warehouse/busProduct/buslist",
+  {}
+ ],
+ [
+  "/saas-warehouse/busProduct/warelist",
+  {}
+ ],
+ [
+  "/saas-warehouse/busProduct/warelist",
+  {
+   "fstProId": 1
+  }
+ ],
+ [
+  "/saas-warehouse/busProduct/selCnPro",
+  {
+   "page": {
+    "current": 1,
+    "size": 3
+   }
+  }
+ ],
+ [
+  "/saas-warehouse/busProduct/selNewPro",
+  {}
+ ],
+ [
+  "/saas-warehouse/busProduct/selNowNotice",
+  {}
+ ],
+ [
+  "/saas-warehouse/busProduct/selBasCount",
+  {}
+ ],
+ [
+  "/saas-warehouse/busProduct/selCheckPro",
+  {
+   "searchStr": ""
+  }
+ ],
+ [
+  "/saas-warehouse/busProduct/selCheckPro",
+  {
+   "searchStr": "原煤"
+  }
+ ],
+ [
+  "/saas-warehouse/busProduct/selCheckPro",
+  {
+   "status": 1,
+   "searchStr": ""
+  }
+ ],
+ [
+  "/saas-warehouse/busProduct/hisPrice",
+  {
+   "id": 126,
+   "hisPriceType": 3,
+   "priceType": 3
+  }
+ ],
+ [
+  "/saas-warehouse/busProduct/hisPrice",
+  {
+   "id": 126,
+   "hisPriceType": 1,
+   "priceType": 1
+  }
+ ],
+ [
+  "/saas-warehouse/busProduct/hisPrice",
+  {
+   "id": 126,
+   "hisPriceType": 2,
+   "priceType": 2
+  }
+ ],
+ [
+  "/saas-warehouse/busProduct/hisPrice",
+  {
+   "id": 126,
+   "hisPriceType": 9,
+   "priceType": 3
+  }
+ ],
+ [
+  "/saas-warehouse/busProduct/hisPrice",
+  {
+   "id": 126,
+   "hisPriceType": 3
+  }
+ ],
+ [
+  "/saas-warehouse/busProduct/hisPrice",
+  {
+   "id": 126,
+   "hisPriceType": 3,
+   "priceType": 9
+  }
+ ],
+ [
+  "/saas-warehouse/busProduct/hisPrice",
+  {
+   "id": 99977799,
+   "hisPriceType": 3,
+   "priceType": 3
+  }
+ ],
+ [
+  "/saas-warehouse/busProduct/hisPrice",
+  {
+   "hisPriceType": 3,
+   "priceType": 3
+  }
+ ],
+ [
+  "/saas-warehouse/busProduct/getById",
+  {
+   "id": 126
+  }
+ ],
+ [
+  "/saas-warehouse/busProduct/getById",
+  {
+   "id": 473
+  }
+ ],
+ [
+  "/saas-warehouse/busProduct/getById",
+  {
+   "id": 99977710
+  }
+ ],
+ [
+  "/saas-warehouse/busProduct/getById",
+  {
+   "id": 99977799
+  }
+ ],
+ [
+  "/saas-warehouse/busProduct/getById",
+  {
+   "id": 1254
+  }
+ ],
+ [
+  "/saas-warehouse/busProduct/listByPage",
+  {
+   "page": {
+    "current": 1,
+    "size": 3
+   },
+   "searchStr": "原煤"
+  }
+ ],
+ [
+  "/saas-warehouse/busProduct/listByPage",
+  {
+   "page": {
+    "current": 1,
+    "size": 3
+   },
+   "searchStr": ""
+  }
+ ],
+ [
+  "/saas-warehouse/busProduct/listByPage",
+  {
+   "page": {
+    "current": 1,
+    "size": 3
+   },
+   "searchStr": "公司"
+  }
+ ],
+ [
+  "/saas-warehouse/busProduct/listByPage",
+  {
+   "page": {
+    "current": 1,
+    "size": 3
+   },
+   "searchStr": "煤",
+   "threeProId": 9
+  }
+ ],
+ [
+  "/saas-warehouse/busProduct/listByPage",
+  {
+   "page": {
+    "current": 1,
+    "size": 3
+   },
+   "searchStr": "原煤",
+   "fstProId": 1,
+   "warehouseType": 0
+  }
+ ],
+ [
+  "/saas-warehouse/busProduct/listByPage",
+  {
+   "page": {
+    "current": 1,
+    "size": 2
+   },
+   "searchStr": "原煤",
+   "isRealCheck": 1
+  }
+ ],
+ [
+  "/saas-warehouse/busProduct/listByPage",
+  {
+   "page": {
+    "current": 1,
+    "size": 2
+   },
+   "searchStr": "原煤",
+   "provinceCode": "140000"
+  }
+ ],
+ [
+  "/saas-warehouse/busProduct/listByPage",
+  {
+   "page": {
+    "current": 1,
+    "size": 2
+   },
+   "searchStr": "原煤",
+   "isShared": true
+  }
+ ],
+ [
+  "/saas-warehouse/busProduct/listByPage",
+  {
+   "page": {
+    "current": 1,
+    "size": 2
+   },
+   "searchStr": "原煤",
+   "isGroupSearch": false
+  }
+ ],
+ [
+  "/saas-warehouse/busProduct/listByPage",
+  {}
+ ],
+ [
+  "/saas-warehouse/busProduct/listByPage",
+  {
+   "searchStr": "原煤"
+  }
+ ]
+]

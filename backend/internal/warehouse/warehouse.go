@@ -26,6 +26,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/seetheworldwithme/panda-supply-chain/backend/internal/auth"
 	"github.com/seetheworldwithme/panda-supply-chain/backend/internal/db"
@@ -42,7 +43,9 @@ func NewService(database *db.DB) *Service { return &Service{DB: database} }
 
 func bodyMap(r *http.Request) map[string]any {
 	var m map[string]any
-	_ = json.NewDecoder(r.Body).Decode(&m)
+	decoder := json.NewDecoder(r.Body)
+	decoder.UseNumber()
+	_ = decoder.Decode(&m)
 	if m == nil {
 		return map[string]any{}
 	}
@@ -204,18 +207,19 @@ func jsonNumberInt64(n int64) json.Number { return json.Number(strconv.FormatInt
 // ── Map 查询整形(SELECT * 进 Map 的 MyBatis 行)──
 // 列类型驱动:tinyint(1)→bool、decimal→Double 最短表示(整数补 .0,Java Double.toString)、
 // datetime→ISO T、date→日期、整数→数字、其余字符串。information_schema 懒加载缓存。
-var mapTypeCache = syncMapOf{} // table → []colType
+var mapTypeCache sync.Map
 
 type colType struct{ name, dataType, columnType string }
 
-type syncMapOf struct{ m map[string][]colType }
+type schemaTable struct {
+	db    *sql.DB
+	table string
+}
 
-func (s *syncMapOf) load(d *sql.DB, table string) []colType {
-	if s.m == nil {
-		s.m = map[string][]colType{}
-	}
-	if v, ok := s.m[table]; ok {
-		return v
+func loadMapTypes(d *sql.DB, table string) []colType {
+	key := schemaTable{db: d, table: table}
+	if cached, ok := mapTypeCache.Load(key); ok {
+		return cached.([]colType)
 	}
 	rows, err := d.Query("SELECT column_name, data_type, column_type FROM information_schema.columns WHERE table_schema=DATABASE() AND table_name=? ORDER BY ordinal_position", table)
 	if err != nil {
@@ -225,10 +229,14 @@ func (s *syncMapOf) load(d *sql.DB, table string) []colType {
 	var out []colType
 	for rows.Next() {
 		var c colType
-		_ = rows.Scan(&c.name, &c.dataType, &c.columnType)
+		if err := rows.Scan(&c.name, &c.dataType, &c.columnType); err != nil {
+			return nil
+		}
 		out = append(out, c)
 	}
-	s.m[table] = out
+	if rows.Err() == nil && len(out) > 0 {
+		mapTypeCache.Store(key, out)
+	}
 	return out
 }
 
@@ -267,7 +275,7 @@ func mapShape(row map[string]any, cols []colType) map[string]any {
 }
 
 func mapShapeRows(d *sql.DB, table string, rows []map[string]any) []map[string]any {
-	cols := mapTypeCache.load(d, table)
+	cols := loadMapTypes(d, table)
 	out := make([]map[string]any, 0, len(rows))
 	for _, r := range rows {
 		out = append(out, mapShape(r, cols))

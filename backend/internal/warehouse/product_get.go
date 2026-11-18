@@ -198,7 +198,7 @@ func (s *Service) bpGetById(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if len(etc) > 0 {
-			p["etcInfo"] = mapShape(etc[0], mapTypeCache.load(d, "chain_basic_enterprise"))
+			p["etcInfo"] = mapShape(etc[0], loadMapTypes(d, "chain_basic_enterprise"))
 		} else {
 			p["etcInfo"] = nil
 		}
@@ -210,7 +210,7 @@ func (s *Service) bpGetById(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if len(g) > 0 {
-			p["groupInfo"] = mapShape(g[0], mapTypeCache.load(d, "chain_basic_enterprise"))
+			p["groupInfo"] = mapShape(g[0], loadMapTypes(d, "chain_basic_enterprise"))
 		} else {
 			p["groupInfo"] = nil
 		}
@@ -227,7 +227,7 @@ func (s *Service) bpGetById(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			if len(g) > 0 {
-				p["groupInfo"] = mapShape(g[0], mapTypeCache.load(d, "chain_basic_enterprise"))
+				p["groupInfo"] = mapShape(g[0], loadMapTypes(d, "chain_basic_enterprise"))
 			}
 		}
 	}

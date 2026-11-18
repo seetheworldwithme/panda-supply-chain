@@ -1,12 +1,14 @@
 // member2.go 批2 会员/积分/红包 bespoke 端点(selUserMemberInfo/exchangeRecords/
 // totoalMoney/searchSignDate/signIn/generateAmount/receiveAmount)。
-// 红包 generateAmount/receiveAmount:本地 nacos 无 openRedAmount 配置 → Java NPE 恒 999
-// (8765 实测),Go 照抄恒 999;真实配置上线时的行为登记差异交徐先生。
+// 本地 Java 缺少 openRedAmount。Go 通过 PANDA_WAREHOUSE_RED_ENABLED 提供相同开关。
 package warehouse
 
 import (
 	"database/sql"
+	"math/rand/v2"
 	"net/http"
+	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -196,14 +198,68 @@ func (s *Service) rrTotoalMoney(w http.ResponseWriter, r *http.Request) {
 	platform.Success(w, jsonNumberInt64(v))
 }
 
-// rrGenerateAmount:本地 nacos 无 openRedAmount → NPE 恒 999(8765 实测;真实配置行为登记差异)
-func (s *Service) rrGenerateAmount(w http.ResponseWriter, r *http.Request) {
-	platform.Unknown(w)
+func redEnvelopeEnabled() (bool, bool) {
+	value, err := strconv.Atoi(os.Getenv("PANDA_WAREHOUSE_RED_ENABLED"))
+	return value != 0, err == nil
 }
 
-// rrReceiveAmount:同上恒 999
+func (s *Service) rrGenerateAmount(w http.ResponseWriter, r *http.Request) {
+	enabled, configured := redEnvelopeEnabled()
+	body := bodyMap(r)
+	typeValue, valid := bindVal("i", body["receiveType"])
+	if !configured || !entBusRedEnvelopeRecord.validateBody(body) {
+		platform.Unknown(w)
+		return
+	}
+	if !enabled {
+		platform.Fail(w, 603, "")
+		return
+	}
+	if !valid || typeValue == nil || currentUser(r).UserID == 0 {
+		platform.Unknown(w)
+		return
+	}
+	if num(typeValue) == 5 {
+		platform.Fail(w, 602, "今日已达领取上限")
+		return
+	}
+	d := s.pick(r)
+	ranges, err := queryRows(d, "SELECT min_amount, max_amount FROM bus_red_envelope_range WHERE receive_type=? LIMIT 2", typeValue)
+	if err != nil || len(ranges) != 1 || ranges[0]["min_amount"] == nil || ranges[0]["max_amount"] == nil {
+		platform.Unknown(w)
+		return
+	}
+	low, high := int64(num(ranges[0]["min_amount"])), int64(num(ranges[0]["max_amount"]))
+	if low < -2147483648 || high > 2147483647 || high < low || high-low >= 2147483647 {
+		platform.Unknown(w)
+		return
+	}
+	now := time.Now().Format("2006-01-02 15:04:05")
+	amount := low + rand.Int64N(high-low+1)
+	vals := map[string]any{"user_id": currentUser(r).UserID, "receive_type": typeValue, "create_amount": amount, "is_write_off": false, "create_time": now, "update_time": now}
+	id, err := platform.Insert(d, "bus_red_money_clog", vals)
+	if err != nil {
+		platform.Unknown(w)
+		return
+	}
+	vals["id"] = id
+	result := platform.EntityEcho(platform.Camelize(vals), entBusRedMoneyClog.keys, map[string]any{"receiveType": jsonNumberInt64(int64(num(typeValue)))})
+	platform.Success(w, result)
+}
+
+// Withdrawal writes only after a successful merchant transfer. The vendor
+// integration still needs a configured and verified transfer adapter.
 func (s *Service) rrReceiveAmount(w http.ResponseWriter, r *http.Request) {
-	platform.Unknown(w)
+	enabled, configured := redEnvelopeEnabled()
+	if !configured || !entBusRedEnvelopeRecord.validateBody(bodyMap(r)) {
+		platform.Unknown(w)
+		return
+	}
+	if !enabled {
+		platform.Fail(w, 603, "活动已结束")
+		return
+	}
+	platform.Fail(w, 603, "")
 }
 
 // usSearchSignDate = searchSignDate:当月逐日签到图(已签 "+N"/过去未签 0/未来与今日 "签")
