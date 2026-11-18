@@ -59,6 +59,7 @@ func Register(mux *http.ServeMux, s *Service) {
 	r("/chainAuthMenu/delBatch", s.menuDelBatch)
 	r("/chainAuthMenu/selAuthys", s.menuSelAuthys)
 	// ChainAuthUserController(用户)
+	r("/chainAuthUser/list", s.warehouseBrokerList)
 	r("/chainAuthUser/listByPage", s.userListByPage)
 	r("/chainAuthUser/supList", s.userSupList)
 	r("/chainAuthUser/add", s.userAdd)

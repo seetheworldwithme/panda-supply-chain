@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/seetheworldwithme/panda-supply-chain/backend/internal/auth"
+	"github.com/seetheworldwithme/panda-supply-chain/backend/internal/commonrest"
 	"github.com/seetheworldwithme/panda-supply-chain/backend/internal/platform"
 )
 
@@ -337,11 +338,11 @@ func (s *Service) countLogistArea(w http.ResponseWriter, r *http.Request) {
 	out := []map[string]any{}
 	for _, row := range ms {
 		out = append(out, map[string]any{
-			"loadingArea":    bts(row["loadingArea"]),
-			"loadingLnglog":  bts(row["loadingLnglog"]),
-			"unloadingArea":  bts(row["unloadingArea"]),
+			"loadingArea":     bts(row["loadingArea"]),
+			"loadingLnglog":   bts(row["loadingLnglog"]),
+			"unloadingArea":   bts(row["unloadingArea"]),
 			"unloadingLnglog": bts(row["unloadingLnglog"]),
-			"logCount":       num(row["logCount"]),
+			"logCount":        num(row["logCount"]),
 		})
 	}
 	platform.Success(w, out)
@@ -386,27 +387,7 @@ func (s *Service) countPriceTrend(w http.ResponseWriter, r *http.Request) {
 // Java ChainBasicEnterpriseServiceImpl.ptlist:201 → mapper ptlist:40(is_chain_etc=1 且备案号非空)。
 // 前端仪表盘只传 {countyCode, searchStr},getSql 对 countyCode 生成无 % 的 like(等值)
 func (s *Service) ptlist(w http.ResponseWriter, r *http.Request) {
-	m := bodyMap(r)
-	d := s.pick(r)
-	q := "SELECT * FROM chain_basic_enterprise WHERE 1=1"
-	var args []any
-	if c := str(m, "countyCode"); c != "" {
-		q += " AND county_code LIKE ?"
-		args = append(args, c)
-	}
-	q += " AND CONCAT(IFNULL(enterprise_name, ''), IFNULL(credit_code, ''), IFNULL(address, ''), IFNULL(legal_person, ''), IFNULL(controller_person, ''), IFNULL(contacts_person, ''), IFNULL(enterprise_type, ''), IFNULL(type, ''), IFNULL(reg_time, ''), IFNULL(rate_number, ''), IFNULL(sh_time, ''), IFNULL(phone, ''), IFNULL(leg_identity, ''), IFNULL(reg_money, ''), IFNULL(reg_adress, ''), IFNULL(businesser, ''), IFNULL(county_name, ''), IFNULL(boss, '')) LIKE ?"
-	args = append(args, "%"+str(m, "searchStr")+"%")
-	q += " AND is_chain_etc=1 AND rate_number IS NOT NULL AND rate_number!='' ORDER BY create_time DESC"
-	rows, err := d.Query(q, args...)
-	if err != nil {
-		platform.Unknown(w)
-		return
-	}
-	ms, _ := scanMaps(rows)
-	if ms == nil {
-		ms = []map[string]any{}
-	}
-	platform.Success(w, ms)
+	commonrest.NewService(s.DB).EnterpriseList(w, r)
 }
 
 // entSelectCount POST /saas-common/chainBasicEnterprise/selectCount 企业数量(filter=true)。

@@ -475,3 +475,42 @@ func (s *Service) selUserRoles(w http.ResponseWriter, r *http.Request) {
 	}
 	platform.Success(w, out)
 }
+
+// warehouseBrokerList serves the supply page's broker selectors. The Java
+// list maps whole user records; the selectors only need these three columns.
+func (s *Service) warehouseBrokerList(w http.ResponseWriter, r *http.Request) {
+	user := auth.From(r.Context())
+	if user.UserID == 0 {
+		platform.NotAuth(w)
+		return
+	}
+	var allowed bool
+	err := s.DB.Chain.QueryRowContext(r.Context(), "SELECT EXISTS(SELECT 1 FROM chain_auth_user WHERE id=? AND account_type IN (2,5))", user.UserID).Scan(&allowed)
+	if err != nil {
+		platform.Unknown(w)
+		return
+	}
+	if !allowed {
+		platform.NotAuth(w)
+		return
+	}
+	body := bodyMap(r)
+	if len(body) != 1 || str(body, "ware_identity") != "8" {
+		platform.Fail(w, 602, "仅支持查询经纪人列表")
+		return
+	}
+	rows, err := s.DB.Chain.QueryContext(r.Context(), "SELECT id, username, phone FROM chain_auth_user WHERE ware_identity = ? ORDER BY id", 8)
+	if err != nil {
+		platform.Unknown(w)
+		return
+	}
+	brokers, err := platform.ScanMaps(rows)
+	if err != nil {
+		platform.Unknown(w)
+		return
+	}
+	if brokers == nil {
+		brokers = []map[string]any{}
+	}
+	platform.Success(w, brokers)
+}

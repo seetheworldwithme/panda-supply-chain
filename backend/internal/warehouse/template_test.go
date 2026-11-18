@@ -2,6 +2,7 @@ package warehouse
 
 import (
 	"encoding/json"
+	"github.com/seetheworldwithme/panda-supply-chain/backend/internal/platform"
 	"net/http/httptest"
 	"strings"
 	"testing"
@@ -49,5 +50,13 @@ func TestRequestDecimalRetainsScaleAndLargeInteger(t *testing.T) {
 func TestSQLLiteralPreservesJSONNumber(t *testing.T) {
 	if got := javaNumStr(json.Number("3.50")); got != "3.50" {
 		t.Fatalf("SQL literal=%q", got)
+	}
+}
+
+func TestSharedStringsKeepRichTextRunsInOneCell(t *testing.T) {
+	data := `<sst><si><r><t>*</t></r><r><t>地区</t></r></si><si/><si><t>太原市</t></si></sst>`
+	got := platform.ExcelSharedStrings(data)
+	if len(got) != 3 || got[0] != "*地区" || got[1] != "" || got[2] != "太原市" {
+		t.Fatalf("shared string indexes shifted: %q", got)
 	}
 }

@@ -9,21 +9,22 @@
 // 关键怪癖:hyqc-core 4 参重载 readExcel(cls,file,systemCode,sheetIdx) 把 systemCode
 // 丢成 "" 再委托 5 参——warehouse 模板导入实际从不注入编号,selectSystemCode 只是
 // 先跑一次(表无 system_code 列时 SQL 报错 → 恒 999,bus_* 表全部无该列,已实测)。
-// ponytail: .xls(HSSF 二进制)不支持——Go 版 .xls 走"上传文件格式不正确"失败语义,
-// 需要 .xls 时引入三方库再补;表头包含匹配用声明序近似 Java HashMap 迭代序(同标题多命中场景)。
+// Binary XLS is normalized by LibreOffice before the shared OOXML reader.
+
 package warehouse
 
 import (
 	"archive/zip"
 	"crypto/rand"
+	"database/sql"
 	"encoding/json"
 	"encoding/xml"
-	"database/sql"
 	"fmt"
 	"io"
 	"mime/multipart"
 	"net/http"
 	"net/url"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -289,7 +290,8 @@ func readExcelFile(fh *multipart.FileHeader, fields []impField, systemCode strin
 		irt.ErrInfos = []string{"上传文件为空"}
 		return irt
 	}
-	if !strings.HasSuffix(strings.ToLower(fh.Filename), ".xlsx") {
+	ext := strings.ToLower(filepath.Ext(fh.Filename))
+	if ext != ".xlsx" && ext != ".xls" {
 		irt.ErrInfos = []string{"上传文件格式不正确"}
 		return irt
 	}
@@ -299,6 +301,15 @@ func readExcelFile(fh *multipart.FileHeader, fields []impField, systemCode strin
 		return irt
 	}
 	defer f.Close()
+	if ext == ".xls" {
+		converted, cleanup, err := platform.OpenLegacyExcel(f)
+		if err != nil {
+			irt.ErrInfos = []string{"解析 Excel 异常，请检查文件格式和内容"}
+			return irt
+		}
+		defer cleanup()
+		f = converted
+	}
 	xl, perr := parseXlsx(f)
 	if perr != nil {
 		irt.ErrInfos = []string{"解析 Excel 异常，请检查文件格式和内容"}
@@ -605,7 +616,7 @@ func parseXlsx(f multipart.File) (*xlsx, error) {
 		case zf.Name == "xl/sharedStrings.xml":
 			data, err := readZip(zf)
 			if err == nil {
-				out.shared = parseSharedStrings(string(data))
+				out.shared = platform.ExcelSharedStrings(string(data))
 			}
 		case zf.Name == "xl/_rels/workbook.xml.rels":
 			data, err := readZip(zf)
@@ -656,36 +667,6 @@ func readZip(zf *zip.File) ([]byte, error) {
 	}
 	defer rc.Close()
 	return io.ReadAll(rc)
-}
-
-func parseSharedStrings(data string) []string {
-	var out []string
-	dec := xml.NewDecoder(strings.NewReader(data))
-	inT := false
-	cur := strings.Builder{}
-	for {
-		tok, err := dec.Token()
-		if err != nil {
-			break
-		}
-		switch t := tok.(type) {
-		case xml.StartElement:
-			if t.Name.Local == "t" {
-				inT = true
-				cur.Reset()
-			}
-		case xml.CharData:
-			if inT {
-				cur.Write(t)
-			}
-		case xml.EndElement:
-			if t.Name.Local == "t" {
-				out = append(out, cur.String())
-				inT = false
-			}
-		}
-	}
-	return out
 }
 
 func parseRels(data string) map[string]string {
@@ -963,4 +944,3 @@ func excelDateToDay(db float64) string {
 	sec := int64((db - 25569) * 86400)
 	return time.Unix(sec, 0).UTC().Format("2006-01-02")
 }
-

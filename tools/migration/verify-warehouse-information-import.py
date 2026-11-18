@@ -1,6 +1,20 @@
 from pathlib import Path
 exec(Path(__file__).with_name('verify-warehouse-information.py').read_text().split('def main():')[0])
 from xml.sax.saxutils import escape
+from tempfile import TemporaryDirectory
+
+def legacy_workbook(data):
+ with TemporaryDirectory() as work:
+  folder = Path(work)
+  source = folder / 'fixture.xlsx'
+  source.write_bytes(data)
+  subprocess.run([
+   os.environ.get('PANDA_SOFFICE_BIN', 'soffice'),
+   '-env:UserInstallation=' + (folder / 'profile').as_uri(),
+   '--headless', '--convert-to', 'xls:MS Excel 97', '--outdir', work, str(source),
+  ], check=True, capture_output=True, timeout=30)
+  return (folder / 'fixture.xls').read_bytes()
+
 
 def workbook(blob,values):
  z=zipfile.ZipFile(io.BytesIO(blob));ns={'m':'http://schemas.openxmlformats.org/spreadsheetml/2006/main'}
@@ -24,8 +38,12 @@ for ix,domain in enumerate(['Coal','Coking','Railway','Washing']):
  assert sql(f'SELECT COUNT(*) FROM {table} WHERE id={id}')=='0'
  template=req(8765,base+'/generateAndDownloadExcel',method='GET')[1]
  file=workbook(template,{'自增id':id,'*地区':'太原市','*县城':'古交市','地区':'太原市','县城':'古交市','县市':'古交市','市区':'太原市','县区':'古交市','所属市':'太原市','所属县市':'古交市'})
+ ext = 'xlsx'
+ if os.getenv('MIGRATION_XLS') == '1':
+  file = legacy_workbook(file)
+  ext = 'xls'
  bound='warehouse-migration-fixture'
- body=(f'--{bound}\r\nContent-Disposition: form-data; name="file"; filename="fixture.xlsx"\r\nContent-Type: application/octet-stream\r\n\r\n').encode()+file+f'\r\n--{bound}--\r\n'.encode()
+ body=(f'--{bound}\r\nContent-Disposition: form-data; name="file"; filename="fixture.{ext}"\r\nContent-Type: application/octet-stream\r\n\r\n').encode()+file+f'\r\n--{bound}--\r\n'.encode()
  snapshots=[]
  try:
   for port in [8765,8799]:

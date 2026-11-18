@@ -8,9 +8,10 @@ import (
 	"net/http"
 
 	"github.com/seetheworldwithme/panda-supply-chain/backend/internal/auth"
-	"github.com/seetheworldwithme/panda-supply-chain/backend/internal/bill"
 	"github.com/seetheworldwithme/panda-supply-chain/backend/internal/authadmin"
+	"github.com/seetheworldwithme/panda-supply-chain/backend/internal/bill"
 	"github.com/seetheworldwithme/panda-supply-chain/backend/internal/capital"
+	"github.com/seetheworldwithme/panda-supply-chain/backend/internal/commonrest"
 	"github.com/seetheworldwithme/panda-supply-chain/backend/internal/config"
 	"github.com/seetheworldwithme/panda-supply-chain/backend/internal/contract"
 	"github.com/seetheworldwithme/panda-supply-chain/backend/internal/dashboard"
@@ -78,6 +79,7 @@ func main() {
 	// ── saas-warehouse 全服务 + saas-common 剩余(六期掌上煤炭运营) ──
 	whSvc := warehouse.NewService(database)
 	warehouse.Register(mux, whSvc)
+	commonrest.Register(mux, commonrest.NewService(database))
 
 	// 健康检查
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, r *http.Request) {
