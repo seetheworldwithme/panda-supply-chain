@@ -1,0 +1,1726 @@
+[
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthAuthenLog/list",
+      "body": {
+        "id": 99977799
+      }
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "58259bea0f55b8b20f7ddfeace604cd064eb0d1682c48a4cbd4127f1e3f38ee2",
+    "go_sha256": "0e715b23131ecfe43558e46a16207372f19efec814815fd7ec810e534ad31fde",
+    "java_code": "200",
+    "go_code": "200"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthAuthenLog/list",
+      "body": {
+        "id": 1
+      }
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "0e2c3e399e33a21bd804eaef32f430515cb30eb907175631159a0d0991ff1735",
+    "go_sha256": "ae7093c7344c1b23323bfe0e071dc8219ac59f1bac83be0e3e90c272a3e08a3e",
+    "java_code": "200",
+    "go_code": "200"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthAuthenLog/listByPage",
+      "body": {}
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "58259bea0f55b8b20f7ddfeace604cd064eb0d1682c48a4cbd4127f1e3f38ee2",
+    "go_sha256": "0e715b23131ecfe43558e46a16207372f19efec814815fd7ec810e534ad31fde",
+    "java_code": "200",
+    "go_code": "200"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthAuthenLog/listByPage",
+      "body": {
+        "searchStr": "",
+        "page": {
+          "current": 1,
+          "size": 3
+        }
+      }
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "ce51587ffd12638fd3107a64ffe01801f35aac1ce47d8bf07c90c5fab47b1e1e",
+    "go_sha256": "cd41f8eea17e1b7b88ebf7c6a4fc481e8c2e54ee769a50b3a0fa19b7e9c2cf14",
+    "java_code": "200",
+    "go_code": "200"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthAuthenLog/listByPage",
+      "body": {
+        "searchStr": "1",
+        "page": {
+          "current": 1,
+          "size": 3
+        }
+      }
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "cfb9e9202a1ead17f9f861f835aa16b92c553d2753fb0664da0b57a7e67c0391",
+    "go_sha256": "c00211cfb70a5abd11e58860cdc86a5d78c28f303a8e24d562a40dc4261dfaec",
+    "java_code": "200",
+    "go_code": "200"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthAuthenLog/getById",
+      "body": {
+        "id": 99977799
+      }
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 404,
+    "differences": [
+      "HTTP:status",
+      "$raw:bytes",
+      "HTTP:content-type"
+    ],
+    "java_sha256": "937113b93a4cdf1ba08597e1cadbe5b0d8f0b1760072ef1d41e48c1a23fba252",
+    "go_sha256": "b16e15764b8bc06c5c3f9f19bc8b99fa48e7894aa5a6ccdad65da49bbf564793",
+    "java_code": "200"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthAuthenLog/getById",
+      "body": {
+        "id": 1
+      }
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 404,
+    "differences": [
+      "HTTP:status",
+      "$raw:bytes",
+      "HTTP:content-type"
+    ],
+    "java_sha256": "591965387ec33b055b8ec8771d8afab3dc176608cc531580af82f0dab0151baf",
+    "go_sha256": "b16e15764b8bc06c5c3f9f19bc8b99fa48e7894aa5a6ccdad65da49bbf564793",
+    "java_code": "200"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthAuthenLog/getById",
+      "body": {}
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 404,
+    "differences": [
+      "HTTP:status",
+      "$raw:bytes",
+      "HTTP:content-type"
+    ],
+    "java_sha256": "937113b93a4cdf1ba08597e1cadbe5b0d8f0b1760072ef1d41e48c1a23fba252",
+    "go_sha256": "b16e15764b8bc06c5c3f9f19bc8b99fa48e7894aa5a6ccdad65da49bbf564793",
+    "java_code": "200"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthAuthenLog/exportExcel",
+      "body": {}
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 500,
+    "differences": [
+      "HTTP:status",
+      "$raw:bytes",
+      "HTTP:content-type"
+    ],
+    "java_sha256": "28f037118b4a693565a0c361e5e5a2fe80e092ab6e42b5dcbf90119fa8aa81ed",
+    "go_sha256": "109938781bce6b05f2297d22de539720eb56db8c17cc5b94e82926c80662c9dd",
+    "go_code": "999"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthAuthority/list",
+      "body": {
+        "id": 99977799
+      }
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "58259bea0f55b8b20f7ddfeace604cd064eb0d1682c48a4cbd4127f1e3f38ee2",
+    "go_sha256": "0e715b23131ecfe43558e46a16207372f19efec814815fd7ec810e534ad31fde",
+    "java_code": "200",
+    "go_code": "200"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthAuthority/list",
+      "body": {
+        "id": 1
+      }
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "58259bea0f55b8b20f7ddfeace604cd064eb0d1682c48a4cbd4127f1e3f38ee2",
+    "go_sha256": "0e715b23131ecfe43558e46a16207372f19efec814815fd7ec810e534ad31fde",
+    "java_code": "200",
+    "go_code": "200"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthAuthority/listByPage",
+      "body": {}
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 500,
+    "go_status": 500,
+    "differences": [],
+    "java_sha256": "11e236e030dff9fd7f6ee5653e67601f24a1197c419dec93cbb40e3da90a808e",
+    "go_sha256": "109938781bce6b05f2297d22de539720eb56db8c17cc5b94e82926c80662c9dd",
+    "java_code": "999",
+    "go_code": "999"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthAuthority/listByPage",
+      "body": {
+        "searchStr": "",
+        "page": {
+          "current": 1,
+          "size": 3
+        }
+      }
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "29f612f48b6f8b7a767be1b1b425340bee87cf62191a7b3693c7c81d29da2724",
+    "go_sha256": "03510cefdc3cf2482df05212f870e3019e9df0fb12f683b6bf5b1c06b3647871",
+    "java_code": "200",
+    "go_code": "200"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthAuthority/listByPage",
+      "body": {
+        "searchStr": "1",
+        "page": {
+          "current": 1,
+          "size": 3
+        }
+      }
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "36f9eb68ec9866399dd9dfd85b5aef55ab7cc9e496c3bb043f669ad67906dd9c",
+    "go_sha256": "f6d689b16224d8d9f876e3b5db1a1ca0b7a5d0ec657b41f5a2903fd7327841c5",
+    "java_code": "200",
+    "go_code": "200"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthAuthority/getById",
+      "body": {
+        "id": 99977799
+      }
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "937113b93a4cdf1ba08597e1cadbe5b0d8f0b1760072ef1d41e48c1a23fba252",
+    "go_sha256": "da0d3bd3738482336f2f98682a9a3364bf83ba7b890ba7ea3ac797f2fb9e1a85",
+    "java_code": "200",
+    "go_code": "200"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthAuthority/getById",
+      "body": {
+        "id": 1
+      }
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "937113b93a4cdf1ba08597e1cadbe5b0d8f0b1760072ef1d41e48c1a23fba252",
+    "go_sha256": "da0d3bd3738482336f2f98682a9a3364bf83ba7b890ba7ea3ac797f2fb9e1a85",
+    "java_code": "200",
+    "go_code": "200"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthAuthority/getById",
+      "body": {}
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "937113b93a4cdf1ba08597e1cadbe5b0d8f0b1760072ef1d41e48c1a23fba252",
+    "go_sha256": "da0d3bd3738482336f2f98682a9a3364bf83ba7b890ba7ea3ac797f2fb9e1a85",
+    "java_code": "200",
+    "go_code": "200"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthAuthority/exportExcel",
+      "body": {}
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 500,
+    "differences": [
+      "HTTP:status",
+      "$raw:bytes",
+      "HTTP:content-type"
+    ],
+    "java_sha256": "aeb8597e4b18fdaf1bf7d410502ed441db556357f91aebd4f02eed69ec5de869",
+    "go_sha256": "109938781bce6b05f2297d22de539720eb56db8c17cc5b94e82926c80662c9dd",
+    "go_code": "999"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthAuthorityRole/list",
+      "body": {
+        "id": 99977799
+      }
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "58259bea0f55b8b20f7ddfeace604cd064eb0d1682c48a4cbd4127f1e3f38ee2",
+    "go_sha256": "0e715b23131ecfe43558e46a16207372f19efec814815fd7ec810e534ad31fde",
+    "java_code": "200",
+    "go_code": "200"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthAuthorityRole/list",
+      "body": {
+        "id": 1
+      }
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "58259bea0f55b8b20f7ddfeace604cd064eb0d1682c48a4cbd4127f1e3f38ee2",
+    "go_sha256": "0e715b23131ecfe43558e46a16207372f19efec814815fd7ec810e534ad31fde",
+    "java_code": "200",
+    "go_code": "200"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthAuthorityRole/listByPage",
+      "body": {}
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 500,
+    "go_status": 500,
+    "differences": [],
+    "java_sha256": "11e236e030dff9fd7f6ee5653e67601f24a1197c419dec93cbb40e3da90a808e",
+    "go_sha256": "109938781bce6b05f2297d22de539720eb56db8c17cc5b94e82926c80662c9dd",
+    "java_code": "999",
+    "go_code": "999"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthAuthorityRole/listByPage",
+      "body": {
+        "searchStr": "",
+        "page": {
+          "current": 1,
+          "size": 3
+        }
+      }
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "db28a2c3faa5c3d1b1c9bb899bc19ca641edc72a206c1ea5455d4d9a8936d3e2",
+    "go_sha256": "426d418eb7af6063c3ec6b5aa5d5e02cd27e5562590bf33f3538d08cc325c05b",
+    "java_code": "200",
+    "go_code": "200"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthAuthorityRole/listByPage",
+      "body": {
+        "searchStr": "1",
+        "page": {
+          "current": 1,
+          "size": 3
+        }
+      }
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "f76320381c2290b059135e6c52f27d38e99f4c7ad594651f9c62ffd34bdd9433",
+    "go_sha256": "e111a3b7360c37a634bb35c9799bc6081a9eec1d931ac546a25ad40ad7a8787a",
+    "java_code": "200",
+    "go_code": "200"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthAuthorityRole/getById",
+      "body": {
+        "id": 99977799
+      }
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "937113b93a4cdf1ba08597e1cadbe5b0d8f0b1760072ef1d41e48c1a23fba252",
+    "go_sha256": "da0d3bd3738482336f2f98682a9a3364bf83ba7b890ba7ea3ac797f2fb9e1a85",
+    "java_code": "200",
+    "go_code": "200"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthAuthorityRole/getById",
+      "body": {
+        "id": 1
+      }
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "937113b93a4cdf1ba08597e1cadbe5b0d8f0b1760072ef1d41e48c1a23fba252",
+    "go_sha256": "da0d3bd3738482336f2f98682a9a3364bf83ba7b890ba7ea3ac797f2fb9e1a85",
+    "java_code": "200",
+    "go_code": "200"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthAuthorityRole/getById",
+      "body": {}
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "937113b93a4cdf1ba08597e1cadbe5b0d8f0b1760072ef1d41e48c1a23fba252",
+    "go_sha256": "da0d3bd3738482336f2f98682a9a3364bf83ba7b890ba7ea3ac797f2fb9e1a85",
+    "java_code": "200",
+    "go_code": "200"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthAuthorityRole/exportExcel",
+      "body": {}
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 500,
+    "differences": [
+      "HTTP:status",
+      "$raw:bytes",
+      "HTTP:content-type"
+    ],
+    "java_sha256": "868b750a266042e88bebd34903bd38f3bcf70ed480f75762179dc11279c655d2",
+    "go_sha256": "109938781bce6b05f2297d22de539720eb56db8c17cc5b94e82926c80662c9dd",
+    "go_code": "999"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthAuthorityUser/list",
+      "body": {
+        "id": 99977799
+      }
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "58259bea0f55b8b20f7ddfeace604cd064eb0d1682c48a4cbd4127f1e3f38ee2",
+    "go_sha256": "0e715b23131ecfe43558e46a16207372f19efec814815fd7ec810e534ad31fde",
+    "java_code": "200",
+    "go_code": "200"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthAuthorityUser/list",
+      "body": {
+        "id": 1
+      }
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "58259bea0f55b8b20f7ddfeace604cd064eb0d1682c48a4cbd4127f1e3f38ee2",
+    "go_sha256": "0e715b23131ecfe43558e46a16207372f19efec814815fd7ec810e534ad31fde",
+    "java_code": "200",
+    "go_code": "200"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthAuthorityUser/listByPage",
+      "body": {}
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 500,
+    "go_status": 500,
+    "differences": [],
+    "java_sha256": "11e236e030dff9fd7f6ee5653e67601f24a1197c419dec93cbb40e3da90a808e",
+    "go_sha256": "109938781bce6b05f2297d22de539720eb56db8c17cc5b94e82926c80662c9dd",
+    "java_code": "999",
+    "go_code": "999"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthAuthorityUser/listByPage",
+      "body": {
+        "searchStr": "",
+        "page": {
+          "current": 1,
+          "size": 3
+        }
+      }
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 500,
+    "go_status": 500,
+    "differences": [],
+    "java_sha256": "11e236e030dff9fd7f6ee5653e67601f24a1197c419dec93cbb40e3da90a808e",
+    "go_sha256": "109938781bce6b05f2297d22de539720eb56db8c17cc5b94e82926c80662c9dd",
+    "java_code": "999",
+    "go_code": "999"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthAuthorityUser/listByPage",
+      "body": {
+        "searchStr": "1",
+        "page": {
+          "current": 1,
+          "size": 3
+        }
+      }
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 500,
+    "go_status": 500,
+    "differences": [],
+    "java_sha256": "11e236e030dff9fd7f6ee5653e67601f24a1197c419dec93cbb40e3da90a808e",
+    "go_sha256": "109938781bce6b05f2297d22de539720eb56db8c17cc5b94e82926c80662c9dd",
+    "java_code": "999",
+    "go_code": "999"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthAuthorityUser/getById",
+      "body": {
+        "id": 99977799
+      }
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "937113b93a4cdf1ba08597e1cadbe5b0d8f0b1760072ef1d41e48c1a23fba252",
+    "go_sha256": "da0d3bd3738482336f2f98682a9a3364bf83ba7b890ba7ea3ac797f2fb9e1a85",
+    "java_code": "200",
+    "go_code": "200"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthAuthorityUser/getById",
+      "body": {
+        "id": 1
+      }
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "937113b93a4cdf1ba08597e1cadbe5b0d8f0b1760072ef1d41e48c1a23fba252",
+    "go_sha256": "da0d3bd3738482336f2f98682a9a3364bf83ba7b890ba7ea3ac797f2fb9e1a85",
+    "java_code": "200",
+    "go_code": "200"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthAuthorityUser/getById",
+      "body": {}
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "937113b93a4cdf1ba08597e1cadbe5b0d8f0b1760072ef1d41e48c1a23fba252",
+    "go_sha256": "da0d3bd3738482336f2f98682a9a3364bf83ba7b890ba7ea3ac797f2fb9e1a85",
+    "java_code": "200",
+    "go_code": "200"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthAuthorityUser/exportExcel",
+      "body": {}
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 500,
+    "differences": [
+      "HTTP:status",
+      "$raw:bytes",
+      "HTTP:content-type"
+    ],
+    "java_sha256": "b85a3c7b7b8b533454c38c8069c47a7db5d9fc690e1d963be8e10a844306a96c",
+    "go_sha256": "109938781bce6b05f2297d22de539720eb56db8c17cc5b94e82926c80662c9dd",
+    "go_code": "999"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthMenu/list",
+      "body": {
+        "id": 99977799
+      }
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "58259bea0f55b8b20f7ddfeace604cd064eb0d1682c48a4cbd4127f1e3f38ee2",
+    "go_sha256": "0e715b23131ecfe43558e46a16207372f19efec814815fd7ec810e534ad31fde",
+    "java_code": "200",
+    "go_code": "200"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthMenu/list",
+      "body": {
+        "id": 1
+      }
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "1009d7426aaf5a26047de1cd94598c4cc96a4ac64f1b2f4a9c7c0f0819e4940d",
+    "go_sha256": "83ed001c810f4437786b7430b7d82d0e1917d520e89ab72f90d56efb3f021ea1",
+    "java_code": "200",
+    "go_code": "200"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthMenu/listByPage",
+      "body": {}
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 500,
+    "go_status": 200,
+    "differences": [
+      "HTTP:status",
+      "$.code:value",
+      "$.data:type",
+      "$.msg:value",
+      "$.success:value"
+    ],
+    "java_sha256": "11e236e030dff9fd7f6ee5653e67601f24a1197c419dec93cbb40e3da90a808e",
+    "go_sha256": "b02202f557750e624a04055c941ff269e0baba5c41c5c8115c8687ec604a53ce",
+    "java_code": "999",
+    "go_code": "200"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthMenu/listByPage",
+      "body": {
+        "searchStr": "",
+        "page": {
+          "current": 1,
+          "size": 3
+        }
+      }
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "e9d8062c25bdba62ba7ee6ee4446c60ef3d134a68b7889b8ea9e1920f8baab55",
+    "go_sha256": "d7f847104bc843149dcf72cb1e5aa6631cc9b23f3309c4fa9e9e478b9386b0d5",
+    "java_code": "200",
+    "go_code": "200"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthMenu/listByPage",
+      "body": {
+        "searchStr": "1",
+        "page": {
+          "current": 1,
+          "size": 3
+        }
+      }
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "7892ceb65a4b8177ec5464c0375827e4b760cd53a5c0a77d7efe91a98ecbe658",
+    "go_sha256": "8be3e84de9d6f6b343986c31b1062f574329f24c801d41bee6d686179c963248",
+    "java_code": "200",
+    "go_code": "200"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthMenu/getById",
+      "body": {
+        "id": 99977799
+      }
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 500,
+    "go_status": 200,
+    "differences": [
+      "HTTP:status",
+      "$.code:value",
+      "$.data:type",
+      "$.msg:value",
+      "$.success:value"
+    ],
+    "java_sha256": "11e236e030dff9fd7f6ee5653e67601f24a1197c419dec93cbb40e3da90a808e",
+    "go_sha256": "da0d3bd3738482336f2f98682a9a3364bf83ba7b890ba7ea3ac797f2fb9e1a85",
+    "java_code": "999",
+    "go_code": "200"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthMenu/getById",
+      "body": {
+        "id": 1
+      }
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "5d8b0d18b0c574ed818056c142eb0e7bc7627790f42caeaffcadc6f68d53ca12",
+    "go_sha256": "2c22f83b5a0d764e0990f33513f5445fc1805122a564b13a0b65a94730430703",
+    "java_code": "200",
+    "go_code": "200"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthMenu/getById",
+      "body": {}
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 500,
+    "go_status": 200,
+    "differences": [
+      "HTTP:status",
+      "$.code:value",
+      "$.data:type",
+      "$.msg:value",
+      "$.success:value"
+    ],
+    "java_sha256": "11e236e030dff9fd7f6ee5653e67601f24a1197c419dec93cbb40e3da90a808e",
+    "go_sha256": "da0d3bd3738482336f2f98682a9a3364bf83ba7b890ba7ea3ac797f2fb9e1a85",
+    "java_code": "999",
+    "go_code": "200"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthMenu/exportExcel",
+      "body": {}
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 500,
+    "differences": [
+      "HTTP:status",
+      "$raw:bytes",
+      "HTTP:content-type"
+    ],
+    "java_sha256": "2408df170b7d40e57ad295d148325caa7190cf94d051b31f82085e8549640a70",
+    "go_sha256": "109938781bce6b05f2297d22de539720eb56db8c17cc5b94e82926c80662c9dd",
+    "go_code": "999"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthMenuRole/list",
+      "body": {
+        "id": 99977799
+      }
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "58259bea0f55b8b20f7ddfeace604cd064eb0d1682c48a4cbd4127f1e3f38ee2",
+    "go_sha256": "0e715b23131ecfe43558e46a16207372f19efec814815fd7ec810e534ad31fde",
+    "java_code": "200",
+    "go_code": "200"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthMenuRole/list",
+      "body": {
+        "id": 1
+      }
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "58259bea0f55b8b20f7ddfeace604cd064eb0d1682c48a4cbd4127f1e3f38ee2",
+    "go_sha256": "0e715b23131ecfe43558e46a16207372f19efec814815fd7ec810e534ad31fde",
+    "java_code": "200",
+    "go_code": "200"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthMenuRole/listByPage",
+      "body": {}
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 500,
+    "go_status": 500,
+    "differences": [],
+    "java_sha256": "11e236e030dff9fd7f6ee5653e67601f24a1197c419dec93cbb40e3da90a808e",
+    "go_sha256": "109938781bce6b05f2297d22de539720eb56db8c17cc5b94e82926c80662c9dd",
+    "java_code": "999",
+    "go_code": "999"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthMenuRole/listByPage",
+      "body": {
+        "searchStr": "",
+        "page": {
+          "current": 1,
+          "size": 3
+        }
+      }
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "bdf94da5bc4b2fd4f40e833e8f286dfa9e7090e647010856f335170f3559c7f8",
+    "go_sha256": "66db8218491a8f8bfc1bd66a01d8fa65ba9371aa9bf1584fbc4e9d4b4b2ad948",
+    "java_code": "200",
+    "go_code": "200"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthMenuRole/listByPage",
+      "body": {
+        "searchStr": "1",
+        "page": {
+          "current": 1,
+          "size": 3
+        }
+      }
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "a08e2001e1d6d6031139c9105773c19e79c717e33c7d0a452a092063f15cb205",
+    "go_sha256": "d014f5d10edd1b743aa226569c235f26c56fcd54797217adf2d026508e4ccfe3",
+    "java_code": "200",
+    "go_code": "200"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthMenuRole/getById",
+      "body": {
+        "id": 99977799
+      }
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "937113b93a4cdf1ba08597e1cadbe5b0d8f0b1760072ef1d41e48c1a23fba252",
+    "go_sha256": "da0d3bd3738482336f2f98682a9a3364bf83ba7b890ba7ea3ac797f2fb9e1a85",
+    "java_code": "200",
+    "go_code": "200"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthMenuRole/getById",
+      "body": {
+        "id": 1
+      }
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "937113b93a4cdf1ba08597e1cadbe5b0d8f0b1760072ef1d41e48c1a23fba252",
+    "go_sha256": "da0d3bd3738482336f2f98682a9a3364bf83ba7b890ba7ea3ac797f2fb9e1a85",
+    "java_code": "200",
+    "go_code": "200"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthMenuRole/getById",
+      "body": {}
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "937113b93a4cdf1ba08597e1cadbe5b0d8f0b1760072ef1d41e48c1a23fba252",
+    "go_sha256": "da0d3bd3738482336f2f98682a9a3364bf83ba7b890ba7ea3ac797f2fb9e1a85",
+    "java_code": "200",
+    "go_code": "200"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthMenuRole/exportExcel",
+      "body": {}
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 500,
+    "differences": [
+      "HTTP:status",
+      "$raw:bytes",
+      "HTTP:content-type"
+    ],
+    "java_sha256": "35d31dcaecb9203090b4e4142aa5e4866d0e09eb4457f7a59dc7dfffb9f16654",
+    "go_sha256": "109938781bce6b05f2297d22de539720eb56db8c17cc5b94e82926c80662c9dd",
+    "go_code": "999"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthMenuUser/list",
+      "body": {
+        "id": 99977799
+      }
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "58259bea0f55b8b20f7ddfeace604cd064eb0d1682c48a4cbd4127f1e3f38ee2",
+    "go_sha256": "0e715b23131ecfe43558e46a16207372f19efec814815fd7ec810e534ad31fde",
+    "java_code": "200",
+    "go_code": "200"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthMenuUser/list",
+      "body": {
+        "id": 1
+      }
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "afae6f9282ff815480ff3ffc4678500ec2cedc76eabafa63d46353760d6af6b1",
+    "go_sha256": "5a7019a59beff45799c847a252080a4ab97f1b01d531f253216a8d402e98f2b0",
+    "java_code": "200",
+    "go_code": "200"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthMenuUser/listByPage",
+      "body": {}
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 500,
+    "go_status": 500,
+    "differences": [],
+    "java_sha256": "11e236e030dff9fd7f6ee5653e67601f24a1197c419dec93cbb40e3da90a808e",
+    "go_sha256": "109938781bce6b05f2297d22de539720eb56db8c17cc5b94e82926c80662c9dd",
+    "java_code": "999",
+    "go_code": "999"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthMenuUser/listByPage",
+      "body": {
+        "searchStr": "",
+        "page": {
+          "current": 1,
+          "size": 3
+        }
+      }
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "9c4a7e19bcf88e0dea763370b263a3787eeb60aa8591374da5ec6dcb4a43966d",
+    "go_sha256": "621246a6b4c79abce6e200ce4712a2b04c37ac7fa410e4d98ac1aba1e6e93fe4",
+    "java_code": "200",
+    "go_code": "200"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthMenuUser/listByPage",
+      "body": {
+        "searchStr": "1",
+        "page": {
+          "current": 1,
+          "size": 3
+        }
+      }
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "81e5fb295c941b1203edb29791ac6ca6bd4daf3074c21515c80c8ea55bb8a2bd",
+    "go_sha256": "a55eb2439d6a6c5e86bc3b69cf1d3cfe28f8d8d8d7c1611c5c62219914e400e7",
+    "java_code": "200",
+    "go_code": "200"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthMenuUser/getById",
+      "body": {
+        "id": 99977799
+      }
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "937113b93a4cdf1ba08597e1cadbe5b0d8f0b1760072ef1d41e48c1a23fba252",
+    "go_sha256": "da0d3bd3738482336f2f98682a9a3364bf83ba7b890ba7ea3ac797f2fb9e1a85",
+    "java_code": "200",
+    "go_code": "200"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthMenuUser/getById",
+      "body": {
+        "id": 1
+      }
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "cb88c94eee885526ed5a55e68a20228450fcf6d1cfc8ad700159c0c1a44afcfd",
+    "go_sha256": "5f2775654d80c9895400e1877102071303e45ff57b5f4e8a8e0cd0570eb46213",
+    "java_code": "200",
+    "go_code": "200"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthMenuUser/getById",
+      "body": {}
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "937113b93a4cdf1ba08597e1cadbe5b0d8f0b1760072ef1d41e48c1a23fba252",
+    "go_sha256": "da0d3bd3738482336f2f98682a9a3364bf83ba7b890ba7ea3ac797f2fb9e1a85",
+    "java_code": "200",
+    "go_code": "200"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthMenuUser/exportExcel",
+      "body": {}
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 500,
+    "differences": [
+      "HTTP:status",
+      "$raw:bytes",
+      "HTTP:content-type"
+    ],
+    "java_sha256": "767d1ddf9deef33f3a1804ca10dfb7ee2af022deaa9bbdb5348423f04fff5213",
+    "go_sha256": "109938781bce6b05f2297d22de539720eb56db8c17cc5b94e82926c80662c9dd",
+    "go_code": "999"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthSecret/list",
+      "body": {
+        "id": 99977799
+      }
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "58259bea0f55b8b20f7ddfeace604cd064eb0d1682c48a4cbd4127f1e3f38ee2",
+    "go_sha256": "0e715b23131ecfe43558e46a16207372f19efec814815fd7ec810e534ad31fde",
+    "java_code": "200",
+    "go_code": "200"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthSecret/list",
+      "body": {
+        "id": 1
+      }
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "6efcfe131c578f36779c87eef23d1b764cde40c495bdd1ad0484c1f102b3e4de",
+    "go_sha256": "9c50ecb457fbeed12ff3be1a74698b38bbddc46bfe7888ea132c4d165c3b3fc4",
+    "java_code": "200",
+    "go_code": "200"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthSecret/listByPage",
+      "body": {}
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 500,
+    "go_status": 500,
+    "differences": [],
+    "java_sha256": "11e236e030dff9fd7f6ee5653e67601f24a1197c419dec93cbb40e3da90a808e",
+    "go_sha256": "109938781bce6b05f2297d22de539720eb56db8c17cc5b94e82926c80662c9dd",
+    "java_code": "999",
+    "go_code": "999"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthSecret/listByPage",
+      "body": {
+        "searchStr": "",
+        "page": {
+          "current": 1,
+          "size": 3
+        }
+      }
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "7d68bfdcdff54f93a5409aa4f563c3ffdadb63b063dadd9f00b9034cdbf558e6",
+    "go_sha256": "c71ff04e4afca24a4fbed9bf7339375ae5014278a59ea616599aea0a45c45025",
+    "java_code": "200",
+    "go_code": "200"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthSecret/listByPage",
+      "body": {
+        "searchStr": "1",
+        "page": {
+          "current": 1,
+          "size": 3
+        }
+      }
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "6118ff5e75f1fe4c8843539e797a1de3ed96ed725ba5da21cf6a203733e6cd16",
+    "go_sha256": "eda7c477c7c5f7f66f1c97809b4dbb10117e2f6e2a994212d2cbb39481365fb0",
+    "java_code": "200",
+    "go_code": "200"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthSecret/getById",
+      "body": {
+        "id": 99977799
+      }
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "937113b93a4cdf1ba08597e1cadbe5b0d8f0b1760072ef1d41e48c1a23fba252",
+    "go_sha256": "da0d3bd3738482336f2f98682a9a3364bf83ba7b890ba7ea3ac797f2fb9e1a85",
+    "java_code": "200",
+    "go_code": "200"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthSecret/getById",
+      "body": {
+        "id": 1
+      }
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "689a3bca80a6e48fb14dbce408948f02dc519cc69671ef5db7a6817ab39a14bd",
+    "go_sha256": "bfc3ea6a2aea0005d0068b5bf89bae3c4540feedde355906cd1a77025981c069",
+    "java_code": "200",
+    "go_code": "200"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthSecret/getById",
+      "body": {}
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "937113b93a4cdf1ba08597e1cadbe5b0d8f0b1760072ef1d41e48c1a23fba252",
+    "go_sha256": "da0d3bd3738482336f2f98682a9a3364bf83ba7b890ba7ea3ac797f2fb9e1a85",
+    "java_code": "200",
+    "go_code": "200"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthSecret/exportExcel",
+      "body": {}
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 500,
+    "differences": [
+      "HTTP:status",
+      "$raw:bytes",
+      "HTTP:content-type"
+    ],
+    "java_sha256": "1e053b76951e42e793886b71cef0dc34a53d0db9949cd9aea90d26bf2540efa7",
+    "go_sha256": "109938781bce6b05f2297d22de539720eb56db8c17cc5b94e82926c80662c9dd",
+    "go_code": "999"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthUseRole/list",
+      "body": {
+        "id": 99977799
+      }
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "58259bea0f55b8b20f7ddfeace604cd064eb0d1682c48a4cbd4127f1e3f38ee2",
+    "go_sha256": "0e715b23131ecfe43558e46a16207372f19efec814815fd7ec810e534ad31fde",
+    "java_code": "200",
+    "go_code": "200"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthUseRole/list",
+      "body": {
+        "id": 1
+      }
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "58259bea0f55b8b20f7ddfeace604cd064eb0d1682c48a4cbd4127f1e3f38ee2",
+    "go_sha256": "0e715b23131ecfe43558e46a16207372f19efec814815fd7ec810e534ad31fde",
+    "java_code": "200",
+    "go_code": "200"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthUseRole/listByPage",
+      "body": {}
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 500,
+    "go_status": 500,
+    "differences": [],
+    "java_sha256": "11e236e030dff9fd7f6ee5653e67601f24a1197c419dec93cbb40e3da90a808e",
+    "go_sha256": "109938781bce6b05f2297d22de539720eb56db8c17cc5b94e82926c80662c9dd",
+    "java_code": "999",
+    "go_code": "999"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthUseRole/listByPage",
+      "body": {
+        "searchStr": "",
+        "page": {
+          "current": 1,
+          "size": 3
+        }
+      }
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "4dbdb08d4be6c9cf257dd2aef57e02d4efde7d0ff87a8451e7a62100c1e12870",
+    "go_sha256": "cba030bb4387151e5bd6476bc272779e0b01fd43b5a3f21444362c3fbf54ad23",
+    "java_code": "200",
+    "go_code": "200"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthUseRole/listByPage",
+      "body": {
+        "searchStr": "1",
+        "page": {
+          "current": 1,
+          "size": 3
+        }
+      }
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "90af0cd71e902870aaea6de2c677f5710cbd277fb7dc70710f71a54ada8e97b3",
+    "go_sha256": "46cb9dc38794b17e611652521ea5275db2bcd63aea910bae4ac678b8783de697",
+    "java_code": "200",
+    "go_code": "200"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthUseRole/getById",
+      "body": {
+        "id": 99977799
+      }
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "937113b93a4cdf1ba08597e1cadbe5b0d8f0b1760072ef1d41e48c1a23fba252",
+    "go_sha256": "da0d3bd3738482336f2f98682a9a3364bf83ba7b890ba7ea3ac797f2fb9e1a85",
+    "java_code": "200",
+    "go_code": "200"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthUseRole/getById",
+      "body": {
+        "id": 1
+      }
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "937113b93a4cdf1ba08597e1cadbe5b0d8f0b1760072ef1d41e48c1a23fba252",
+    "go_sha256": "da0d3bd3738482336f2f98682a9a3364bf83ba7b890ba7ea3ac797f2fb9e1a85",
+    "java_code": "200",
+    "go_code": "200"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthUseRole/getById",
+      "body": {}
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "937113b93a4cdf1ba08597e1cadbe5b0d8f0b1760072ef1d41e48c1a23fba252",
+    "go_sha256": "da0d3bd3738482336f2f98682a9a3364bf83ba7b890ba7ea3ac797f2fb9e1a85",
+    "java_code": "200",
+    "go_code": "200"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthUseRole/exportExcel",
+      "body": {}
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 500,
+    "differences": [
+      "HTTP:status",
+      "$raw:bytes",
+      "HTTP:content-type"
+    ],
+    "java_sha256": "534eb61470c76e825db1bd7717c383ab6cdbd6986af154b4d54ae88df77fe82b",
+    "go_sha256": "109938781bce6b05f2297d22de539720eb56db8c17cc5b94e82926c80662c9dd",
+    "go_code": "999"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthUser/list",
+      "body": {
+        "id": 99977799
+      }
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [
+      "$.code:value",
+      "$.data:type",
+      "$.msg:value",
+      "$.success:value"
+    ],
+    "java_sha256": "58259bea0f55b8b20f7ddfeace604cd064eb0d1682c48a4cbd4127f1e3f38ee2",
+    "go_sha256": "00c97fd7484fd06d7a30ea1c15c152b6111191d1af5564ce13094d52f35b479e",
+    "java_code": "200",
+    "go_code": "602"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthUser/list",
+      "body": {
+        "id": 1
+      }
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [
+      "$.code:value",
+      "$.data:type",
+      "$.msg:value",
+      "$.success:value"
+    ],
+    "java_sha256": "58259bea0f55b8b20f7ddfeace604cd064eb0d1682c48a4cbd4127f1e3f38ee2",
+    "go_sha256": "00c97fd7484fd06d7a30ea1c15c152b6111191d1af5564ce13094d52f35b479e",
+    "java_code": "200",
+    "go_code": "602"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthUser/listByPage",
+      "body": {}
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 500,
+    "go_status": 200,
+    "differences": [
+      "HTTP:status",
+      "$.code:value",
+      "$.data:type",
+      "$.msg:value",
+      "$.success:value"
+    ],
+    "java_sha256": "11e236e030dff9fd7f6ee5653e67601f24a1197c419dec93cbb40e3da90a808e",
+    "go_sha256": "b02202f557750e624a04055c941ff269e0baba5c41c5c8115c8687ec604a53ce",
+    "java_code": "999",
+    "go_code": "200"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthUser/listByPage",
+      "body": {
+        "searchStr": "",
+        "page": {
+          "current": 1,
+          "size": 3
+        }
+      }
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "c1ee4144cfcdafe8bf109ae62c468c3b8f3cc564cadcada8f30085bcb1ee92b3",
+    "go_sha256": "6e388a97b7946806ee1dba99e316d06fb48ebf4eef07ae2bb90d7107fec6d99c",
+    "java_code": "200",
+    "go_code": "200"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthUser/listByPage",
+      "body": {
+        "searchStr": "1",
+        "page": {
+          "current": 1,
+          "size": 3
+        }
+      }
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "300409338ad69ee8ef3d46034030f566d3ff57fb73ef300513f9aed92036b4e3",
+    "go_sha256": "77b95115a0016a57dc8cc86bb6dabfec379c84f5e95ed43403dd082ddde5224d",
+    "java_code": "200",
+    "go_code": "200"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthUser/exportExcel",
+      "body": {}
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 500,
+    "go_status": 500,
+    "differences": [],
+    "java_sha256": "11e236e030dff9fd7f6ee5653e67601f24a1197c419dec93cbb40e3da90a808e",
+    "go_sha256": "109938781bce6b05f2297d22de539720eb56db8c17cc5b94e82926c80662c9dd",
+    "java_code": "999",
+    "go_code": "999"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthUserList/listByPage",
+      "body": {}
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 500,
+    "go_status": 200,
+    "differences": [
+      "HTTP:status",
+      "$.code:value",
+      "$.data:type",
+      "$.msg:value",
+      "$.success:value"
+    ],
+    "java_sha256": "11e236e030dff9fd7f6ee5653e67601f24a1197c419dec93cbb40e3da90a808e",
+    "go_sha256": "b02202f557750e624a04055c941ff269e0baba5c41c5c8115c8687ec604a53ce",
+    "java_code": "999",
+    "go_code": "200"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthUserList/listByPage",
+      "body": {
+        "searchStr": "",
+        "page": {
+          "current": 1,
+          "size": 3
+        }
+      }
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "c1ee4144cfcdafe8bf109ae62c468c3b8f3cc564cadcada8f30085bcb1ee92b3",
+    "go_sha256": "6e388a97b7946806ee1dba99e316d06fb48ebf4eef07ae2bb90d7107fec6d99c",
+    "java_code": "200",
+    "go_code": "200"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthUserList/listByPage",
+      "body": {
+        "searchStr": "1",
+        "page": {
+          "current": 1,
+          "size": 3
+        }
+      }
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "300409338ad69ee8ef3d46034030f566d3ff57fb73ef300513f9aed92036b4e3",
+    "go_sha256": "77b95115a0016a57dc8cc86bb6dabfec379c84f5e95ed43403dd082ddde5224d",
+    "java_code": "200",
+    "go_code": "200"
+  }
+]

@@ -10,17 +10,19 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/seetheworldwithme/panda-supply-chain/backend/internal/platform"
 )
 
 // CurrentUser 请求级用户身份。登录用户由 JWT 解出,免登录验签请求为匿名(SignedAnon=true)
 type CurrentUser struct {
-	SignedAnon bool // Signature/AuthorizationId 验签通过的匿名请求(内部/前端登录前调用)
-	UserID     int64
-	Account    string
-	Username   string
-	CompanyID  int64
-	Level       int
-	AccountType string
+	SignedAnon     bool // Signature/AuthorizationId 验签通过的匿名请求(内部/前端登录前调用)
+	UserID         int64
+	Account        string
+	Username       string
+	CompanyID      int64
+	Level          int
+	AccountType    string
 	EnterpriseCode string // 对照 Java JWTInfo.enterpriseCode(企业账号才有)
 }
 
@@ -30,8 +32,8 @@ const userKey ctxKey = 1
 
 // Middleware 鉴权中间件:有 Bearer token 则解析注入用户;否则尝试 Signature/AuthorizationId 验签;
 // 两者皆无则匿名(SecurityContext 为空,受保护接口返回 403)。
-// 放行清单(permitAll)由 main.go 路由挂载顺序控制,中间件本身总是执行、不直接拦截
-func Middleware(kp *KeyPair, secretDB *sql.DB) func(http.Handler) http.Handler {
+// 每次请求复核本地账号，避免已删除或禁用的账号仅靠旧 JWT 继续访问。
+func Middleware(kp *KeyPair, secretDB *sql.DB, tenantDB ...*sql.DB) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			user := &CurrentUser{}
@@ -43,15 +45,58 @@ func Middleware(kp *KeyPair, secretDB *sql.DB) func(http.Handler) http.Handler {
 					user.Username = claims.Username
 					user.CompanyID = parseInt64(claims.CompanyID)
 					user.EnterpriseCode = claims.EnterpriseCode
+					database := secretDB
+					if r.Header.Get("applytype") == "zjjg" && len(tenantDB) > 0 {
+						database = tenantDB[0]
+					}
+					var level sql.NullInt64
+					var accountType sql.NullString
+					if database == nil {
+						user = &CurrentUser{}
+					} else if err := database.QueryRowContext(r.Context(), `SELECT level,account_type FROM chain_auth_user
+WHERE (phone=? OR account=?) AND (handle_result=1 OR channel=2)
+ORDER BY CASE WHEN account_type!=4 AND handle_result=1 THEN 0 WHEN account_type=4 AND handle_result=1 THEN 1 ELSE 2 END, level DESC LIMIT 1`, claims.Account, claims.Account).Scan(&level, &accountType); err != nil {
+						user = &CurrentUser{}
+					} else {
+						// Java 特殊请求处理末尾将所有有效用户的上下文 level 设为 2。
+						user.Level = 2
+						user.AccountType = accountType.String
+					}
 				}
 				// 解析失败按无 token 处理,继续走验签/匿名(与 Java 过滤器行为一致)
 			}
 			if user.UserID == 0 && !user.SignedAnon {
 				user.SignedAnon = checkSignature(r, secretDB)
 			}
+			if checkBankSignature(r) {
+				user.SignedAnon = true
+			}
+			if checkEsignSignature(r) {
+				user.SignedAnon = true
+			}
+			if strings.Contains(r.URL.Path, "asyncTlzf") {
+				user.SignedAnon = true
+			}
+			if user.UserID == 0 && !user.SignedAnon && !publicRequest(r.URL.Path) {
+				platform.NotAuth(w)
+				return
+			}
 			next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), userKey, user)))
 		})
 	}
+}
+
+// Java SecurityConfig public entries plus callbacks/share entry points for which
+// JwtAuthorizationTokenFilter constructs its own principal. Payload verification
+// remains the responsibility of the callback handler.
+func publicRequest(path string) bool {
+	if path == "/healthz" || path == "/saas-common/upload/preShareFIle" {
+		return true
+	}
+	if path == "/saas-auth/login" || path == "/saas-auth/screenLogin" || strings.HasPrefix(path, "/saas-auth/code/") || strings.HasPrefix(path, "/saas-auth/authentication/") {
+		return true
+	}
+	return path == "/saas-warehouse/busMyBill/payNotify" || path == "/saas-warehouse/busMyBill/appPayNotify"
 }
 
 // From 取当前请求用户
@@ -63,8 +108,10 @@ func From(ctx context.Context) *CurrentUser {
 }
 
 // checkSignature 对照 SafeVerify.checkSignature:
-//   mySig = HmacSHA256(key=secret, msg=authorizationId+batchNumber+secret)
-//   inSig = HmacSHA256(key=secret, msg=authorizationId+"hyqc"+secret)
+//
+//	mySig = HmacSHA256(key=secret, msg=authorizationId+batchNumber+secret)
+//	inSig = HmacSHA256(key=secret, msg=authorizationId+"hyqc"+secret)
+//
 // 传入 Signature 命中任一即通过。secret 存于 chain_auth_secret 表
 func checkSignature(r *http.Request, secretDB *sql.DB) bool {
 	authorizationId := r.Header.Get("AuthorizationId")

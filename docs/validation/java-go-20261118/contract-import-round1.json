@@ -1,0 +1,122 @@
+[
+  {
+    "endpoint": "chainContract/importExcelCg",
+    "differences": [
+      "HTTP:status",
+      "$.code:value",
+      "$.data:value",
+      "$.msg:value",
+      "$.success:value",
+      "$database:contract-or-supplier",
+      "$business:import-failed"
+    ],
+    "java_status": 500,
+    "go_status": 200,
+    "java_code": 999,
+    "go_code": 200,
+    "java_fixture": false,
+    "go_fixture": true,
+    "fixture_created": false,
+    "cleaned": true
+  },
+  {
+    "endpoint": "chainContract/importExcelXs",
+    "differences": [
+      "HTTP:status",
+      "$.code:value",
+      "$.data:value",
+      "$.msg:value",
+      "$.success:value",
+      "$database:contract-or-supplier",
+      "$business:import-failed"
+    ],
+    "java_status": 500,
+    "go_status": 200,
+    "java_code": 999,
+    "go_code": 200,
+    "java_fixture": false,
+    "go_fixture": true,
+    "fixture_created": false,
+    "cleaned": true
+  },
+  {
+    "endpoint": "chainCgContract/importExcelCg",
+    "differences": [
+      "HTTP:status",
+      "$.code:value",
+      "$.data:value",
+      "$.msg:value",
+      "$.success:value",
+      "$database:contract-or-supplier",
+      "$business:import-failed"
+    ],
+    "java_status": 500,
+    "go_status": 200,
+    "java_code": 999,
+    "go_code": 200,
+    "java_fixture": false,
+    "go_fixture": true,
+    "fixture_created": false,
+    "cleaned": true
+  },
+  {
+    "endpoint": "chainCgContract/importExcelXs",
+    "differences": [
+      "HTTP:status",
+      "$.code:value",
+      "$.data:value",
+      "$.msg:value",
+      "$.success:value",
+      "$database:contract-or-supplier",
+      "$business:import-failed"
+    ],
+    "java_status": 500,
+    "go_status": 200,
+    "java_code": 999,
+    "go_code": 200,
+    "java_fixture": false,
+    "go_fixture": true,
+    "fixture_created": false,
+    "cleaned": true
+  },
+  {
+    "endpoint": "chainXsContract/importExcelCg",
+    "differences": [
+      "HTTP:status",
+      "$.code:value",
+      "$.data:value",
+      "$.msg:value",
+      "$.success:value",
+      "$database:contract-or-supplier",
+      "$business:import-failed"
+    ],
+    "java_status": 500,
+    "go_status": 200,
+    "java_code": 999,
+    "go_code": 200,
+    "java_fixture": false,
+    "go_fixture": true,
+    "fixture_created": false,
+    "cleaned": true
+  },
+  {
+    "endpoint": "chainXsContract/importExcelXs",
+    "differences": [
+      "HTTP:status",
+      "$.code:value",
+      "$.data:value",
+      "$.msg:value",
+      "$.success:value",
+      "$database:contract-or-supplier",
+      "$business:import-failed"
+    ],
+    "java_status": 500,
+    "go_status": 200,
+    "java_code": 999,
+    "go_code": 200,
+    "java_fixture": false,
+    "go_fixture": true,
+    "fixture_created": false,
+    "cleaned": true
+  }
+]

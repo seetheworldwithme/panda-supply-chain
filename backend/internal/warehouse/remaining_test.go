@@ -23,6 +23,17 @@ func TestInformationAndPeripheralRoutesRegistered(t *testing.T) {
 	}
 }
 
+func TestEnterpriseLeasingWriteRoutesRegistered(t *testing.T) {
+	mux := http.NewServeMux()
+	Register(mux, &Service{})
+	for _, path := range []string{"/busEnterpriseLeasing/add", "/busEnterpriseLeasing/updateById"} {
+		req := httptest.NewRequest("POST", "/saas-warehouse"+path, nil)
+		if _, pattern := mux.Handler(req); pattern == "" {
+			t.Errorf("unregistered: POST %s", path)
+		}
+	}
+}
+
 func TestInformationFiltersUseQueryWrapperRanges(t *testing.T) {
 	where, args := infoWhere(entXmmcCoalInfo, map[string]any{"city": "晋中", "capacity": float64(10), "sulfur": float64(1), "sulfurMin": float64(0.5), "factoryTaxPriceMax": float64(500), "searchStr": "ignored", "priceUpdTimeStart": "2025-01-01T00:00:00"})
 	want := " WHERE city LIKE ? AND sulfur >= ? AND factory_tax_price <= ? AND price_upd_time >= ?"

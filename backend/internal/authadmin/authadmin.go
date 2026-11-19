@@ -12,12 +12,15 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/seetheworldwithme/panda-supply-chain/backend/internal/auth"
+
 	"github.com/seetheworldwithme/panda-supply-chain/backend/internal/db"
 	"github.com/seetheworldwithme/panda-supply-chain/backend/internal/platform"
 )
 
 type Service struct {
-	DB *db.DB
+	DB   *db.DB
+	Auth *auth.Service
 }
 
 func NewService(database *db.DB) *Service { return &Service{DB: database} }
@@ -27,6 +30,7 @@ func Register(mux *http.ServeMux, s *Service) {
 	r := func(path string, h http.HandlerFunc) {
 		mux.HandleFunc("POST /saas-auth"+path, h)
 	}
+	s.registerUserCompat(r)
 	// ChainAuthRoleController(角色与权限分配)
 	r("/chainAuthRole/selEtcRoles", s.selEtcRoles)
 	r("/chainAuthRole/selPtRoles", s.selPtRoles)
@@ -59,10 +63,10 @@ func Register(mux *http.ServeMux, s *Service) {
 	r("/chainAuthMenu/delBatch", s.menuDelBatch)
 	r("/chainAuthMenu/selAuthys", s.menuSelAuthys)
 	// ChainAuthUserController(用户)
-	r("/chainAuthUser/list", s.warehouseBrokerList)
 	r("/chainAuthUser/listByPage", s.userListByPage)
 	r("/chainAuthUser/supList", s.userSupList)
 	r("/chainAuthUser/add", s.userAdd)
+	// 服务器运行包的方法正常编译；本机重编译包的缺陷不作为契约。
 	r("/chainAuthUser/updateById", s.userUpdateById)
 	r("/chainAuthUser/deleteById", s.userDeleteById)
 	r("/chainAuthUser/delBatch", s.userDelBatch)

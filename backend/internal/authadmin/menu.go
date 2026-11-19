@@ -32,6 +32,10 @@ func (s *Service) menuList(w http.ResponseWriter, r *http.Request) {
 // select *, (select name ... pid) pname where CONCAT(name, route_name) like '%ss%' order by create_time desc
 func (s *Service) menuListByPage(w http.ResponseWriter, r *http.Request) {
 	m := bodyMap(r)
+	if _, ok := m["page"].(map[string]any); !ok {
+		platform.Unknown(w) // Java mapper requires a Page object.
+		return
+	}
 	current, size := pageOf(m)
 	ss := searchStrOf(m)
 	q := "SELECT *, (SELECT name FROM chain_auth_menu WHERE id=m.pid) pname FROM chain_auth_menu m WHERE CONCAT(name, route_name) LIKE ? ORDER BY create_time DESC"
@@ -61,7 +65,7 @@ func (s *Service) menuGetById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if menu == nil {
-		platform.Success(w, nil)
+		platform.Unknown(w) // Java service dereferences the missing menu.
 		return
 	}
 	out := shapeMenuOne(menu)

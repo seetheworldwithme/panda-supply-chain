@@ -67,13 +67,6 @@ func bts(v any) string {
 	}
 }
 
-// getImgByRelId POST /saas-common/upload/getImgByRelId 企业头像/备案图片 base64。
-// Java UploadController:280 读本地磁盘文件转 base64;Go 部署形态无该磁盘目录,
-// 一期降级返回空(前端显示占位)。ponytail: 需要真图时在文件存储落位后按 chain_common_file.url 补
-func (s *Service) getImgByRelId(w http.ResponseWriter, r *http.Request) {
-	platform.Success(w, map[string]any{"yyzz": "", "lbts": []any{}})
-}
-
 // countActBus POST /saas-common/chainBasicMainPage/countActBus 累计实际业务量。
 // Java ChainBasicBussinessServiceImpl.countActBus:88 → mapper countActBus:30
 func (s *Service) countActBus(w http.ResponseWriter, r *http.Request) {

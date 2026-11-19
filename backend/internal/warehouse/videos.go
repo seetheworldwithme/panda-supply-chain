@@ -479,7 +479,7 @@ func vidDoubleJson(f float64) any {
 // null 键保留 —— callSettersOnNulls=true 实证)
 func vidShapeRows(d *sql.DB, rows []map[string]any) []map[string]any {
 	types := map[string]colType{}
-	for _, t := range []string{"bus_videos", "bus_product", "chain_auth_user"} {
+	for _, t := range []string{"bus_videos", "bus_product", "chain_auth_user", "bus_member_benefits"} {
 		for _, ct := range loadMapTypes(d, t) {
 			if _, dup := types[ct.name]; !dup {
 				types[ct.name] = ct
@@ -498,6 +498,12 @@ func vidShapeRows(d *sql.DB, rows []map[string]any) []map[string]any {
 				rec[alias] = nil
 				continue
 			}
+			// MariaDB JDBC exposes these scalar-subquery expressions as numeric
+			// values even when their underlying columns are tinyint(1).
+			if alias == "isShowEtcName" || alias == "isShowEtcPhone" {
+				rec[alias] = jsonNumberInt64(int64(num(v)))
+				continue
+			}
 			ct, ok := types[col]
 			if !ok { // count 子查询别名与跨表布尔列(bus_member_benefits)
 				if col == "is_show_etc_name" || col == "is_show_etc_phone" {
@@ -510,7 +516,9 @@ func vidShapeRows(d *sql.DB, rows []map[string]any) []map[string]any {
 			switch {
 			case ct.dataType == "tinyint" && ct.columnType == "tinyint(1)":
 				rec[alias] = num(v) != 0
-			case ct.dataType == "decimal" || ct.dataType == "double" || ct.dataType == "float":
+			case ct.dataType == "decimal":
+				rec[alias] = json.Number(strOf(v)) // JDBC DECIMAL is BigDecimal, preserving scale.
+			case ct.dataType == "double" || ct.dataType == "float":
 				rec[alias] = vidDoubleJson(num(v))
 			case ct.dataType == "datetime" || ct.dataType == "timestamp":
 				if s, isS := v.(string); isS && len(s) == 19 {
@@ -524,7 +532,7 @@ func vidShapeRows(d *sql.DB, rows []map[string]any) []map[string]any {
 				} else {
 					rec[alias] = v
 				}
-			case ct.dataType == "int" || ct.dataType == "bigint" || ct.dataType == "smallint" || ct.dataType == "mediumint":
+			case ct.dataType == "int" || ct.dataType == "bigint" || ct.dataType == "smallint" || ct.dataType == "mediumint" || ct.dataType == "tinyint":
 				rec[alias] = jsonNumberInt64(int64(num(v)))
 			default:
 				rec[alias] = v

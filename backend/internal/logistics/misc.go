@@ -90,6 +90,10 @@ func (s *Service) lcList(w http.ResponseWriter, r *http.Request) {
 // lcListByPage where CONCAT(id) like '%${searchStr}%' order by create_time desc
 func (s *Service) lcListByPage(w http.ResponseWriter, r *http.Request) {
 	m := bodyMap(r)
+	if _, ok := m["page"].(map[string]any); !ok {
+		platform.Unknown(w) // Java mapper requires a Page object.
+		return
+	}
 	d := s.pick(r)
 	current, size := pageOf(m)
 	where := "WHERE CONCAT(id) like '%" + searchStrOf(m) + "%'"
@@ -243,6 +247,10 @@ var twIntFields = map[string]bool{"id": true, "carriagePlatform": true, "invoici
 
 func (s *Service) twListByPage(w http.ResponseWriter, r *http.Request) {
 	m := bodyMap(r)
+	if _, ok := m["page"].(map[string]any); !ok {
+		platform.Unknown(w)
+		return
+	}
 	d := s.pick(r)
 	u := currentUser(r)
 	// jwt 公司信用代码前置(实体缺行 → Java NPE → 999)
@@ -759,6 +767,10 @@ const wlConcat = "CONCAT(IFNULL(bill_number, ''), IFNULL(issuing_office, ''), IF
 
 func (s *Service) wlListByPage(w http.ResponseWriter, r *http.Request) {
 	m := bodyMap(r)
+	if _, ok := m["page"].(map[string]any); !ok {
+		platform.Unknown(w) // Java mapper requires a Page object.
+		return
+	}
 	d := s.pick(r)
 	cond := "where 1=1"
 	var args []any

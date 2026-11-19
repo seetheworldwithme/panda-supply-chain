@@ -2,22 +2,18 @@
 // BusProductMapper 的 listByPage/listNoPage/listByFenCi/listNoPFenCi/relListByPage/selTags、
 // BusUserClickProMapper.selLastClickPro;SQL 原文逐字照抄,含 Java 端错列 bug)。
 //
-// 【已知差异:HanLP 分词为近似实现,复杂自然语言搜索串的结果可能与 8765 不一致,徐先生决策项】
-// Go 用简单切分近似(连续汉字/连续数字含小数点/连续字母各成一词,其余字符为分隔符),
-// 不复现 HanLP 词典("主焦"、"1/3焦")与 NLP 切分;数字词的"硫/挥发/水"分支照抄
-// (Java 里 Double.parseDouble 通过的词不可能含汉字,该分支实为死代码,i+1 越界 999 不可达)。
+// HanLP 分词由同版本 portable-1.8.4 模型原生移植，离线黄金用原服务器 JAR 对照。
+// 数字词的"硫/挥发/水"分支仍照抄 Java(可解析数字不含汉字，属于原实现的不可达分支)。
 //
 // 其他登记差异:
-//   1. redis userId{uid} hash 在 Go 单体恒空(无登录缓存)→ etc_rel_phone 恒拼字面 null
-//      (与 Java redis 未命中一致;Java 命中时拼真实手机号的场景不复现)。
-//   2. 推荐分支 page 缺失:Java 先跑 relListNoPage(结果丢弃)再 relListByPage(null) 连环异常 → 999;
-//      Go 在分支入口直接 999(只读等价,响应逐字节一致)。
-//   3. 匿名验签请求(UserID=0)视同 Java jwtInfo=null:maps.userId=0、推荐分支跳过、
-//      warehouseType=1 → NPE 对应 999(authGuard 已拦未登录,正常登录流不触达)。
-//   4. JSON 数字字面小数位:Java BigDecimal 保 "550.00",Go float64 得 "550"(仓库既有近似,
-//      前端以字符串传数可保字面,bindVal 已支持)。
-//   5. MP count 优化(optimizeCountSql)以 SELECT COUNT(*) FROM (原SQL去 order by) cnt 近似
-//      (仓库既有约定,见 template.go stripOrderBy)。
+//  1. 推荐分支 page 缺失:Java 先跑 relListNoPage(结果丢弃)再 relListByPage(null) 连环异常 → 999;
+//     Go 在分支入口直接 999(只读等价,响应逐字节一致)。
+//  2. 匿名验签请求(UserID=0)视同 Java jwtInfo=null:maps.userId=0、推荐分支跳过、
+//     warehouseType=1 → NPE 对应 999(authGuard 已拦未登录,正常登录流不触达)。
+//  3. JSON 数字字面小数位:Java BigDecimal 保 "550.00",Go float64 得 "550"(仓库既有近似,
+//     前端以字符串传数可保字面,bindVal 已支持)。
+//  4. MP count 优化(optimizeCountSql)以 SELECT COUNT(*) FROM (原SQL去 order by) cnt 近似
+//     (仓库既有约定,见 template.go stripOrderBy)。
 package warehouse
 
 import (
@@ -25,7 +21,6 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"unicode"
 
 	"github.com/seetheworldwithme/panda-supply-chain/backend/internal/platform"
 )
@@ -75,38 +70,16 @@ func bpCount(d *sql.DB, col, v string) (int64, error) {
 	return n, err
 }
 
-// bpTokenize HanLP 近似分词:连续汉字/连续数字(含小数点)/连续字母各成一个词,其余为分隔符
-func bpTokenize(s string) []string {
-	var words []string
-	var cur []rune
-	kind := byte(0)
-	flush := func() {
-		if len(cur) > 0 {
-			words = append(words, string(cur))
-			cur = cur[:0]
-		}
-		kind = 0
+func bpCachedPhone(r *http.Request, uid string) (string, error) {
+	hash, err := platform.RedisHash(r.Context(), "userId"+uid)
+	if err != nil {
+		return "", err
 	}
-	for _, c := range s {
-		k := byte(0)
-		switch {
-		case unicode.Is(unicode.Han, c):
-			k = 'h'
-		case c >= '0' && c <= '9' || c == '.':
-			k = 'd'
-		case unicode.IsLetter(c):
-			k = 'a'
-		}
-		if k == 0 || k != kind {
-			flush()
-		}
-		if k != 0 {
-			kind = k
-			cur = append(cur, c)
-		}
+	phone, ok := hash["phone"]
+	if !ok {
+		return "null", nil
 	}
-	flush()
-	return words
+	return phone, nil
 }
 
 // bpParseNum 对照 Double.parseDouble(word) 成功(仅数字/小数词;字母词 NaN/Inf 不视为数字)
@@ -286,13 +259,18 @@ func (s *Service) bpListByPage(w http.ResponseWriter, r *http.Request) {
 	if v := bpB("i", m["warehouseType"]); v != nil && v.(string) == "0" {
 		sqlStr += " and status = 1 and (is_certified_etc=1 or ware_identity=4)"
 	}
-	// 8. warehouseType 1:redis 无记录 → etc_rel_phone=null 字面拼接;jwtInfo null(UserID=0)→ NPE → 999
+	// 8. 原 Java 直接拼接 Redis phone，未命中保留字面 null；不以数据库补缓存。
 	if v := bpB("i", m["warehouseType"]); v != nil && v.(string) == "1" {
 		if uid == 0 {
 			platform.Unknown(w)
 			return
 		}
-		sqlStr += " and (create_user_id = " + uidStr + " or business_id= " + uidStr + " or area_buser_id= " + uidStr + " or etc_rel_phone=null)"
+		phone, err := bpCachedPhone(r, uidStr)
+		if err != nil {
+			platform.Unknown(w)
+			return
+		}
+		sqlStr += " and (create_user_id = " + uidStr + " or business_id= " + uidStr + " or area_buser_id= " + uidStr + " or etc_rel_phone=" + phone + ")"
 	}
 	// 9. warehouseType 2:otherUserId(null → 字面 null);redis 无记录 → etc_rel_phone=null
 	if v := bpB("i", m["warehouseType"]); v != nil && v.(string) == "2" {
@@ -300,7 +278,12 @@ func (s *Service) bpListByPage(w http.ResponseWriter, r *http.Request) {
 		if ov := bpB("i", m["otherUserId"]); ov != nil {
 			ouid = ov.(string)
 		}
-		sqlStr += " and status != 3 and (create_user_id = " + ouid + " or business_id= " + ouid + " or area_buser_id= " + ouid + " or etc_rel_phone=null)"
+		phone, err := bpCachedPhone(r, ouid)
+		if err != nil {
+			platform.Unknown(w)
+			return
+		}
+		sqlStr += " and status != 3 and (create_user_id = " + ouid + " or business_id= " + ouid + " or area_buser_id= " + ouid + " or etc_rel_phone=" + phone + ")"
 	}
 	// 10/11. isUpDown / isPlatformCertification
 	if bpBoolTrue(m, "isUpDown") {
@@ -359,9 +342,9 @@ func (s *Service) bpListByPage(w http.ResponseWriter, r *http.Request) {
 	if bpBoolTrue(m, "isVisited") {
 		sqlStr += " and exists (select 1 from bus_pro_log where operate_obj=4 and operate_type=7 and pro_id=p.id)"
 	}
-	// 15. 分词分支(!isDirect;HanLP 近似实现,见文件头差异说明)
+	// 15. 分词分支(!isDirect;使用服务器同版本 HanLP portable 模型)
 	if !isDirect {
-		words := bpTokenize(ss)
+		words := hanlpNative(ss)
 		hasEtcName, hasCoalName := false, false
 		for i, word := range words {
 			if !hasEtcName {

@@ -44,54 +44,12 @@ func registerBespoke(mux *http.ServeMux, s *Service) {
 	reg("/chainTlzfOrder/selSfEtc", s.selSfEtc)
 	reg("/chainTlzfOrder/selPtAmt", s.selPtAmt)
 	reg("/chainTlzfOrder/selRelTraceFee", s.selRelTraceFee)
-	reg("/chainTlzfOrder/asyncTlzf", func(w http.ResponseWriter, r *http.Request) {
-		// Java requires repMsg; invalid SM2 callbacks are swallowed by asyncTlzf and return success.
-		if r.FormValue("repMsg") == "" {
-			platform.Unknown(w)
-			return
-		}
-		platform.Success(w, nil)
-	})
-	reg("/chainTlzfOrder/confirmOrCancel", func(w http.ResponseWriter, r *http.Request) {
-		m := bodyMap(r)
-		if !entChainTlzfOrder.validateBody(m) {
-			platform.Unknown(w)
-			return
-		}
-		if m["code"] != nil {
-			platform.Fail(w, 602, "验证码错误")
-			return
-		}
-		platform.Fail(w, 603, "请求失败")
-	})
-	for _, p := range []string{"/chainTlzfOrder/payMoney", "/chainTlzfOrder/selAccAmt", "/chainTlzfOrder/selTransResult"} {
-		reg(p, func(w http.ResponseWriter, r *http.Request) {
-			m := bodyMap(r)
-			if p != "/chainTlzfOrder/selAccAmt" && !entChainTlzfOrder.validateBody(m) {
-				platform.Unknown(w)
-				return
-			}
-			// The Java local environment has no usable Allinpay signing channel. No remote charge is issued.
-			platform.Fail(w, 603, "请求失败")
-		})
-	}
-	reg("/chainTlzfOrder/synchronousStatus", func(w http.ResponseWriter, r *http.Request) {
-		m := bodyMap(r)
-		if !entChainTlzfOrder.validateBody(m) {
-			platform.Unknown(w)
-			return
-		}
-		rows, err := queryRows(s.pick(r), "SELECT * FROM chain_tlzf_order WHERE contract_id <=> ? AND trans_status=0", m["contractId"])
-		if err != nil {
-			platform.Fail(w, 602, "请求失败")
-			return
-		}
-		if len(rows) > 0 {
-			platform.Fail(w, 602, "请求失败")
-			return
-		} // Java MQ send cannot complete locally; pending work remains pending.
-		platform.Success(w, nil)
-	})
+	reg("/chainTlzfOrder/asyncTlzf", s.tlAsync)
+	reg("/chainTlzfOrder/confirmOrCancel", s.tlConfirm)
+	reg("/chainTlzfOrder/payMoney", s.tlPayMoney)
+	reg("/chainTlzfOrder/selAccAmt", s.tlBalance)
+	reg("/chainTlzfOrder/selTransResult", s.tlTransResult)
+	reg("/chainTlzfOrder/synchronousStatus", s.tlSynchronous)
 }
 func (s *Service) selSfEtc(w http.ResponseWriter, r *http.Request) {
 	m := bodyMap(r)

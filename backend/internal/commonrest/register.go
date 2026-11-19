@@ -24,6 +24,9 @@ func Register(mux *http.ServeMux, s *Service) {
 			if strings.HasPrefix(name, "ChainTlzf") || name == "BusMqConsumeLog" {
 				family = 'C'
 			}
+			if name == "ChainBasicEnterprise" {
+				family = 'B'
+			}
 			s.tplListByPage(w, r, e, family)
 		})
 		reg(path+"/getById", func(w http.ResponseWriter, r *http.Request) { s.tplGetById(w, r, e) })
@@ -45,9 +48,15 @@ func Register(mux *http.ServeMux, s *Service) {
 	registerEnterprise(mux, s)
 	registerExternal(mux, s)
 	registerCommonFile(mux, s)
+	registerAuthRest(mux, s)
 }
 func entityForTable(table string) *ent {
 	for _, e := range ents {
+		if e.table == table {
+			return e
+		}
+	}
+	for _, e := range authRestEnts {
 		if e.table == table {
 			return e
 		}

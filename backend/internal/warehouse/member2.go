@@ -272,7 +272,8 @@ func randomRedAmount(db interface {
 // integration still needs a configured and verified transfer adapter.
 func (s *Service) rrReceiveAmount(w http.ResponseWriter, r *http.Request) {
 	enabled, configured := redEnvelopeEnabled()
-	if !configured || !entBusRedEnvelopeRecord.validateBody(bodyMap(r)) {
+	body := bodyMap(r)
+	if !configured || !entBusRedEnvelopeRecord.validateBody(body) {
 		platform.Unknown(w)
 		return
 	}
@@ -280,7 +281,16 @@ func (s *Service) rrReceiveAmount(w http.ResponseWriter, r *http.Request) {
 		platform.Fail(w, 603, "活动已结束")
 		return
 	}
-	platform.Fail(w, 603, "")
+	code, msg, err := s.redReceive(r, body)
+	if err != nil {
+		platform.Fail(w, 603, "")
+		return
+	}
+	if code != 200 {
+		platform.Fail(w, code, msg)
+		return
+	}
+	platform.Success(w, nil)
 }
 
 // usSearchSignDate = searchSignDate:当月逐日签到图(已签 "+N"/过去未签 0/未来与今日 "签")

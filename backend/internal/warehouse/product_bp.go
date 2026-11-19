@@ -179,7 +179,9 @@ func (s *Service) bpSelNowNotice(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	msg := "今日" + strconvI64(n) + "个《炼焦煤》直供平台"
-	// redis GET broadcastMsg:单体内存等价恒空 → 不替换
+	if broadcast := bpBroadcastText(); broadcast != "" {
+		msg = broadcast
+	}
 	parts := strings.Split(msg, ";")
 	platform.Success(w, parts)
 }

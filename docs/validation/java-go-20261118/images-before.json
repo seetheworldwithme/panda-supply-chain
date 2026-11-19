@@ -1,0 +1,23 @@
+[
+  {
+    "case": 0,
+    "differences": [
+      "$.data.lbts:length",
+      "$.data.yyzz:value"
+    ]
+  },
+  {
+    "case": 1,
+    "differences": [
+      "$.data.lbts:missing",
+      "$.data.yyzz:missing"
+    ]
+  },
+  {
+    "case": 2,
+    "differences": [
+      "$.data.yyzz:missing",
+      "$.data.lbts:length"
+    ]
+  }
+]

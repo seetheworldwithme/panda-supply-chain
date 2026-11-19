@@ -21,6 +21,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io"
+	"math/big"
 	"mime/multipart"
 	"net/http"
 	"net/url"
@@ -61,12 +62,14 @@ func autoGenericCode(code string, width int) string {
 
 // impField Excel 列映射(header 与 Java @ExcelColumn value 逐字一致)
 type impField struct {
-	header  string
-	col     string // snake 列
-	kind    string // s=String i=Integer l=Long d=BigDecimal t=LocalDateTime b=Boolean D=LocalDate
-	sys     bool   // SystemCodeColumn
-	dict    bool   // DictColumn
-	notNull bool   // NotBankColumn
+	header      string
+	col         string // snake 列
+	kind        string // s=String i=Integer l=Long d=BigDecimal t=LocalDateTime b=Boolean D=LocalDate
+	sys         bool   // SystemCodeColumn
+	dict        bool   // DictColumn
+	notNull     bool   // NotBankColumn
+	dateCheck   bool   // DateColumn
+	numberCheck bool   // NumberColumn
 }
 
 // ── 导出 ──
@@ -120,7 +123,7 @@ func colIndex(ref string) (int, error) {
 	for i := 0; i < len(ref); i++ {
 		c := ref[i]
 		if c < 'A' || c > 'Z' {
-			return n, nil
+			return n - 1, nil
 		}
 		n = n*26 + int(c-'A') + 1
 	}
@@ -159,9 +162,13 @@ func (s *Service) exportHandler(w http.ResponseWriter, r *http.Request, table st
 	}
 	grid = append(grid, head)
 	for _, m := range ms {
+		folded := map[string]any{}
+		for col, value := range m {
+			folded[strings.ToLower(col)] = value
+		}
 		row := make([]string, 0, len(fields))
 		for _, f := range fields {
-			row = append(row, exportCell(m[f.col], f.kind))
+			row = append(row, exportCell(folded[strings.ToLower(f.col)], f.kind))
 		}
 		grid = append(grid, row)
 	}
@@ -171,11 +178,14 @@ func (s *Service) exportHandler(w http.ResponseWriter, r *http.Request, table st
 // exportCell 对照 writeExcel 的 value.toString():LocalDateTime.toString 秒为 0 时省略
 // ("2023-03-02T17:30")、Boolean → true/false、DECIMAL 保小数位、null 空
 func exportCell(v any, kind string) string {
-	// l/D:Long/LocalDate toString 与扫描文本一致,无需转换
+	// LocalDate 只输出日期，不能带上数据库 DATE 扫描后的零点时间。
 	if v == nil {
 		return ""
 	}
 	s := btsStr(v)
+	if kind == "D" && len(s) >= 10 {
+		return s[:10]
+	}
 	if kind == "b" {
 		return map[string]string{"1": "true", "0": "false"}[s]
 	}
@@ -350,6 +360,9 @@ func readExcelFile(fh *multipart.FileHeader, fields []impField, systemCode strin
 			ent := map[string]any{}
 			allBlank := true
 			for ci, cell := range row.cells {
+				if cell.kind == "missing" {
+					continue
+				}
 				fl, ok := mapped[ci]
 				if !ok {
 					continue
@@ -358,17 +371,24 @@ func readExcelFile(fh *multipart.FileHeader, fields []impField, systemCode strin
 				if strings.TrimSpace(val) != "" {
 					allBlank = false
 				}
-				// validateField(NotBank 必填 / Dict 字典)
+				message := ""
 				if fl.notNull && strings.TrimSpace(val) == "" {
-					irt.ErrInfos = append(irt.ErrInfos, sh.name+"sheet中，第"+strconv.Itoa(row.n)+"行第"+strconv.Itoa(ci+1)+"列字段为空")
-				}
-				if fl.dict {
+					message = "字段为空"
+				} else if fl.dateCheck && !validExcelDate(val) {
+					message = "日期格式错误"
+				} else if fl.numberCheck && !validExcelNumber(val) {
+					message = "必须为数字"
+				} else if fl.dict {
 					if _, err := strconv.Atoi(strings.TrimSpace(val)); err != nil {
 						if _, has := dictMap[val]; !has {
-							irt.ErrInfos = append(irt.ErrInfos, sh.name+"sheet中，第"+strconv.Itoa(row.n)+"行第"+strconv.Itoa(ci+1)+"列无相关字典")
+							message = "无相关字典"
 						}
 					}
 				}
+				if message != "" {
+					irt.ErrInfos = append(irt.ErrInfos, sh.name+"sheet中，第"+strconv.Itoa(row.n)+"行第"+strconv.Itoa(ci+1)+"列"+message)
+				}
+
 				// handleField(行级异常 Java 吞掉:字段留空,行保留)
 				if strings.TrimSpace(val) != "" {
 					setField(ent, fl, val)
@@ -395,16 +415,51 @@ func readExcelFile(fh *multipart.FileHeader, fields []impField, systemCode strin
 			if !allBlank {
 				irt.DataList = append(irt.DataList, ent)
 			}
-			// notNullMap 耗尽(Java 原版 bug:仅首行可触发"不能为空")
+			// notNullMap 耗尽(Java 原版 bug:仅首行可触发"不能为空");
+			// 输出序 = JAR commons-collections4 HashedMap.keySet 迭代序(见 platform.JavaHashedMapOrder)。
 			if len(notNullLeft) > 0 {
+				keep := map[string]bool{}
 				for _, nf := range notNullLeft {
-					irt.ErrInfos = append(irt.ErrInfos, sh.name+"sheet中，"+nf.header+"不能为空")
+					keep[platform.JavaFieldName(nf.col)] = true
+				}
+				var all []string
+				title := map[string]string{}
+				for _, fl := range fields {
+					if fl.notNull {
+						k := platform.JavaFieldName(fl.col)
+						all = append(all, k)
+						title[k] = fl.header
+					}
+				}
+				for _, k := range platform.JavaHashedMapOrder(all, keep) {
+					irt.ErrInfos = append(irt.ErrInfos, sh.name+"sheet中，"+title[k]+"不能为空")
 				}
 				notNullLeft = nil
 			}
 		}
 	}
 	return irt
+}
+
+func validExcelDate(value string) bool {
+	date := strings.Fields(value)
+	if len(date) == 0 {
+		return false
+	}
+	for _, layout := range []string{"2006-01-02", "2006-1-2"} {
+		if _, err := time.Parse(layout, date[0]); err == nil {
+			return true
+		}
+	}
+	return false
+}
+func validExcelNumber(value string) bool {
+	// BigDecimal 不接受空白、NaN 或 Infinity。
+	if value == "" || strings.TrimSpace(value) != value {
+		return false
+	}
+	_, ok := new(big.Rat).SetString(value)
+	return ok && !strings.Contains(value, "/")
 }
 
 // javaHash 对照 Java String.hashCode
@@ -477,6 +532,9 @@ func newSpec(fields []impField) *excelSpec {
 	seen := map[string]bool{}
 	by := map[string]impField{}
 	for _, f := range fields {
+		if f.header == "" {
+			continue
+		} // exported blank columns do not bind import headers
 		if !seen[f.header] {
 			hdrs = append(hdrs, f.header)
 			seen[f.header] = true
@@ -859,7 +917,7 @@ func parseSheetRows(data string, xl *xlsx) []xlsxRow {
 					if ref != "" {
 						if ci, err := colIndex(ref); err == nil {
 							for len(row.cells) < ci {
-								row.cells = append(row.cells, xlsxCell{kind: "blank"})
+								row.cells = append(row.cells, xlsxCell{kind: "missing"})
 							}
 						}
 					}

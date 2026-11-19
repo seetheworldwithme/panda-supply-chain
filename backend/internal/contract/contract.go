@@ -4,13 +4,12 @@
 //
 // 行为保持要点(勿"修复"):
 //   - add 缺 isPayOnline/isEsign → Java 直接解引用 NPE → catch → 602 "保存合同异常"(不落库)
-//   - isEsign=true 且 fileStatus≠0 → feign launchFlow → 本地企业无签章份数返回 602 →
+//   - isEsign=true 且 fileStatus≠0 → 上传附件并发起签章；份数不足返回 602 →
 //     res.getData().toString() NPE → catch → 602 "保存合同异常"(合同不落库);
 //     updateById 同分支忽略 launchFlow 返回值 → 更新已落库,响应 success("保存成功")
 //   - updateById 异常 catch → ResultTool.success("保存失败")(不是 fail)
 //   - removeContracts:DB 行 is_pay_online 为 NULL → getIsPayOnline() NPE → 999
 //   - chainContract 实体 updateTime 无 @JsonFormat(T 格式),createTime 有(空格)——各实体不同,shape 分开处理
-//   - Excel 导入导出 20 个端点本期债务(见 README 三期小节),未注册路由
 //   - toPdfFile 读硬编码 D:\gsht 路径,Linux 必失败 catch 后返回纯文本 "This is to pdf"
 package contract
 
@@ -78,7 +77,8 @@ func Register(mux *http.ServeMux, s *Service) {
 	ct("/chainContract/selZjjgEtc", s.selZjjgEtc)
 	ct("/chainContract/getLogistics", s.getLogistics)
 	ct("/chainContract/delOnce", s.delOnce)
-	ct("/chainContract/toPdfFile", s.toPdfFile)
+	// Java 此入口没有 method 限制。
+	mux.HandleFunc("/saas-contract/chainContract/toPdfFile", zjjgGuard(s.toPdfFile))
 	// add:主/Xs(强制 type=2)/Cg(强制 type=1)
 	ct("/chainContract/add", s.add)
 	ct("/chainXsContract/add", func(w http.ResponseWriter, r *http.Request) { s.addWith(w, r, 2) })
@@ -526,7 +526,7 @@ func (s *Service) eqbSingersOf(d *sql.DB, id int64) []map[string]any {
 
 // add = saveContract。行为保持:缺 isPayOnline/isEsign → 602 "保存合同异常";
 // isPayOnline=true 对方未注册 → 602 "...未注册,请联系对方注册系统";
-// isEsign=true 且 fileStatus≠0 → 本地无签章份数 602 → getData() NPE → 602(不落库)。
+// isEsign=true 且 fileStatus≠0 → 签章返回空数据时 getData() NPE → 602(不落库)。
 // 落库:chain_contract(fill:时间+create/update_user_id)+ chain_logistics_contract(ids)+
 // chain_common_file(filelist,经 saas-common updBthById)+ chain_contract_extend(list)+
 // chain_common_log(日志,getChangeLog 文本细节为债务,仅记前缀)
@@ -567,18 +567,14 @@ func (s *Service) addWith(w http.ResponseWriter, r *http.Request, t int) {
 			return
 		}
 	}
-	// 电子签章:本地无签章份数 → launchFlow 602 → res.getData().toString() NPE → 602(合同不落库)
+	m["eqbFlowId"] = ""
 	if isEsign && fileStatus != 0 {
-		// ponytail: 完整前置链(取文件→uploadFile→launchFlow)在本地均以签章份数不足收场,
-		// 直接保失败语义;接真实 e签宝密钥后需补 SignHelper 集成
-		var free, charge int64
-		_ = d.QueryRow("SELECT IFNULL(sign_free_count,0), IFNULL(sign_charge_count,0) FROM chain_basic_enterprise WHERE id = ?", u.CompanyID).Scan(&free, &charge)
-		if free+charge == 0 {
+		flowID, err := s.contractSign(r, m, false)
+		if err != nil {
 			platform.Fail(w, 602, "保存合同异常")
 			return
 		}
-		platform.Fail(w, 602, "保存合同异常") // 有份数仍走外部 openapi,本地不可达
-		return
+		m["eqbFlowId"] = flowID
 	}
 
 	vals := pick(m, contractCols...)
@@ -766,11 +762,13 @@ func (s *Service) updateById(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
-	// isEsign 高级分支:launchFlow 外部失败仅跳过日志(更新已落库);getChangeLog 文本细节债务
-	if !(func() bool {
-		v, ok := m["isEsign"]
-		return ok && v == true && num(m["fileStatus"]) != 0 && m["eqbFlow"] != nil
-	})() {
+	if m["isEsign"] == true && num(m["fileStatus"]) != 0 {
+		if _, err := s.contractSign(r, m, true); err != nil {
+			echo()
+			return
+		}
+	}
+	{
 		content := "修改合同\n对比结果为：\n"
 		_, _ = d.Exec("INSERT INTO chain_common_log (company_id, user_id, user_name, operation, operation_type) VALUES (?, ?, ?, ?, ?)",
 			strconv.FormatInt(u.CompanyID, 10), strconv.FormatInt(u.UserID, 10), u.Username, content, 1)

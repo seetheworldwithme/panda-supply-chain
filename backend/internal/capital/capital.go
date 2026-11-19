@@ -32,7 +32,8 @@ import (
 )
 
 type Service struct {
-	DB *db.DB
+	DB   *db.DB
+	Auth *auth.Service
 }
 
 func NewService(database *db.DB) *Service { return &Service{DB: database} }
@@ -57,7 +58,7 @@ func Register(mux *http.ServeMux, s *Service) {
 	for _, base := range []string{"/chainCapitalCgDetailed", "/chainCapitalXsDetailed"} {
 		for _, p := range []string{"/list", "/listByPage", "/getById", "/add", "/deleteById", "/updateById",
 			"/saveBatchDetails", "/importAlone", "/importExcelSk", "/importExcelFk", "/exportExcel",
-			"/delBatch", "/getSystemCode", "/getSments", "/getSumPrice", "/countDetail", "/getBanks", "/getDetails"} {
+			"/delBatch", "/balancingAccounts", "/getSystemCode", "/getSments", "/getSumPrice", "/countDetail", "/getBanks", "/getDetails"} {
 			mux.HandleFunc("POST /saas-capital"+base+p, s.handleDetailed)
 		}
 	}

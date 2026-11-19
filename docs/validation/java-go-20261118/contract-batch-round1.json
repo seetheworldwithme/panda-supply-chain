@@ -1,0 +1,49 @@
+[
+  {
+    "endpoint": "chainContract/importOnce",
+    "differences": [
+      "$.data.dataList[0].createTime:value",
+      "$.data.dataList[0].supplierId:value"
+    ],
+    "java_status": 200,
+    "go_status": 200,
+    "cleaned": true
+  },
+  {
+    "endpoint": "chainContract/importAlone",
+    "differences": [
+      "$.data.dataList[0].createTime:value",
+      "$.data.dataList[0].supplierId:value"
+    ],
+    "java_status": 200,
+    "go_status": 200,
+    "cleaned": true
+  },
+  {
+    "endpoint": "chainCgContract/importAlone",
+    "differences": [
+      "$.data.dataList[0].createTime:value",
+      "$.data.dataList[0].supplierId:value"
+    ],
+    "java_status": 200,
+    "go_status": 200,
+    "cleaned": true
+  },
+  {
+    "endpoint": "chainXsContract/importAlone",
+    "differences": [
+      "$.data.dataList[0].createTime:value",
+      "$.data.dataList[0].supplierId:value"
+    ],
+    "java_status": 200,
+    "go_status": 200,
+    "cleaned": true
+  },
+  {
+    "endpoint": "chainContract/importStep",
+    "differences": [],
+    "java_status": 200,
+    "go_status": 200,
+    "cleaned": true
+  }
+]

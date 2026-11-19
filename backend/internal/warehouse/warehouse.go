@@ -34,7 +34,11 @@ import (
 )
 
 type Service struct {
-	DB *db.DB
+	HTTPClient *http.Client // 通知通道可注入本地传输，测试不触达真实用户。
+	DB         *db.DB
+	Jobs       *platform.Jobs
+	redMu      sync.Mutex
+	redCache   map[string]redMemory
 }
 
 func NewService(database *db.DB) *Service { return &Service{DB: database} }

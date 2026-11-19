@@ -228,6 +228,10 @@ func (s *Service) smallCtl(w http.ResponseWriter, r *http.Request, def smallDef)
 // smallListByPage 各小控制器 listByPage(实现各异)
 func (s *Service) smallListByPage(w http.ResponseWriter, r *http.Request, d *sql.DB, def smallDef) {
 	m := bodyMap(r)
+	if _, ok := m["page"].(map[string]any); !ok {
+		platform.Unknown(w) // Java mapper requires a Page object.
+		return
+	}
 	current, size := pageOf(m)
 	var q, countQ string
 	var args []any

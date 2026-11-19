@@ -1,0 +1,42 @@
+[
+  {
+    "populated": true,
+    "endpoint": "chainContract/importOnce",
+    "differences": [],
+    "java_status": 200,
+    "go_status": 200,
+    "cleaned": true
+  },
+  {
+    "populated": true,
+    "endpoint": "chainContract/importAlone",
+    "differences": [],
+    "java_status": 200,
+    "go_status": 200,
+    "cleaned": true
+  },
+  {
+    "populated": true,
+    "endpoint": "chainCgContract/importAlone",
+    "differences": [],
+    "java_status": 200,
+    "go_status": 200,
+    "cleaned": true
+  },
+  {
+    "populated": true,
+    "endpoint": "chainXsContract/importAlone",
+    "differences": [],
+    "java_status": 200,
+    "go_status": 200,
+    "cleaned": true
+  },
+  {
+    "populated": true,
+    "endpoint": "chainContract/importStep",
+    "differences": [],
+    "java_status": 200,
+    "go_status": 200,
+    "cleaned": true
+  }
+]

@@ -1,0 +1,42 @@
+[
+  {
+    "case": "invalid-body:",
+    "differences": []
+  },
+  {
+    "case": "invalid-body:null",
+    "differences": []
+  },
+  {
+    "case": "invalid-body:[]",
+    "differences": []
+  },
+  {
+    "case": "invalid-body:{",
+    "differences": []
+  },
+  {
+    "case": "invalid-body:\"string\"",
+    "differences": []
+  },
+  {
+    "case": "Java-first-JSON-value",
+    "differences": []
+  },
+  {
+    "case": "original-Java-token-on-both",
+    "differences": []
+  },
+  {
+    "case": "authentication-before-body-binding",
+    "differences": []
+  },
+  {
+    "case": "imageGet",
+    "differences": []
+  },
+  {
+    "case": "imageGet?width=90&height=30",
+    "differences": []
+  }
+]

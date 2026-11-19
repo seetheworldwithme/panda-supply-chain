@@ -191,14 +191,36 @@ func (s *Service) openMembershipPay(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer tx.Rollback()
-	vals := map[string]any{"order_nb": uuid32(), "user_id": currentUser(r).UserID, "amount": amount, "amount_unit": "元", "status": 1, "bill_remark": remark, "trans_type": tt, "is_renew": m["isRenew"], "user_coupon_id": m["userCouponId"]}
+	orderNb := uuid32()
+	vals := map[string]any{"order_nb": orderNb, "user_id": currentUser(r).UserID, "amount": amount, "amount_unit": "元", "status": 1, "bill_remark": remark, "trans_type": tt, "is_renew": m["isRenew"], "user_coupon_id": m["userCouponId"]}
 	if _, err := platform.TxInsert(tx, "bus_my_bill", vals); err != nil {
 		platform.Unknown(w)
 		return
 	}
-	// The merchant adapter is an explicit external-service decision. No merchant
-	// credentials are copied from the Java tree and no real payment is initiated.
-	// Local Java fails at its NULL-openid/merchant configuration boundary; rollback
-	// and HTTP 500/code999 preserve that observed behavior.
-	platform.Unknown(w)
+	// 原方法经 TxAdviceInterceptor 全量事务：openid NPE 回滚账单；
+	// miniAppPay 内部 catch → null 是正常返回，账单提交且 success(null)。
+	u, err := platform.GetByID(d, "chain_auth_user", currentUser(r).UserID)
+	if err != nil || u == nil || u["openid"] == nil {
+		platform.Unknown(w) // feign getById 后 openid.toString() NPE
+		return
+	}
+	if m["isJsPay"] == true || m["appid"] != nil {
+		pay, err := s.v3MembershipPay(r, m, amount, orderNb)
+		if err != nil {
+			platform.Unknown(w)
+			return
+		}
+		if err = tx.Commit(); err != nil {
+			platform.Unknown(w)
+			return
+		}
+		platform.Success(w, pay)
+		return
+	}
+	payObj := s.miniAppPay(r, str(u, "openid"), amount, orderNb, remark, nil)
+	if err := tx.Commit(); err != nil {
+		platform.Unknown(w)
+		return
+	}
+	platform.Success(w, payObj)
 }

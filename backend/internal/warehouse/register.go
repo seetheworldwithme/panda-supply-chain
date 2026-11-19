@@ -1,7 +1,8 @@
 // register.go 模板十件套路由挂载。tplCtls(routes_gen.go)逐控制器配置;
 // bespoke 端点在各业务文件里经 extraRegs 注册,注册前已 grep 全 internal 防冲突
 // (/busRedEnvelopeRange/list、/busRedEnvelopeRange/updBatch、/busProLog/selMemberData
-//  二期 authadmin 已实现,路由表已标 skip)。
+//
+//	二期 authadmin 已实现,路由表已标 skip)。
 package warehouse
 
 import (
@@ -15,11 +16,11 @@ import (
 type tplCtl struct {
 	Path         string
 	Ent          *ent
-	Family       byte   // 'A' 无 page → 999;'B' 无 page → listNoPage;'C' B + startTime/endTime 过滤
-	DelBatchData bool   // delBatch 响应 data "删除成功"(true)或无 data(false)
-	ExportGET    bool   // exportExcel 用 GET(仅 BusProduct,十件套 skip 另走 bespoke)
-	Wrap2        bool   // listByPage 把 JsonResult 再包一层(仅 BusGlobalConfig,8765 实测双层 data)
-	HasUpdBatch  bool   // 控制器有 /updBatch 附加端点
+	Family       byte     // 'A' 无 page → 999;'B' 无 page → listNoPage;'C' B + startTime/endTime 过滤
+	DelBatchData bool     // delBatch 响应 data "删除成功"(true)或无 data(false)
+	ExportGET    bool     // exportExcel 用 GET(仅 BusProduct,十件套 skip 另走 bespoke)
+	Wrap2        bool     // listByPage 把 JsonResult 再包一层(仅 BusGlobalConfig,8765 实测双层 data)
+	HasUpdBatch  bool     // 控制器有 /updBatch 附加端点
 	Skip         []string // 不按模板注册的端点路径(bespoke/重复)
 }
 
@@ -64,6 +65,10 @@ func Register(mux *http.ServeMux, s *Service) {
 		}
 		if !skip["/updateById"] {
 			mux.HandleFunc("POST /saas-warehouse"+c.Path+"/updateById", authGuard(func(w http.ResponseWriter, r *http.Request) {
+				if e == entBusVideos {
+					s.updateVideo(w, r)
+					return
+				}
 				s.tplUpdateById(w, r, e)
 			}))
 		}

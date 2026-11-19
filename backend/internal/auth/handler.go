@@ -7,9 +7,12 @@ import (
 	"fmt"
 	"image"
 	"image/color"
-	"image/png"
+	"image/jpeg"
 	"math/big"
+	"net"
 	"net/http"
+	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -148,14 +151,22 @@ func (s *Service) loginTokens(u *chainAuthUser, applyType string) (map[string]in
 		"companyName": companyName,
 		"companyId":   fmt.Sprintf("%d", u.CompanyID.Int64),
 		"level":       fmt.Sprintf("%d", level),
-		"xzqhCode":    u.XzqhCode.String,
-		"xzqhName":    u.XzqhName.String,
-		"accountType": accountType,
-		"nickName":    u.NickName.String,
-		"phone":       u.Phone.String,
-		"wxHeadImg":   u.WxHeadImg.String,
-		"hasRole":     s.hasRole(u.ID) || accountType == "5",
+		"xzqhCode":    nullableString(u.XzqhCode),
+		"xzqhName":    nullableString(u.XzqhName),
+		"accountType": nullableString(u.AccountType),
+		// Java UserServiceImpl 未将昵称和头像复制到 UserInfo。
+		"nickName":  nil,
+		"phone":     nullableString(u.Phone),
+		"wxHeadImg": nil,
+		"hasRole":   s.hasRole(u.ID) || accountType == "5",
 	}, nil
+}
+
+func nullableString(v sql.NullString) any {
+	if !v.Valid {
+		return nil
+	}
+	return v.String
 }
 
 // Login POST /saas-auth/login (form-urlencoded: username/password/code/checked)
@@ -225,15 +236,16 @@ func (s *Service) PhoneCode(w http.ResponseWriter, r *http.Request) {
 		platform.Fail(w, 2002, "用户名不存在")
 		return
 	}
-	var exists int
-	if err := s.DB.QueryRow("SELECT COUNT(*) FROM chain_auth_user WHERE handle_result = 1 AND (phone = ? OR account = ?)", body.Account, body.Account).Scan(&exists); err != nil || exists == 0 {
+	var phone sql.NullString
+	if err := s.DB.QueryRow("SELECT phone FROM chain_auth_user WHERE handle_result = 1 AND (phone = ? OR account = ?) ORDER BY level DESC LIMIT 1", body.Account, body.Account).Scan(&phone); err != nil {
 		platform.Fail(w, 2002, "用户名不存在")
 		return
 	}
-	code := randomCode()
-	s.mu.Lock()
-	s.sms[body.Account+"_PhoneYzm"] = smsCode{value: code, expire: time.Now().Add(60 * time.Second)}
-	s.mu.Unlock()
+	code := s.IssuePhoneCode(body.Account)
+	if platform.LoadWxConfig().SendMsg {
+		platform.SendLegacySMS(r.Context(), phone.String, []string{code}, "", "")
+		code = ""
+	}
 	platform.Success(w, code)
 }
 
@@ -245,20 +257,64 @@ func (s *Service) VerifyPhoneCode(account, code string) bool {
 	return ok && time.Now().Before(sc.expire) && sc.value == code
 }
 
-// ImageCode POST /saas-auth/code/image 返回简单 PNG(Java 版校验已注释,前端主流程不使用)
+// imageCodeKey 与 Java 一样按客户端地址缓存验证码，去掉 IPv6 冒号。
+func imageCodeKey(r *http.Request) string {
+	ip := strings.TrimSpace(strings.Split(r.Header.Get("X-Forwarded-For"), ",")[0])
+	if ip == "" {
+		ip = r.Header.Get("X-Real-IP")
+	}
+	if ip == "" {
+		ip, _, _ = net.SplitHostPort(r.RemoteAddr)
+	}
+	return strings.ReplaceAll(ip, ":", "") + "_ImgYzm"
+}
+
+// ImageCode 保留 JPEG、尺寸参数、四位数字和 60 秒有效期。
 func (s *Service) ImageCode(w http.ResponseWriter, r *http.Request) {
-	img := image.NewRGBA(image.Rect(0, 0, 100, 40))
-	for x := 0; x < 100; x++ {
-		for y := 0; y < 40; y++ {
+	width, height := 67, 23
+	for key, dest := range map[string]*int{"width": &width, "height": &height} {
+		if r.URL.Query().Has(key) {
+			n, err := strconv.Atoi(r.URL.Query().Get(key))
+			if err != nil || n <= 0 || n > 4096 {
+				platform.Unknown(w)
+				return
+			}
+			*dest = n
+		}
+	}
+	img := image.NewRGBA(image.Rect(0, 0, width, height))
+	for x := 0; x < width; x++ {
+		for y := 0; y < height; y++ {
 			img.Set(x, y, color.RGBA{R: 240, G: 240, B: 240, A: 255})
 		}
 	}
 	rng := func(n int) int { v, _ := rand.Int(rand.Reader, big.NewInt(int64(n))); return int(v.Int64()) }
-	for i := 0; i < 60; i++ {
-		img.Set(rng(100), rng(40), color.RGBA{R: uint8(rng(256)), G: uint8(rng(256)), B: uint8(rng(256)), A: 255})
+	code := randomCode()[:4]
+	// ponytail: 四位数字用内置点阵绘制，避免只为验证码引入字体依赖。
+	digits := [10][5]byte{{7, 5, 5, 5, 7}, {2, 6, 2, 2, 7}, {7, 1, 7, 4, 7}, {7, 1, 7, 1, 7}, {5, 5, 7, 1, 1}, {7, 4, 7, 1, 7}, {7, 4, 7, 5, 7}, {7, 1, 1, 1, 1}, {7, 5, 7, 5, 7}, {7, 5, 7, 1, 7}}
+	for i, ch := range code {
+		ink := color.RGBA{R: uint8(20 + rng(110)), G: uint8(20 + rng(110)), B: uint8(20 + rng(110)), A: 255}
+		for y, row := range digits[ch-'0'] {
+			for x := 0; x < 3; x++ {
+				if row&(1<<(2-x)) != 0 {
+					for dx := 0; dx < 2; dx++ {
+						for dy := 0; dy < 3; dy++ {
+							img.Set(6+13*i+x*2+dx, 2+y*3+dy, ink)
+						}
+					}
+				}
+			}
+		}
 	}
-	w.Header().Set("Content-Type", "image/png")
-	_ = png.Encode(w, img)
+	for i := 0; i < 155; i++ {
+		img.Set(rng(width), rng(height), color.RGBA{R: 180, G: 190, B: 180, A: 255})
+	}
+	s.mu.Lock()
+	s.sms[imageCodeKey(r)] = smsCode{value: code, expire: time.Now().Add(60 * time.Second)}
+	s.mu.Unlock()
+	w.Header().Set("Cache-Control", "no-store, no-cache")
+	w.Header().Set("Content-Type", "image/jpeg")
+	_ = jpeg.Encode(w, img, &jpeg.Options{Quality: 75})
 }
 
 // UpdatePwd POST /saas-auth/chainAuthUser/updatePwd (JSON: {id?, password, newPassword})

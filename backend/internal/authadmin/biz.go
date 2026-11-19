@@ -44,6 +44,10 @@ func shapeSupplier(rows []map[string]any) []map[string]any {
 // ${} 原样拼接(含注入语义),searchStr 缺失为字面 "null"
 func (s *Service) supplierListByPage(w http.ResponseWriter, r *http.Request) {
 	m := bodyMap(r)
+	if _, ok := m["page"].(map[string]any); !ok {
+		platform.Unknown(w) // Java mapper requires a Page object.
+		return
+	}
 	current, size := pageOf(m)
 	sql := "where 1=1 "
 	if v, ok := m["partnerType"]; ok && v != nil {

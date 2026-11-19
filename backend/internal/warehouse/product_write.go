@@ -1,9 +1,8 @@
-// product_write.go BusProduct 写端点与积分/日志链(批1;对照规格书 3.4-3.8/3.13/3.15-3.17/3.23-3.25)。
-// 已知差异(徐先生决策项):MQ 同步消息不发送(单体无 RocketMQ,Java 本地 proxy 不在线时
-// 发送同样失败被吞,响应不受影响);短信/unipush/微信推送为外部依赖,本地恒失败,Go 不发起。
+// 煤种写接口及积分、日志、持久化后续同步，按服务器运行包保留原行为。
 package warehouse
 
 import (
+	"context"
 	"crypto/rand"
 	"database/sql"
 	"encoding/hex"
@@ -33,9 +32,9 @@ func init() {
 			platform.Success(w, nil) // Java mapper @Update 里是 SELECT,恒无写入
 		})
 		reg("/busProduct/syncEtcScore", s.bpSyncEtcScore)
-		reg("/busProduct/getDetailImg", s.bpGetDetailImg)
-		reg("/busProduct/pushOfficialMsg", s.bpPushOfficialMsg)
-		reg("/busProduct/getCareOfficial", s.bpGetCareOfficial)
+		reg("/busProduct/getDetailImg", s.bpGetDetailImgActual)
+		reg("/busProduct/pushOfficialMsg", s.bpPushOfficialActual)
+		reg("/busProduct/getCareOfficial", s.bpGetCareActual)
 	})
 }
 
@@ -223,7 +222,7 @@ func (s *Service) bpUpdUserScore(w http.ResponseWriter, d *sql.DB, bp map[string
 	// status==2 → 返回当月冻结积分(仅 updateById 审核 paths 调用,status 均来自 bp)
 	if st := str(bp, "status"); st == "2" {
 		var fs int
-		_ = d.QueryRow("select ifnull(score,0) from bus_score_log where user_id = "+userId+" and pro_id = "+str(bp, "id")+" and score_type=2 and score_get_type=3 limit 1").Scan(&fs)
+		_ = d.QueryRow("select ifnull(score,0) from bus_score_log where user_id = " + userId + " and pro_id = " + str(bp, "id") + " and score_type=2 and score_get_type=3 limit 1").Scan(&fs)
 		newMo := ruleMoGetSumScore + fs
 		_, _ = d.Exec("UPDATE bus_score_rule SET mo_get_sum_score=? WHERE id=?", newMo, ruleID)
 		if urow != nil {
@@ -256,7 +255,7 @@ func (s *Service) bpUpdUserScore(w http.ResponseWriter, d *sql.DB, bp map[string
 	case 5:
 		content = "审核通过发布煤种"
 		var fs int
-		_ = d.QueryRow("select ifnull(score,0) from bus_score_log where user_id = "+userId+" and pro_id = "+str(bp, "id")+" and score_type=2 and score_get_type=2 limit 1").Scan(&fs)
+		_ = d.QueryRow("select ifnull(score,0) from bus_score_log where user_id = " + userId + " and pro_id = " + str(bp, "id") + " and score_type=2 and score_get_type=2 limit 1").Scan(&fs)
 		if fs == 0 {
 			fs = publishCoalScore
 			s.bpScoreLog(d, userId, userPhone, "发布煤种", fs, orgA, orgA, orgF, orgF+fs, str(bp, "id"), 1, 2, 2)
@@ -279,7 +278,7 @@ func (s *Service) bpUpdUserScore(w http.ResponseWriter, d *sql.DB, bp map[string
 	case 6:
 		content = "审核通过更新价格"
 		var fs int
-		_ = d.QueryRow("select ifnull(score,0) from bus_score_log where user_id = "+userId+" and pro_id = "+str(bp, "id")+" and score_type=2 and score_get_type=3 limit 1").Scan(&fs)
+		_ = d.QueryRow("select ifnull(score,0) from bus_score_log where user_id = " + userId + " and pro_id = " + str(bp, "id") + " and score_type=2 and score_get_type=3 limit 1").Scan(&fs)
 		if fs == 0 {
 			fs = updPriceScore
 			s.bpScoreLog(d, userId, userPhone, "更新煤种价格", fs, orgA, orgA, orgF, orgF+fs, str(bp, "id"), 1, 2, 3)
@@ -409,7 +408,7 @@ func (s *Service) bpUpdateById(w http.ResponseWriter, r *http.Request) {
 		if str(m, "status") == "1" && str(bp, "status") == "0" {
 			m["lastCheckTime"] = nowSpace()
 		}
-		if str(m, "status") == "3" {
+		if str(m, "status") == "3" && str(bp, "status") == "0" {
 			m["downTime"] = nowSpace()
 		}
 	}
@@ -452,31 +451,17 @@ func (s *Service) bpUpdateById(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	s.bpLog(w, r, d, "修改了煤种："+str(bp, "thName")+s.custLog(m, false), "2")
-	// MQ syncOtherInfo 不发送(单体差异);score=getUpdPriceScore:
-	// selNewPriceLog 最新价对比 → 冻结/解冻积分
-	score := s.bpGetUpdPriceScore(w, d, bp, m)
+	score := s.bpOriginalUpdPriceScore(w, d, bp, m)
 	if score < 0 {
 		return
 	}
+	job := r.Clone(context.WithoutCancel(r.Context()))
+	job.Header = r.Header.Clone()
+	job.Header.Del("applytype") // 原 MQ 消费者没有请求头，使用默认业务库。
+	first := str(m, "status") == "1" && str(bp, "status") == "0" && bp["lastCheckTime"] == nil
+	userID, oldStatus := strconv.FormatInt(currentUser(r).UserID, 10), str(bp, "status")
+	s.submitProductJob(job, productJob{ProID: id, UserID: userID, First: first, OriginalStatus: oldStatus})
 	platform.Success(w, jsonNumberInt64(int64(score)))
-}
-
-// bpGetUpdPriceScore = getUpdPriceScore:新旧价对比 → updUserScore(3,2) 冻结或 (6,1)
-func (s *Service) bpGetUpdPriceScore(w http.ResponseWriter, d *sql.DB, bp, m map[string]any) int {
-	newPrice, oldPrice := "", ""
-	if v := str(m, "exFactoryPrice"); v != "" {
-		newPrice, oldPrice = v, s.bpLastPrice(d, str(m, "id"), "1")
-	} else if v := str(m, "platePrice"); v != "" {
-		newPrice, oldPrice = v, s.bpLastPrice(d, str(m, "id"), "2")
-	} else {
-		return 0
-	}
-	if newPrice == "" || oldPrice == "" || newPrice == oldPrice {
-		return 0
-	}
-	// 简化对照:getUpdPriceScore 分支按新旧价 status 变化调用 updUserScore(3,2)/(6,1);
-	// 本地价格流水以最新一条 pre_price 为旧价。具体状态迁移登记差异(规格 2 节)。
-	return s.bpUpdUserScore(w, d, m, 3, 2)
 }
 
 func (s *Service) bpLastPrice(d *sql.DB, proId, priceType string) string {
@@ -721,25 +706,4 @@ func (s *Service) bpSyncEtcScore(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	platform.Success(w, nil)
-}
-
-// bpGetDetailImg:合成图依赖 /home/ubuntu/uploadfiles/frame73.jpg,本地 Java 同样缺失
-// → 全程异常被吞 → success(null)(登记差异:Go 直接等价返回 null,不做画图)
-func (s *Service) bpGetDetailImg(w http.ResponseWriter, r *http.Request) {
-	platform.Success(w, nil)
-}
-
-// bpPushOfficialMsg:feign getAccessToken 在 try 外 → 本地失败 → 999
-func (s *Service) bpPushOfficialMsg(w http.ResponseWriter, r *http.Request) {
-	platform.Unknown(w)
-}
-
-// bpGetCareOfficial:openid 缺失 → 999;微信查询失败 → fail("判断是否关注公众号异常：")
-func (s *Service) bpGetCareOfficial(w http.ResponseWriter, r *http.Request) {
-	m := bodyMap(r)
-	if _, has := m["openid"]; !has || m["openid"] == nil {
-		platform.Unknown(w)
-		return
-	}
-	platform.FailData(w, 999, "失败", "判断是否关注公众号异常：")
 }

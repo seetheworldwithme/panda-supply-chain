@@ -1,0 +1,86 @@
+[
+  {
+    "endpoint": "chainContract/importExcelCg",
+    "differences": [
+      "$database:contract-or-supplier"
+    ],
+    "java_status": 200,
+    "go_status": 200,
+    "java_code": 200,
+    "go_code": 200,
+    "java_fixture": true,
+    "go_fixture": true,
+    "fixture_created": true,
+    "cleaned": true
+  },
+  {
+    "endpoint": "chainContract/importExcelXs",
+    "differences": [
+      "$database:contract-or-supplier"
+    ],
+    "java_status": 200,
+    "go_status": 200,
+    "java_code": 200,
+    "go_code": 200,
+    "java_fixture": true,
+    "go_fixture": true,
+    "fixture_created": true,
+    "cleaned": true
+  },
+  {
+    "endpoint": "chainCgContract/importExcelCg",
+    "differences": [
+      "$database:contract-or-supplier"
+    ],
+    "java_status": 200,
+    "go_status": 200,
+    "java_code": 200,
+    "go_code": 200,
+    "java_fixture": true,
+    "go_fixture": true,
+    "fixture_created": true,
+    "cleaned": true
+  },
+  {
+    "endpoint": "chainCgContract/importExcelXs",
+    "differences": [
+      "$database:contract-or-supplier"
+    ],
+    "java_status": 200,
+    "go_status": 200,
+    "java_code": 200,
+    "go_code": 200,
+    "java_fixture": true,
+    "go_fixture": true,
+    "fixture_created": true,
+    "cleaned": true
+  },
+  {
+    "endpoint": "chainXsContract/importExcelCg",
+    "differences": [
+      "$database:contract-or-supplier"
+    ],
+    "java_status": 200,
+    "go_status": 200,
+    "java_code": 200,
+    "go_code": 200,
+    "java_fixture": true,
+    "go_fixture": true,
+    "fixture_created": true,
+    "cleaned": true
+  },
+  {
+    "endpoint": "chainXsContract/importExcelXs",
+    "differences": [
+      "$database:contract-or-supplier"
+    ],
+    "java_status": 200,
+    "go_status": 200,
+    "java_code": 200,
+    "go_code": 200,
+    "java_fixture": true,
+    "go_fixture": true,
+    "fixture_created": true,
+    "cleaned": true
+  }
+]

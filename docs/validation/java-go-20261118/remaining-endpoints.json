@@ -1,0 +1,112 @@
+[
+  {
+    "name": "wechat/auth echostr",
+    "differences": [],
+    "note": ""
+  },
+  {
+    "name": "wechat/auth default",
+    "differences": [],
+    "note": ""
+  },
+  {
+    "name": "wechat/authorize",
+    "differences": [],
+    "note": ""
+  },
+  {
+    "name": "wechat/userInfo invalid",
+    "differences": [],
+    "note": ""
+  },
+  {
+    "name": "selPhoneMsg invalid",
+    "differences": [],
+    "note": ""
+  },
+  {
+    "name": "login invalid",
+    "differences": [],
+    "note": ""
+  },
+  {
+    "name": "reg empty body",
+    "differences": [],
+    "note": ""
+  },
+  {
+    "name": "reg wrong code",
+    "differences": [],
+    "note": ""
+  },
+  {
+    "name": "updMerExpire",
+    "differences": [],
+    "note": ""
+  },
+  {
+    "name": "stopAll",
+    "differences": [],
+    "note": ""
+  },
+  {
+    "name": "stopById",
+    "differences": [],
+    "note": ""
+  },
+  {
+    "name": "payNotify bad sign",
+    "differences": [],
+    "note": ""
+  },
+  {
+    "name": "payNotify empty body",
+    "differences": [],
+    "note": ""
+  },
+  {
+    "name": "payNotify GET",
+    "differences": [],
+    "note": ""
+  },
+  {
+    "name": "getWxConfig",
+    "differences": [],
+    "note": ""
+  },
+  {
+    "name": "refundMoney",
+    "differences": [],
+    "note": ""
+  },
+  {
+    "name": "payNotify verified success",
+    "differences": [],
+    "note": "java={'http': 200, 'body': '<xml><return_code>SUCCESS</return_code><return_msg>OK</return_msg></xml>', 'billStatus': '2', 'user': '3\\t2027-12-31 10:20:30'} go={'http': 200, 'body': '<xml><return_code>SUCCESS</return_code><return_msg>OK</return_msg></xml>', 'billStatus': '2', 'user': '3\\t2027-12-31 10:20:30'}"
+  },
+  {
+    "name": "loginChat 1:1 JAR defect",
+    "differences": [],
+    "note": "java=500 go=500 body=b'{\"success\":false,\"code\":999,\"msg\":\"\\xe5\\xa4\\xb1\\xe8\\xb4\\xa5\",\"data\":\"\\xe7\\xb3\\xbb\\xe7\\xbb\\x9f\\xe5\\x8f\\x91\\xe7\\x94\\x9f\\xe6\\x9c\\xaa\\xe7\\x9f\\xa5\\xe9\\x94\\x99\\xe8\\xaf\\xaf\\xef\\xbc\\x8c\\xe8\\xaf\\xb7\\xe7\\xa8\\x8d\\xe5\\x90\\x8e\\xe9\\x87\\x8d\\xe8\\xaf\\x95\\xe3\\x80\\x82\"}\\n'"
+  },
+  {
+    "name": "loginChatApp 1:1 JAR defect",
+    "differences": [],
+    "note": "java=500 go=500 body=b'{\"success\":false,\"code\":999,\"msg\":\"\\xe5\\xa4\\xb1\\xe8\\xb4\\xa5\",\"data\":\"\\xe7\\xb3\\xbb\\xe7\\xbb\\x9f\\xe5\\x8f\\x91\\xe7\\x94\\x9f\\xe6\\x9c\\xaa\\xe7\\x9f\\xa5\\xe9\\x94\\x99\\xe8\\xaf\\xaf\\xef\\xbc\\x8c\\xe8\\xaf\\xb7\\xe7\\xa8\\x8d\\xe5\\x90\\x8e\\xe9\\x87\\x8d\\xe8\\xaf\\x95\\xe3\\x80\\x82\"}\\n'"
+  },
+  {
+    "name": "appPayNotify Go-only (Java env defect)",
+    "differences": [],
+    "note": "Go status=200 body=b''"
+  },
+  {
+    "name": "appPayNotify Java local",
+    "differences": [],
+    "note": "Java status=500（商户私钥缺失类初始化失败，环境缺陷）"
+  },
+  {
+    "name": "start void",
+    "differences": [],
+    "note": "通联同步定时任务未迁移（支付硬依赖）"
+  }
+]

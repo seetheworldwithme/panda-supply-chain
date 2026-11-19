@@ -64,6 +64,10 @@ func getMapsOf(m map[string]any) map[string]any {
 // company_id/is_esign 等直拼(与 Java 相同的注入面),maps 值参数化
 func (s *Service) listByPage(w http.ResponseWriter, r *http.Request) {
 	m := bodyMap(r)
+	if _, ok := m["page"].(map[string]any); !ok {
+		platform.Unknown(w) // Java mapper requires a Page object.
+		return
+	}
 	d := s.pick(r)
 	u := currentUser(r)
 	current, size := pageOf(m)

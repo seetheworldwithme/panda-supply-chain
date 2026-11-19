@@ -1,0 +1,32 @@
+[
+  {
+    "path": "/chainAuthChat/loginByAccount",
+    "success_required": true,
+    "differences": []
+  },
+  {
+    "path": "/chainAuthChat/buslogin",
+    "success_required": true,
+    "differences": []
+  },
+  {
+    "path": "/chainAuthUser/loginCarSystem",
+    "success_required": true,
+    "differences": []
+  },
+  {
+    "path": "/chainAuthUser/loginCarSystem",
+    "success_required": false,
+    "differences": []
+  },
+  {
+    "path": "/chainAuthChat/getAppInfo",
+    "success_required": false,
+    "differences": []
+  },
+  {
+    "path": "/chainAuthChat/getAppInfo",
+    "success_required": true,
+    "differences": []
+  }
+]

@@ -66,7 +66,7 @@ func colIndex(ref string) (int, error) {
 	for i := 0; i < len(ref); i++ {
 		c := ref[i]
 		if c < 'A' || c > 'Z' {
-			return n, nil
+			return n - 1, nil
 		}
 		n = n*26 + int(c-'A') + 1
 	}
@@ -292,10 +292,24 @@ func readExcelFile(fh *multipart.FileHeader, fields []impField, systemCode strin
 			if !allBlank {
 				irt.DataList = append(irt.DataList, ent)
 			}
-			// notNullMap 耗尽(Java 原版 bug:仅首行可触发"不能为空")
+			// notNullMap 耗尽(Java 原版 bug:仅首行可触发"不能为空");
+			// 输出序 = JAR commons-collections4 HashedMap.keySet 迭代序(见 platform.JavaHashedMapOrder)。
 			if len(notNullLeft) > 0 {
+				keep := map[string]bool{}
 				for _, nf := range notNullLeft {
-					irt.ErrInfos = append(irt.ErrInfos, sh.name+"sheet中，"+nf.header+"不能为空")
+					keep[platform.JavaFieldName(nf.col)] = true
+				}
+				var all []string
+				title := map[string]string{}
+				for _, fl := range fields {
+					if fl.notNull {
+						k := platform.JavaFieldName(fl.col)
+						all = append(all, k)
+						title[k] = fl.header
+					}
+				}
+				for _, k := range platform.JavaHashedMapOrder(all, keep) {
+					irt.ErrInfos = append(irt.ErrInfos, sh.name+"sheet中，"+title[k]+"不能为空")
 				}
 				notNullLeft = nil
 			}

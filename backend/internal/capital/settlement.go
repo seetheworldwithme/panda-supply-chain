@@ -223,6 +223,10 @@ func stListByPageSearch(m map[string]any) (string, []any, bool) {
 // stListByPage mapper:显式列 IFNULL(khxje,sum_price)+CONCAT 10 列,order by set_start_time desc
 func (s *Service) stListByPage(w http.ResponseWriter, r *http.Request) {
 	m := bodyMap(r)
+	if _, ok := m["page"].(map[string]any); !ok {
+		platform.Unknown(w) // Java mapper requires a Page object.
+		return
+	}
 	if !validateDT(m, dtSettSpace, dtSettDate, dtSettT) {
 		platform.Unknown(w)
 		return
@@ -414,8 +418,6 @@ func (s *Service) stSaveBatch(w http.ResponseWriter, r *http.Request) {
 		}
 		vals := pick(row, entSettlement.cols...)
 		delete(vals, "id")
-		delete(vals, "create_time")
-		delete(vals, "update_time")
 		if n, err := intType(row, "type"); err == nil {
 			switch n {
 			case 1:

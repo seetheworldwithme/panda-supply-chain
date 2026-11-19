@@ -13,10 +13,7 @@ func registerEnterprise(mux *http.ServeMux, s *Service) {
 	}
 	reg("add", s.enterpriseAdd)
 	reg("selProvinces", s.selProvinces)
-	reg("selEtcName", func(w http.ResponseWriter, r *http.Request) {
-		// The local Qichacha channel has no successful response. Java's catch returns an empty JSONArray.
-		platform.Success(w, []any{})
-	})
+	reg("selEtcName", s.enterpriseSearch)
 	reg("selEtcInfo", func(w http.ResponseWriter, r *http.Request) {
 		m := bodyMap(r)
 		rows, err := queryRows(s.pick(r), "SELECT * FROM chain_basic_enterprise WHERE enterprise_name <=> ? AND is_authentication=1", m["enterpriseName"])
@@ -31,14 +28,7 @@ func registerEnterprise(mux *http.ServeMux, s *Service) {
 		platform.Fail(w, 603, "")
 	})
 	for _, p := range []string{"tlOpenBind", "tlChangeAcc"} {
-		mux.HandleFunc("POST /saas-common/chainTlzfConfig/"+p, authGuard(func(w http.ResponseWriter, r *http.Request) {
-			m := bodyMap(r)
-			if !entChainTlzfConfig.validateBody(m) {
-				platform.Unknown(w)
-				return
-			}
-			platform.Fail(w, 603, "请求失败")
-		}))
+		mux.HandleFunc("POST /saas-common/chainTlzfConfig/"+p, authGuard(s.tlConfig))
 	}
 }
 

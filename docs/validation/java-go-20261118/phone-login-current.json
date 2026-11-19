@@ -1,0 +1,38 @@
+[
+  {
+    "case": 0,
+    "differences": [],
+    "jar_compilation_defect_replicated": true,
+    "go_verified": true
+  },
+  {
+    "case": 1,
+    "differences": [],
+    "jar_compilation_defect_replicated": true,
+    "go_verified": true
+  },
+  {
+    "case": 2,
+    "differences": [],
+    "jar_compilation_defect_replicated": true,
+    "go_verified": true
+  },
+  {
+    "case": 3,
+    "differences": [],
+    "jar_compilation_defect_replicated": true,
+    "go_verified": true
+  },
+  {
+    "case": 4,
+    "differences": [],
+    "jar_compilation_defect_replicated": false,
+    "go_verified": true
+  },
+  {
+    "case": 5,
+    "differences": [],
+    "jar_compilation_defect_replicated": false,
+    "go_verified": true
+  }
+]

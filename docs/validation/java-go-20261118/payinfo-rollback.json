@@ -1,0 +1,22 @@
+[
+  {
+    "name": "getPayInfo openid success(null)",
+    "differences": [],
+    "note": "java={'http': 200, 'code': 200, 'data': None, 'billDelta': 1} go={'http': 200, 'code': 200, 'data': None, 'billDelta': 1}"
+  },
+  {
+    "name": "getPayInfo bill shape",
+    "differences": [],
+    "note": "['5980\\t开通年度会员\\t2\\t1', '5980\\t开通年度会员\\t2\\t1']"
+  },
+  {
+    "name": "getPayInfo openid-null rollback",
+    "differences": [],
+    "note": "java={'http': 500, 'code': 999, 'billDelta': 0} go={'http': 500, 'code': 999, 'billDelta': 0}"
+  },
+  {
+    "name": "payNotify expiration-null rollback",
+    "differences": [],
+    "note": "java={'http': 500, 'billStatus': '1', 'user': '1\\t1'} go={'http': 500, 'billStatus': '1', 'user': '1\\t1'}"
+  }
+]

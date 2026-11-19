@@ -15,5 +15,8 @@ backend/public/uploads/
 *.pem
 *.key
 
+# Python
+__pycache__/
+
 # 系统
 .DS_Store

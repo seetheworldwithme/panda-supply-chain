@@ -4,8 +4,10 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/seetheworldwithme/panda-supply-chain/backend/internal/auth"
 	"github.com/seetheworldwithme/panda-supply-chain/backend/internal/authadmin"
@@ -18,6 +20,7 @@ import (
 	"github.com/seetheworldwithme/panda-supply-chain/backend/internal/db"
 	"github.com/seetheworldwithme/panda-supply-chain/backend/internal/logistics"
 	"github.com/seetheworldwithme/panda-supply-chain/backend/internal/menu"
+	"github.com/seetheworldwithme/panda-supply-chain/backend/internal/platform"
 	"github.com/seetheworldwithme/panda-supply-chain/backend/internal/warehouse"
 )
 
@@ -36,10 +39,34 @@ func main() {
 		log.Fatalf("RSA 密钥初始化失败: %v", err)
 	}
 
+	jobDir := os.Getenv("PANDA_JOB_DIR")
+	if jobDir == "" {
+		jobDir = "data/jobs"
+	}
+	jobs := platform.NewJobs(jobDir)
+	mux := newMuxWithJobs(database, kp, jobs)
+	go func() {
+		if err := jobs.Run(context.Background()); err != nil {
+			log.Fatalf("后台消息队列失败: %v", err)
+		}
+	}()
+
+	handler := cors(auth.Middleware(kp, database.Chain, database.Zjjg)(platform.ValidateJavaBodies(mux)))
+	log.Printf("云管理 Go 后端监听 :%s (chain=%s)", cfg.Port, maskDSN(cfg.ChainDSN))
+	log.Fatal(http.ListenAndServe(":"+cfg.Port, handler))
+}
+
+// newMux 供服务启动和离线路由核查共用。
+func newMux(database *db.DB, kp *auth.KeyPair) *http.ServeMux {
+	return newMuxWithJobs(database, kp, nil)
+}
+
+func newMuxWithJobs(database *db.DB, kp *auth.KeyPair, jobs *platform.Jobs) *http.ServeMux {
 	authSvc := auth.NewService(database.Chain, kp)
 	menuSvc := menu.NewService(database.Chain)
 	dashSvc := dashboard.NewService(database)
 	adminSvc := authadmin.NewService(database)
+	adminSvc.Auth = authSvc
 	contractSvc := contract.NewService(database)
 	logisticsSvc := logistics.NewService(database)
 
@@ -48,9 +75,15 @@ func main() {
 	// ── saas-auth:登录族(permitAll,照 Java SecurityConfig 放行清单) ──
 	mux.HandleFunc("POST /saas-auth/login", authSvc.Login)
 	mux.HandleFunc("POST /saas-auth/screenLogin", authSvc.ScreenLogin)
+	mux.HandleFunc("POST /saas-auth/authentication/mobile", authSvc.MobileLogin)
+	mux.HandleFunc("/saas-auth/logout", authSvc.Logout)
 	mux.HandleFunc("POST /saas-auth/code/phone", authSvc.PhoneCode)
 	mux.HandleFunc("POST /saas-auth/code/image", authSvc.ImageCode)
+	mux.HandleFunc("GET /saas-auth/code/imageGet", authSvc.ImageCode)
 	mux.HandleFunc("POST /saas-auth/chainAuthUser/updatePwd", authSvc.UpdatePwd)
+	mux.HandleFunc("POST /saas-auth/chainAuthUser/getPhoneCode", authSvc.UserPhoneCode)
+	mux.HandleFunc("POST /saas-auth/chainAuthChat/code/phone", authSvc.ChatPhoneCode)
+	mux.HandleFunc("POST /saas-auth/chainAuthUser/createToken", authSvc.CreateExpiredToken)
 
 	// ── saas-auth:菜单/权限 ──
 	mux.HandleFunc("POST /saas-auth/chainAuthMenu/selUserMenus", menuSvc.SelUserMenus)
@@ -70,6 +103,7 @@ func main() {
 
 	// ── saas-capital 全服务(五期资金;统计 selectQuantity/countSett/countDetail 已由本期精确实现接管) ──
 	capitalSvc := capital.NewService(database)
+	capitalSvc.Auth = authSvc
 	capital.Register(mux, capitalSvc)
 
 	// ── saas-bill 全服务(五期票据;chainBill 统计 7 条与 chainBillRate 2 条自 dashboard 移交精确实现) ──
@@ -79,7 +113,19 @@ func main() {
 	// ── saas-warehouse 全服务 + saas-common 剩余(六期掌上煤炭运营) ──
 	whSvc := warehouse.NewService(database)
 	warehouse.Register(mux, whSvc)
-	commonrest.Register(mux, commonrest.NewService(database))
+	commonSvc := commonrest.NewService(database)
+	commonSvc.Auth = authSvc
+	commonrest.Register(mux, commonSvc)
+	commonSvc.BatchMux = mux
+	if jobs != nil {
+		whSvc.RegisterJobs(jobs)
+		commonSvc.RegisterJobs(jobs)
+		go func() {
+			if err := authSvc.StartMemberExpiry(context.Background()); err != nil {
+				log.Printf("会员到期监听失败: %v", err)
+			}
+		}()
+	}
 
 	// 健康检查
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, r *http.Request) {
@@ -87,9 +133,7 @@ func main() {
 		_, _ = w.Write([]byte("ok"))
 	})
 
-	handler := cors(auth.Middleware(kp, database.Chain)(mux))
-	log.Printf("云管理 Go 后端监听 :%s (chain=%s)", cfg.Port, maskDSN(cfg.ChainDSN))
-	log.Fatal(http.ListenAndServe(":"+cfg.Port, handler))
+	return mux
 }
 
 // cors 对照 Java 网关的跨域放行:前端各端口直连 8765,允许任意来源与所需请求头

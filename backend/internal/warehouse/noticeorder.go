@@ -288,11 +288,15 @@ func mapSearchArg(m map[string]any) any {
 // ${searchSql} order by create_time desc(无 CONCAT 条款)。
 func (s *Service) advFindList(w http.ResponseWriter, r *http.Request) {
 	m := bodyMap(r)
-	cond, ok := s.mapConds(m, entBusAdvertisement)
-	if !ok {
-		platform.Unknown(w)
-		return
+	// Java calls generic getSql(T) with a Map: it inspects HashMap fields,
+	// finds no ExcelColumn annotations and produces no predicates.
+	for _, v := range m {
+		if v == nil {
+			platform.Unknown(w)
+			return
+		}
 	}
+	cond := " where 1=1"
 	q := "select *, (select notice_type from bus_notice where id=notice_id) noticeType from bus_advertisement" + cond + " order by create_time desc"
 	rows, cols, err := s.queryEnt(r, q)
 	if err != nil {
@@ -518,6 +522,10 @@ func (s *Service) elLike(w http.ResponseWriter, r *http.Request) {
 // status 非空再原样注入;isPtSearch 空/false → and bus_order.create_phone = '<user.phone>'。
 func (s *Service) orderListByPage(w http.ResponseWriter, r *http.Request) {
 	m := bodyMap(r)
+	if _, ok := m["page"].(map[string]any); !ok {
+		platform.Unknown(w) // Java mapper requires a Page object.
+		return
+	}
 	if !entBusOrder.validateBody(m) {
 		platform.Unknown(w)
 		return
@@ -630,7 +638,7 @@ func (s *Service) orderGetById(w http.ResponseWriter, r *http.Request) {
 }
 
 // placeOrder 实测{}→999 且无新行:save() 先插行,随后 pro=getById(proId) 缺失 →
-// params 组装 NPE → 全局事务回滚 → 无行+999;有产品则短信通知(外部依赖,Go 不发送,已登记差异)。
+// params 组装 NPE → 全局事务回滚；有产品时按原配置发送通知。
 func (s *Service) placeOrder(w http.ResponseWriter, r *http.Request) {
 	m := bodyMap(r)
 	if !entBusOrder.validateBody(m) {
@@ -686,7 +694,14 @@ func (s *Service) placeOrder(w http.ResponseWriter, r *http.Request) {
 		platform.Unknown(w)
 		return
 	}
-	platform.Success(w, nil) // 短信通知为外部依赖,Go 不发送(已知差异清单)
+	if cfgs > 0 {
+		product, _ := platform.GetByID(d, "bus_product", vals["pro_id"])
+		configs, _ := queryRows(d, "SELECT admin_phone FROM bus_config WHERE msg_type=1")
+		for _, config := range configs {
+			platform.SendLegacySMS(r.Context(), javaStr(config["admin_phone"]), []string{phone, javaStr(product["warehouse_nb"])}, "1990680", "")
+		}
+	}
+	platform.Success(w, nil)
 }
 
 // ── busNotice/listByPage( advertisements @Many 关联) ─────────────────────────
@@ -695,6 +710,10 @@ func (s *Service) placeOrder(w http.ResponseWriter, r *http.Request) {
 // selAdvers(@Many):SELECT t.* from bus_advertisement t where notice_id = ${id}(id 字面注入)。
 func (s *Service) noticeLbListByPage(w http.ResponseWriter, r *http.Request) {
 	m := bodyMap(r)
+	if _, ok := m["page"].(map[string]any); !ok {
+		platform.Unknown(w) // Java mapper requires a Page object.
+		return
+	}
 	if !entBusNotice.validateBody(m) {
 		platform.Unknown(w)
 		return
@@ -782,7 +801,10 @@ func (s *Service) vidGetById(w http.ResponseWriter, r *http.Request) {
 			shaped[0]["busProduct"] = pshaped[0]
 		}
 	}
-	// 红包分支:shareUserId 非空且访客≠分享者才触发(发送为 MQ/红包随机,已知差异,Go 不复刻)
+	if err := s.videoVisit(r, m); err != nil {
+		platform.Unknown(w)
+		return
+	}
 	platform.Success(w, shaped[0])
 }
 
@@ -856,6 +878,10 @@ func (s *Service) vidDeleteById(w http.ResponseWriter, r *http.Request) {
 // seeUserId 非空 → listByPage(if* 子查询,userId=seeUserId)+ 访客记录副作用;否则 listByPage2。
 func (s *Service) vidLbListByPage(w http.ResponseWriter, r *http.Request) {
 	m := bodyMap(r)
+	if _, ok := m["page"].(map[string]any); !ok {
+		platform.Unknown(w) // Java mapper requires a Page object.
+		return
+	}
 	if !entBusVideos.validateBody(m) {
 		platform.Unknown(w)
 		return

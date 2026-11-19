@@ -18,6 +18,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/seetheworldwithme/panda-supply-chain/backend/internal/auth"
 	"github.com/seetheworldwithme/panda-supply-chain/backend/internal/platform"
@@ -69,6 +70,9 @@ var entFill = []string{"id", "enterpriseCode", "adminName", "enterpriseName", "s
 func shapeEnterprise(rows []map[string]any) []map[string]any {
 	out := platform.CamelizeRows(rows)
 	for _, r := range out {
+		if value, ok := r["regTime"].(string); ok && len(value) >= 10 {
+			r["regTime"] = value[:10] // Java LocalDate, not LocalDateTime.
+		}
 		for _, c := range []string{"isNetwork", "rotationFlag", "isChainEtc", "isBusinessEtc",
 			"isSignEtc", "isMemberEtc", "isAuthentication", "isDisplayed"} {
 			if v, ok := r[c]; ok && v != nil {
@@ -287,7 +291,7 @@ func (s *Service) entUpdateById(w http.ResponseWriter, r *http.Request) {
 				platform.Unknown(w)
 				return
 			}
-			if _, err := platform.UpdateByID(s.DB.Chain, "chain_auth_user", em["id"], pick(em, userWriteCols...)); err != nil {
+			if _, err := platform.UpdateByIDNoFill(s.DB.Chain, "chain_auth_user", em["id"], pick(em, userWriteCols...)); err != nil {
 				platform.Unknown(w)
 				return
 			}
@@ -402,8 +406,7 @@ func (s *Service) entUpdateTry(r *http.Request, m map[string]any) error {
 	return nil
 }
 
-// removeFileByRel 对照 delByRelId({relation_id, file_type}):逐行 removeFile 的库内效果
-// (磁盘与压缩文件删除为降级项:文件不在本机布局内)
+// removeFileByRel 对照 delByRelId({relation_id, file_type})。
 func (s *Service) removeFileByRel(relID, fileType string) {
 	rows, err := queryRows(s.DB.Chain, "SELECT id FROM chain_common_file WHERE relation_id=? AND file_type=?", relID, fileType)
 	if err != nil {
@@ -422,6 +425,13 @@ func (s *Service) removeFileRow(fid string) {
 	_, _ = s.DB.Chain.Exec("DELETE FROM chain_common_file WHERE id=?", fid)
 	_, _ = s.DB.Chain.Exec("UPDATE chain_basic_enterprise SET advertising_video_id=NULL WHERE advertising_video_id=?", fid)
 	_, _ = s.DB.Chain.Exec("UPDATE chain_basic_enterprise SET website_img_id=NULL, website_ced_img_id=NULL WHERE website_img_id=? OR website_ced_img_id=?", fid, fid)
+	// 原件因先删行后查行而遗留，转换图片仍按原 mapper 返回路径逐个删除。
+	images, err := queryRows(s.DB.Chain, "SELECT file_path,file_name FROM chain_common_img WHERE file_id=?", fid)
+	if err == nil {
+		for _, image := range images {
+			_ = os.Remove(filepath.Join(str(image, "file_path"), str(image, "file_name")))
+		}
+	}
 	_, _ = s.DB.Chain.Exec("DELETE FROM chain_common_file WHERE source_id=?", fid)
 }
 
@@ -563,7 +573,7 @@ var eqbRename = map[string]string{
 	"noticeType": "noticetype", "orgAvailableAuthTypes": "orgavailableauthtypes",
 	"personAuthAdvancedEnabled": "personauthadvancedenabled",
 	"personAvailableAuthTypes":  "personavailableauthtypes",
-	"redirectDelayTime": "redirectdelaytime", "redirectUrl": "redirecturl",
+	"redirectDelayTime":         "redirectdelaytime", "redirectUrl": "redirecturl",
 	"signPlatform": "signplatform", "willTypes": "willtypes", "signValidity": "signvalidity",
 	"platformSign": "platformsign", "actorIndentityType": "actorindentitytype",
 	"assignedPosbean": "assignedposbean", "autoExecute": "autoexecute",
@@ -615,6 +625,10 @@ func shapeEqb(rows []map[string]any) []map[string]any {
 // eqbListByPage = mapper.listByPage:getSql(全 ExcelColumn)+ CONCAT(id) like '%searchStr%'
 func (s *Service) eqbListByPage(w http.ResponseWriter, r *http.Request) {
 	m := bodyMap(r)
+	if _, ok := m["page"].(map[string]any); !ok {
+		platform.Unknown(w) // Java mapper requires a Page object.
+		return
+	}
 	current, size := pageOf(m)
 	searchSql, args := getSqlEq(m, eqbExcelCols, map[string]bool{}, eqbWrap)
 	q := "SELECT * FROM chain_eqb_config " + searchSql + " AND CONCAT(id) LIKE ? ORDER BY create_time DESC"
@@ -692,8 +706,9 @@ func (s *Service) eqbDelBatch(w http.ResponseWriter, r *http.Request) {
 // ── 文件上传 /saas-common/upload/batch ──
 
 // uploadBatch 对照 ChainCommonFileServiceImpl.upload:存文件 + 插 chain_common_file,
-// 图片返回 base64 url。降级:图片压缩行(compressedId)与 excel 转 png/doc 转 pdf 不做,
-// setup 页面只用 id 与 url。单文件异常吞掉继续(对照 Java catch+log)
+// 图片压缩副本(compressedId)、excel 转 png 与 Java 同源(共享 platform 实现);
+// doc 转 pdf 使用本地文档渲染器，转换异常保留原接口中断行为。
+// 整个循环在 Java 同一个 try 内:任何异常吞掉并返回已处理部分(这里用 break 对齐)。
 func (s *Service) uploadBatch(w http.ResponseWriter, r *http.Request) {
 	cu := auth.From(r.Context())
 	user, err := platform.GetByID(s.DB.Chain, "chain_auth_user", cu.UserID)
@@ -715,24 +730,24 @@ func (s *Service) uploadBatch(w http.ResponseWriter, r *http.Request) {
 	for _, fh := range fhs {
 		src, err := fh.Open()
 		if err != nil {
-			continue
+			break
 		}
 		suffix := filepath.Ext(fh.Filename)
 		fileName := newUUID() + suffix
 		if err := os.MkdirAll(dir, 0o755); err != nil {
 			src.Close()
-			continue
+			break
 		}
 		dst, err := os.Create(filepath.Join(dir, fileName))
 		if err != nil {
 			src.Close()
-			continue
+			break
 		}
 		_, cpErr := io.Copy(dst, src)
 		dst.Close()
 		src.Close()
 		if cpErr != nil {
-			continue
+			break
 		}
 		vals := map[string]any{
 			"company_id": cu.CompanyID, "file_real_name": fh.Filename, "file_name": fileName,
@@ -740,10 +755,47 @@ func (s *Service) uploadBatch(w http.ResponseWriter, r *http.Request) {
 		}
 		id, err := platform.InsertNoFill(s.DB.Chain, "chain_common_file", vals)
 		if err != nil {
-			continue
+			break
 		}
-		item := map[string]any{"id": id, "fileName": fileName, "name": fh.Filename}
+		cid := int64(0)
 		if isImgExt(suffix) {
+			cid = platform.CompressFileRow(s.DB.Chain, id)
+			if _, err := platform.UpdateByIDNoFill(s.DB.Chain, "chain_common_file", id, map[string]any{"compressed_id": cid}); err != nil {
+				break
+			}
+		}
+		if strings.Contains(fileName, ".xls") || strings.Contains(fileName, ".xlsx") {
+			imgdir := filepath.Join(dir, strings.SplitN(fileName, ".", 2)[0]+"_img")
+			imgs, err := platform.RenderExcelUpload(r.Context(), filepath.Join(dir, fileName), imgdir)
+			if err != nil {
+				break
+			}
+			for _, img := range imgs {
+				if _, err = platform.InsertNoFill(s.DB.Chain, "chain_common_img", map[string]any{"file_id": id, "file_name": img, "file_path": imgdir}); err != nil {
+					break
+				}
+			}
+			if err != nil {
+				break
+			}
+		}
+		if strings.Contains(fileName, ".doc") || strings.Contains(fileName, ".docx") {
+			root := os.Getenv("PANDA_UPLOAD_DIR")
+			if root == "" {
+				root = "data/uploads"
+			}
+			imgdir := filepath.Join(root, "convertFiles")
+			preview := strconv.FormatInt(time.Now().UnixMilli(), 10) + ".pdf"
+			if err = platform.RenderDocumentPDF(r.Context(), filepath.Join(dir, fileName), filepath.Join(imgdir, preview)); err != nil {
+				break
+			}
+			if _, err = platform.InsertNoFill(s.DB.Chain, "chain_common_img", map[string]any{"file_id": id, "file_name": preview, "file_path": imgdir}); err != nil {
+				break
+			}
+		}
+		item := map[string]any{"id": strconv.FormatInt(id, 10), "fileName": fileName, "name": fh.Filename}
+		if isImgExt(suffix) {
+			item["compressedId"] = strconv.FormatInt(cid, 10)
 			if b, err := os.ReadFile(filepath.Join(dir, fileName)); err == nil {
 				item["url"] = "data:image/jpg;base64," + base64.StdEncoding.EncodeToString(b)
 			}

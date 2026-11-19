@@ -98,6 +98,10 @@ func loListByPageSearch(m map[string]any) string {
 // ${searchSql} and CONCAT(...) like '%${searchStr}%' order by create_time desc
 func (s *Service) loListByPage(w http.ResponseWriter, r *http.Request) {
 	m := bodyMap(r)
+	if _, ok := m["page"].(map[string]any); !ok {
+		platform.Unknown(w) // Java mapper requires a Page object.
+		return
+	}
 	d := s.pick(r)
 	searchSql := loListByPageSearch(m)
 	if strings.Contains(searchSql, "BAD_BIND") {

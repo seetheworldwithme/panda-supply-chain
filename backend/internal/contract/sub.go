@@ -5,7 +5,6 @@
 package contract
 
 import (
-	"database/sql"
 	"encoding/json"
 	"net/http"
 	"time"
@@ -57,6 +56,10 @@ func (s *Service) extendList(w http.ResponseWriter, r *http.Request) {
 // extendListByPage = mapper:`CONCAT(id) like '%${searchStr}%' order by create_time desc`
 func (s *Service) extendListByPage(w http.ResponseWriter, r *http.Request) {
 	m := bodyMap(r)
+	if _, ok := m["page"].(map[string]any); !ok {
+		platform.Unknown(w) // Java mapper requires a Page object.
+		return
+	}
 	current, size := pageOf(m)
 	cond := "WHERE CONCAT(id) like '%" + searchStrOf(m) + "%'"
 	page, err := paged(s.pick(r), "SELECT * FROM chain_contract_extend "+cond+" ORDER BY create_time DESC",
@@ -424,9 +427,7 @@ func (s *Service) flowListByPage(w http.ResponseWriter, r *http.Request) {
 // flowGetById = Java controller 在查询后调 SignHelper.selSigners(请求体的 eqbFlowId):
 // 请求体不带 eqbFlowId → null NPE;带 eqbFlowId → Emain 外部签章 API 调用失败。
 // 两路在本环境均 999,实测恒 999(行为保持)
-func (s *Service) flowGetById(w http.ResponseWriter, r *http.Request) {
-	platform.Unknown(w)
-}
+func (s *Service) flowGetById(w http.ResponseWriter, r *http.Request) { s.esignGet(w, r) }
 
 func (s *Service) flowAdd(w http.ResponseWriter, r *http.Request) {
 	s.writeAdd(w, r, "chain_eqb_flow", bodyMap(r), flowCols, nil, flowEchoKeys, false, nil)
@@ -457,27 +458,9 @@ func (s *Service) flowDelBatch(w http.ResponseWriter, r *http.Request) {
 
 // flowLaunchFlow = ChainEqbFlowServiceImpl.launchFlow 前置:企业签章份数 0 → 602;
 // 有份数走外部 e签宝 openapi(本地不可达 → 异常 999)
-func (s *Service) flowLaunchFlow(w http.ResponseWriter, r *http.Request) {
-	d := s.pick(r)
-	u := currentUser(r)
-	var free, charge sql.NullInt64
-	err := d.QueryRow("SELECT sign_free_count, sign_charge_count FROM chain_basic_enterprise WHERE id = ?", u.CompanyID).Scan(&free, &charge)
-	if err != nil {
-		platform.Unknown(w) // etc NPE / SQL 异常
-		return
-	}
-	if free.Int64+charge.Int64 == 0 {
-		platform.Fail(w, 602, "签章剩余份数不足，请联系平台管理员")
-		return
-	}
-	platform.Unknown(w) // ponytail: e签宝 openapi 未接入(SignHelper 外部调用),本地必失败;接密钥后补
-}
+func (s *Service) flowLaunchFlow(w http.ResponseWriter, r *http.Request) { s.esignFlow(w, r, true) }
 
-// eqbExternalUnavail 其余外部集成端点:confirmFlow/selSignUrl/selSignPeople/uploadFile/
-// selLanucnInfo/getSignCallBack/v3DownFile——本地无密钥必异常,保 999 语义
-func (s *Service) eqbExternalUnavail(w http.ResponseWriter, r *http.Request) {
-	platform.Unknown(w) // ponytail: e签宝 openapi 未接入;接真实密钥后逐端点复刻
-}
+func (s *Service) eqbExternalUnavail(w http.ResponseWriter, r *http.Request) { s.esignExternal(w, r) }
 
 // ── singers CRUD ──
 

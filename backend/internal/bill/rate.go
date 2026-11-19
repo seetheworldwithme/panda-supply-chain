@@ -105,6 +105,10 @@ func (s *Service) rateList(w http.ResponseWriter, r *http.Request) {
 // rateListByPage getSql 全字段+CONCAT(id) like
 func (s *Service) rateListByPage(w http.ResponseWriter, r *http.Request) {
 	m := bodyMap(r)
+	if _, ok := m["page"].(map[string]any); !ok {
+		platform.Unknown(w) // Java mapper requires a Page object.
+		return
+	}
 	if !validateDT(m, []string{"create_time"}, []string{}, []string{"update_time"}) {
 		platform.Unknown(w)
 		return
@@ -254,8 +258,6 @@ func (s *Service) rateSaveBatch(w http.ResponseWriter, r *http.Request) {
 		}
 		vals := writeVals(&entRate, row)
 		delete(vals, "id")
-		delete(vals, "create_time")
-		delete(vals, "update_time")
 		vals["system_code"] = code
 		n, okb := nextSystemCodeInMem(code)
 		if !okb {

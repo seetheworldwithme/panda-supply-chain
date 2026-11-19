@@ -197,6 +197,10 @@ func searchStrLike(m map[string]any) string {
 
 func (s *Service) billListByPage(w http.ResponseWriter, r *http.Request) {
 	m := bodyMap(r)
+	if _, ok := m["page"].(map[string]any); !ok {
+		platform.Unknown(w) // Java mapper requires a Page object.
+		return
+	}
 	if !validateDT(m, dtBillSpace, dtBillDate, dtBillT) {
 		platform.Unknown(w)
 		return
@@ -458,8 +462,6 @@ func (s *Service) billSaveIrtRows(w http.ResponseWriter, r *http.Request, list [
 		}
 		vals := writeVals(&entBill, row)
 		delete(vals, "id")
-		delete(vals, "create_time")
-		delete(vals, "update_time")
 		// selectByContractCode 回填
 		if v, has := row["contractCode"]; has && v != nil {
 			var cid sql.NullInt64

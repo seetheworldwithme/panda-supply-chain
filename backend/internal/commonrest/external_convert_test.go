@@ -8,11 +8,13 @@ import (
 	"os/exec"
 	"path/filepath"
 	"testing"
+
+	"github.com/seetheworldwithme/panda-supply-chain/backend/internal/platform"
 )
 
 func TestSmallImageCompressionKeepsJavaBytes(t *testing.T) {
 	b := []byte("small-image-under-800KiB")
-	got, e := compressUploadImage(b)
+	got, e := platform.CompressUploadImage(b)
 	if e != nil || !bytes.Equal(b, got) {
 		t.Fatalf("%s %v", got, e)
 	}
@@ -29,7 +31,7 @@ func TestExcelUploadProducesSheetPreview(t *testing.T) {
 	writeXlsx(w, [][]string{{"phase6"}, {"preview"}})
 	p := filepath.Join(dir, "fixture.xlsx")
 	os.WriteFile(p, w.Body.Bytes(), 0600)
-	files, e := renderExcelUpload(context.Background(), p, filepath.Join(dir, "preview"))
+	files, e := platform.RenderExcelUpload(context.Background(), p, filepath.Join(dir, "preview"))
 	if e != nil || len(files) != 1 {
 		t.Fatalf("%v %v", files, e)
 	}

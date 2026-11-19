@@ -9,12 +9,13 @@ import (
 )
 
 func TestExcelMetadataPreservesTagColumns(t *testing.T) {
-	if len(entBusTag.excel) != 8 {
-		t.Fatalf("BusTag export columns=%d, want 8 Java @ExcelColumn headers", len(entBusTag.excel))
+	if len(entBusTag.excel) != 9 {
+		t.Fatalf("BusTag export columns=%d, want all 9 Java @ExcelColumn headers including blank id", len(entBusTag.excel))
 	}
-	if entBusTag.excel[0].header != "标签名称" {
+	if entBusTag.excel[0].header != "" || entBusTag.excel[0].col != "id" || entBusTag.excel[1].header != "标签名称" {
 		t.Fatalf("first header = %q", entBusTag.excel[0].header)
 	}
+	if field,ok:=newSpec(entBusTag.excel).matchHeader("未匹配列");ok { t.Fatalf("blank export header bound an unknown import column: %#v",field) }
 }
 
 func TestOrderQualityColumnsUseMybatisPropertyMatching(t *testing.T) {

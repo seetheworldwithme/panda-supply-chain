@@ -85,6 +85,7 @@ var rateFields = []impField{
 }
 
 var settRecFields2 = []impField{
+	{"id", "id", "i", false, false, false},
 	{"企业id", "company_id", "i", false, false, false},
 	{"结算单id", "statement_id", "i", false, false, false},
 	{"票据id", "bill_id", "i", false, false, false},

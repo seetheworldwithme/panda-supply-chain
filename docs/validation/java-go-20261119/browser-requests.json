@@ -1,0 +1,42 @@
+{
+  "fixtureOnly": true,
+  "backend": "Go 8765",
+  "requests": [
+    {
+      "method": "POST",
+      "path": "http://127.0.0.1:8765/saas-auth/chainAuthUser/list",
+      "status": 200,
+      "code": 200
+    },
+    {
+      "method": "POST",
+      "path": "http://127.0.0.1:8765/saas-warehouse/busBigProdect/allProductType",
+      "status": 200,
+      "code": 200
+    },
+    {
+      "method": "POST",
+      "path": "http://127.0.0.1:8765/saas-auth/chainAuthUser/list",
+      "status": 200,
+      "code": 200
+    },
+    {
+      "method": "POST",
+      "path": "http://127.0.0.1:8765/saas-warehouse/busProduct/listByPage",
+      "status": 200,
+      "code": 200
+    },
+    {
+      "method": "POST",
+      "path": "http://127.0.0.1:8765/saas-common/chainAreaInfo/selByPet",
+      "status": 200,
+      "code": 200
+    },
+    {
+      "method": "POST",
+      "path": "http://127.0.0.1:8765/saas-warehouse/busOrder/listByPage",
+      "status": 200,
+      "code": 200
+    }
+  ]
+}

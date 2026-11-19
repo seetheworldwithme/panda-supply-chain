@@ -1,0 +1,57 @@
+[
+  {
+    "controller": "chainAuthAuthenLog",
+    "differences": [],
+    "db_assertions": "add/update/delete",
+    "cleaned": true
+  },
+  {
+    "controller": "chainAuthAuthority",
+    "differences": [],
+    "db_assertions": "add/update/delete",
+    "cleaned": true
+  },
+  {
+    "controller": "chainAuthAuthorityRole",
+    "differences": [],
+    "db_assertions": "add/update/delete",
+    "cleaned": true
+  },
+  {
+    "controller": "chainAuthAuthorityUser",
+    "differences": [],
+    "db_assertions": "add/update/delete",
+    "cleaned": true
+  },
+  {
+    "controller": "chainAuthMenuRole",
+    "differences": [],
+    "db_assertions": "add/update/delete",
+    "cleaned": true
+  },
+  {
+    "controller": "chainAuthMenuUser",
+    "differences": [],
+    "db_assertions": "add/update/delete",
+    "cleaned": true
+  },
+  {
+    "controller": "chainAuthSecret",
+    "differences": [],
+    "db_assertions": "add/update/delete",
+    "cleaned": true
+  },
+  {
+    "controller": "chainAuthUseRole",
+    "differences": [],
+    "db_assertions": "add/update/delete",
+    "cleaned": true
+  },
+  {
+    "controller": "chainAuthAuthenLog/updBatch",
+    "differences": [],
+    "java_rollback": true,
+    "go_rollback": true,
+    "cleaned": true
+  }
+]

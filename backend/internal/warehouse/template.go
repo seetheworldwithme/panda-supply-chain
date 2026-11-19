@@ -15,20 +15,20 @@ import (
 )
 
 type ent struct {
-	table    string
-	keys     []string   // 实体全键(含载体 searchStr/page/ids 等),响应回填 null 用
-	dbcols   []string   // 实体映射 DB 列(snake)
-	q        []sqlf     // getSql 候选(@ExcelColumn 字段,声明序)
-	excel    []impField // Excel 导入导出列(@ExcelColumn 非空头)
-	decimals []string   // BigDecimal 列(保字面小数位)
-	dates    []string   // LocalDate 列(输出 date-only)
-	isoTimes []string   // 无 @JsonFormat 的 LocalDateTime(输出 ISO T)
-	bools    []string   // Boolean 列(tinyint → true/false)
-	types    []jf       // 全字段绑定类型(Jackson 校验):s/i/l/d/t/T/D/b/list/page/x
-	syscol   bool       // 表有 system_code 列(bus_* 全部没有)
-	listSQL  string     // mapper listByPage 原文(逐实体,含子查询列/别名)
-	listNoSQL string    // mapper listNoPage 原文
-	searchLit bool      // true → '%${maps.searchStr}%' 字面注入(缺失为字面 null)
+	table     string
+	keys      []string   // 实体全键(含载体 searchStr/page/ids 等),响应回填 null 用
+	dbcols    []string   // 实体映射 DB 列(snake)
+	q         []sqlf     // getSql 候选(@ExcelColumn 字段,声明序)
+	excel     []impField // Excel 导入导出列(@ExcelColumn 非空头)
+	decimals  []string   // BigDecimal 列(保字面小数位)
+	dates     []string   // LocalDate 列(输出 date-only)
+	isoTimes  []string   // 无 @JsonFormat 的 LocalDateTime(输出 ISO T)
+	bools     []string   // Boolean 列(tinyint → true/false)
+	types     []jf       // 全字段绑定类型(Jackson 校验):s/i/l/d/t/T/D/b/list/page/x
+	syscol    bool       // 表有 system_code 列(bus_* 全部没有)
+	listSQL   string     // mapper listByPage 原文(逐实体,含子查询列/别名)
+	listNoSQL string     // mapper listNoPage 原文
+	searchLit bool       // true → '%${maps.searchStr}%' 字面注入(缺失为字面 null)
 }
 
 type jf struct{ Name, Kind string }
@@ -114,10 +114,16 @@ func (e *ent) shapeRows(rows []map[string]any, cols []string) []map[string]any {
 		// by index: transient fields may appear between persistent properties.
 		fold := func(k string) string { return strings.ToLower(strings.ReplaceAll(k, "_", "")) }
 		byProperty := make(map[string]any, len(cols))
-		for _, c := range cols { byProperty[fold(c)] = row[c] }
+		for _, c := range cols {
+			byProperty[fold(c)] = row[c]
+		}
 		filtered := make(map[string]any, len(e.keys))
 		for _, k := range e.keys {
-			if v, ok := m[k]; ok { filtered[k] = v } else { filtered[k] = byProperty[fold(k)] }
+			if v, ok := m[k]; ok {
+				filtered[k] = v
+			} else {
+				filtered[k] = byProperty[fold(k)]
+			}
 		}
 		e.decorate(filtered)
 		// Jackson getter 命名输出(实测:dAshContent→dashContent、pType→ptype、dY→dy)
@@ -223,7 +229,10 @@ func camelCol(s string) string {
 }
 
 // qEntEnt 有序查询+实体整形(含别名列/JOIN 重复列的查询统一走这里;失败回 999)
-func (s *Service) qEntEnt(w http.ResponseWriter, d interface{ Query(string, ...any) (*sql.Rows, error); QueryRow(string, ...any) *sql.Row }, e *ent, q string, args ...any) []map[string]any {
+func (s *Service) qEntEnt(w http.ResponseWriter, d interface {
+	Query(string, ...any) (*sql.Rows, error)
+	QueryRow(string, ...any) *sql.Row
+}, e *ent, q string, args ...any) []map[string]any {
 	rows, err := d.Query(q, args...)
 	if err != nil {
 		platform.Unknown(w)
@@ -300,17 +309,25 @@ func (e *ent) getSql(m map[string]any) (string, []any, bool) {
 // "" 对非 String 一律绑 null;失败面:数字字段非数字串、日期字段坏格式、
 // Boolean 收数字/数组、标量字段收对象等。
 func bindVal(kind string, v any) (any, bool) {
- if n, ok := v.(json.Number); ok {
-  switch kind {
-  case "s", "d":
-   if _,err:=strconv.ParseFloat(n.String(),64);err!=nil {return nil,false}; return n.String(),true
-  case "i", "l":
-   if _,err:=strconv.ParseInt(n.String(),10,64);err!=nil {return nil,false}; return n.String(),true
-  case "b":
-   f,err:=strconv.ParseFloat(n.String(),64);return f!=0,err==nil
-  default: return nil,false
-  }
- }
+	if n, ok := v.(json.Number); ok {
+		switch kind {
+		case "s", "d":
+			if _, err := strconv.ParseFloat(n.String(), 64); err != nil {
+				return nil, false
+			}
+			return n.String(), true
+		case "i", "l":
+			if _, err := strconv.ParseInt(n.String(), 10, 64); err != nil {
+				return nil, false
+			}
+			return n.String(), true
+		case "b":
+			f, err := strconv.ParseFloat(n.String(), 64)
+			return f != 0, err == nil
+		default:
+			return nil, false
+		}
+	}
 	switch kind {
 	case "s":
 		switch t := v.(type) {
@@ -502,6 +519,12 @@ func ipageOf(records []map[string]any, total, current, size int64) map[string]an
 //   - 'C' 族(AdvOperaLog 等):B 族 + startTime/endTime DATE_FORMAT 字面注入
 func (s *Service) tplListByPage(w http.ResponseWriter, r *http.Request, e *ent, family byte) {
 	m := bodyMap(r)
+	// These Java listNoPage mapper methods return IPage rather than List;
+	// MyBatis fails when no Page argument is supplied, as with family A.
+	if m["page"] == nil && (e.table == "bus_opinion" || e.table == "bus_pro_log" || e.table == "bus_etc_product") {
+		platform.Unknown(w)
+		return
+	}
 	if !e.validateBody(m) {
 		platform.Unknown(w) // Jackson 绑定失败
 		return
@@ -720,6 +743,7 @@ func (s *Service) tplUpdBatch(w http.ResponseWriter, r *http.Request, e *ent) {
 		platform.Unknown(w)
 		return
 	}
+	entities := make([]map[string]any, 0, len(items))
 	for _, it := range items {
 		em, _ := it.(map[string]any)
 		if em == nil {
@@ -730,9 +754,22 @@ func (s *Service) tplUpdBatch(w http.ResponseWriter, r *http.Request, e *ent) {
 			platform.Unknown(w)
 			return
 		}
-		vals := pick(em, e.dbcols)
-		delete(vals, "id")
-		if _, err := platform.UpdateByID(s.pick(r), e.table, em["id"], vals); err != nil {
+		entities = append(entities, em)
+	}
+	if len(entities) > 0 {
+		err := platform.WithTx(s.pick(r), func(tx *sql.Tx) error {
+			for _, em := range entities {
+				vals := pick(em, e.dbcols)
+				delete(vals, "id")
+				var err error
+				err = platform.TxUpdateByID(tx, e.table, em["id"], vals)
+				if err != nil {
+					return err
+				}
+			}
+			return nil
+		})
+		if err != nil {
 			platform.Unknown(w)
 			return
 		}

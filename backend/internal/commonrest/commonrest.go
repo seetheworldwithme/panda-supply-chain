@@ -1,11 +1,14 @@
 package commonrest
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
 	"net/http"
 	"strconv"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/seetheworldwithme/panda-supply-chain/backend/internal/auth"
 	"github.com/seetheworldwithme/panda-supply-chain/backend/internal/db"
@@ -13,7 +16,15 @@ import (
 )
 
 type Service struct {
-	DB *db.DB
+	DB         *db.DB
+	Auth       *auth.Service
+	HTTPClient *http.Client // 微信接口测试可注入本地传输，不使用真实商户配置。
+	BatchMux   http.Handler // in-process replacements for the original Feign batch calls
+	Jobs       *platform.Jobs
+	tlTasksMu  sync.Mutex
+	tlTasks    map[string]context.CancelFunc
+	tlSyncMu   sync.Mutex
+	tlCache    map[string]time.Time
 }
 
 func NewService(database *db.DB) *Service { return &Service{DB: database} }

@@ -12,6 +12,7 @@ package logistics
 import (
 	"archive/zip"
 	"crypto/rand"
+	"errors"
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
@@ -265,7 +266,7 @@ func colIndex(ref string) (int, error) {
 	for i := 0; i < len(ref); i++ {
 		c := ref[i]
 		if c < 'A' || c > 'Z' {
-			return n, nil
+			return n - 1, nil
 		}
 		n = n*26 + int(c-'A') + 1
 	}
@@ -367,21 +368,27 @@ func formFile(r *http.Request) (*multipart.FileHeader, bool) {
 
 func emptyDict() map[string]string { return map[string]string{} }
 
-// getDictMap 对照 CmnServiceImpl.getDictMap:chain_common_dict 全量 d_key→d_value
-func (s *Service) getDictMap(r *http.Request) map[string]string {
+// getDictMap 对照 CmnServiceImpl.getDictMap:chain_common_dict 全量 d_key→d_value。
+// 全 NULL 行 MyBatis 返回 null 元素 → m.get NPE → 500(与 dictMap 同,1:1 复刻)。
+func (s *Service) getDictMap(r *http.Request) (map[string]string, error) {
 	rows, err := s.pick(r).Query("SELECT d_key, d_value FROM chain_common_dict")
-	out := map[string]string{}
 	if err != nil {
-		return out
+		return nil, err
 	}
-	ms, _ := platform.ScanMaps(rows)
+	ms, err := platform.ScanMaps(rows)
+	if err != nil {
+		return nil, err
+	}
+	out := map[string]string{}
 	for _, m := range ms {
-		k, v := btsStr(m["d_key"]), btsStr(m["d_value"])
-		if k != "" && v != "" {
-			out[k] = v
+		if m["d_key"] == nil && m["d_value"] == nil {
+			return nil, errors.New("java getDictMap NPE on all-null dict row")
+		}
+		if m["d_key"] != nil && m["d_value"] != nil {
+			out[btsStr(m["d_key"])] = btsStr(m["d_value"])
 		}
 	}
-	return out
+	return out, nil
 }
 
 // loImportExcel 5 参 readExcel(单 sheet+字典)+saveIrt:错误包装"运单sheet中，"→
@@ -416,7 +423,12 @@ func (s *Service) importWithIrt(w http.ResponseWriter, r *http.Request, table st
 	}
 	dict := emptyDict()
 	if useDict {
-		dict = s.getDictMap(r)
+		var err error
+		dict, err = s.getDictMap(r)
+		if err != nil {
+			platform.Unknown(w)
+			return
+		}
 	}
 	irt := readExcelFile(fh, fields, syscode, false, dict)
 	if len(irt.ErrInfos) > 0 {
@@ -726,10 +738,24 @@ func readExcelFile(fh *multipart.FileHeader, fields []impField, systemCode strin
 			if !allBlank {
 				irt.DataList = append(irt.DataList, ent)
 			}
-			// notNullMap 耗尽(Java 原版 bug:仅首行可触发"不能为空")
+			// notNullMap 耗尽(Java 原版 bug:仅首行可触发"不能为空");
+			// 输出序 = JAR commons-collections4 HashedMap.keySet 迭代序(见 platform.JavaHashedMapOrder)。
 			if len(notNullLeft) > 0 {
+				keep := map[string]bool{}
 				for _, nf := range notNullLeft {
-					irt.ErrInfos = append(irt.ErrInfos, sh.name+"sheet中，"+nf.header+"不能为空")
+					keep[platform.JavaFieldName(nf.col)] = true
+				}
+				var all []string
+				title := map[string]string{}
+				for _, fl := range fields {
+					if fl.notNull {
+						k := platform.JavaFieldName(fl.col)
+						all = append(all, k)
+						title[k] = fl.header
+					}
+				}
+				for _, k := range platform.JavaHashedMapOrder(all, keep) {
+					irt.ErrInfos = append(irt.ErrInfos, sh.name+"sheet中，"+title[k]+"不能为空")
 				}
 				notNullLeft = nil
 			}

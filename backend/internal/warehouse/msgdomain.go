@@ -474,7 +474,7 @@ func colNames(cols []colType) []string {
 // custNoticeCust = noticeCust:一键通知我的客户。Java 顺序:getById(proId)→null NPE 999 →
 // noticeTime+1 updateById → phones null NPE 999 → 真实短信(SendMessageUtil)。
 // Java 实测:{} → 999(proId null → getById(null) null → NPE,无写库)。
-// 差异登记:短信通道 Go 单体不具备,phones 就绪时 Go 只完成 notice_time/update_time 落库。
+// phones 就绪后通过原腾讯云短信协议发送。
 func (s *Service) custNoticeCust(w http.ResponseWriter, r *http.Request) {
 	m := bodyMap(r)
 	if !entBusCustManage.validateBody(m) {
@@ -501,11 +501,23 @@ func (s *Service) custNoticeCust(w http.ResponseWriter, r *http.Request) {
 		platform.Unknown(w) // for (String phone : getPhones()) NPE(update 已执行,Java 同序)
 		return
 	}
-	if _, ok := ph.([]any); !ok {
+	values, ok := ph.([]any)
+	if !ok {
 		platform.Unknown(w) // phones 绑 List<String> 失败
 		return
 	}
-	platform.Success(w, nil) // 短信发送不复刻(差异登记)
+	phones := make([]string, 0, len(values))
+	for _, value := range values {
+		phones = append(phones, javaStr(value))
+	}
+	price := ""
+	if num(bp["ex_factory_price"]) != 0 {
+		price = javaStr(bp["ex_factory_price"]) + "元（出厂价）"
+	} else if num(bp["plate_price"]) != 0 {
+		price = javaStr(bp["plate_price"]) + "元（车板价）"
+	}
+	platform.SendLegacySMSMany(r.Context(), phones, []string{javaStr(bp["enterprise_name"]) + " " + javaStr(bp["warehouse_nb"]) + " " + price}, "2115763", "")
+	platform.Success(w, nil)
 }
 
 // ── busBiddingInfo ──
@@ -677,21 +689,9 @@ func (s *Service) vlAllLog(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	fields := entFieldSet(entBusVisitorLog)
 	sqlStr := "where 1=1"
 	var args []any
-	for _, k := range platform.SortedKeys(m) {
-		if !fields[k] {
-			continue
-		}
-		u := platform.Underscore(map[string]any{k: nil})
-		col := k
-		for c := range u {
-			col = c
-		}
-		sqlStr += " and " + col + " like ?"
-		args = append(args, m[k])
-	}
+	// Generic StringHelper.getSql(Map) contributes no predicates in Java.
 	if v, has := m["target_user_id"]; has && v != nil {
 		sqlStr += " and target_user_id=" + strOf(v) // 字面注入(Java maps.get→字符串拼接)
 	}

@@ -9,6 +9,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"mime"
@@ -99,6 +100,7 @@ func registerExternal(mux *http.ServeMux, s *Service) {
 		}
 	})
 	reg("POST", "/upload/getByRelId", s.extByRel)
+	reg("POST", "/upload/getImgByRelId", s.extImagesByRel)
 	for _, path := range []string{"/upload/downById", "/upload/zjjgDownById"} {
 		reg("GET", path, s.extDownload)
 	}
@@ -533,7 +535,7 @@ func (s *Service) extUpload(w http.ResponseWriter, r *http.Request, logged bool)
 		}
 		if logged && (strings.Contains(name, ".xls") || strings.Contains(name, ".xlsx")) {
 			imgdir := filepath.Join(dir, strings.SplitN(name, ".", 2)[0]+"_img")
-			imgs, e := renderExcelUpload(r.Context(), p, imgdir)
+			imgs, e := platform.RenderExcelUpload(r.Context(), p, imgdir)
 			if e != nil {
 				break
 			}
@@ -546,10 +548,15 @@ func (s *Service) extUpload(w http.ResponseWriter, r *http.Request, logged bool)
 				break
 			}
 		}
-		// Current Java Doc2PdfUtil is an explicit UnsupportedOperationException stub.
-		// Java saves the file first, then catches conversion error and never appends cfiles.
 		if logged && (strings.Contains(name, ".doc") || strings.Contains(name, ".docx")) {
-			break
+			imgdir := filepath.Join(externalRoot(), "convertFiles")
+			preview := strconv.FormatInt(time.Now().UnixMilli(), 10) + ".pdf"
+			if e = platform.RenderDocumentPDF(r.Context(), p, filepath.Join(imgdir, preview)); e != nil {
+				break
+			}
+			if _, e = platform.InsertNoFill(s.pick(r), "chain_common_img", map[string]any{"file_id": id, "file_name": preview, "file_path": imgdir}); e != nil {
+				break
+			}
 		}
 		if logged && extIsImage(name) {
 			item["url"] = "data:image/jpg;base64," + extBase64(p)
@@ -664,7 +671,19 @@ func (s *Service) extOCR(w http.ResponseWriter, r *http.Request) {
 	}
 	url := os.Getenv("PANDA_OCR_ADAPTER_URL")
 	if url == "" {
-		platform.FailData(w, 701, "OCR外部服务未配置", "ExternalServiceUnavailable")
+		action := map[int]string{1: "IDCardOCR", 2: "BizLicenseOCR", 3: "GeneralBasicOCR"}[typ]
+		response, err := platform.TencentJSON(r.Context(), "ocr", action, "2018-11-19", "ap-beijing", map[string]any{"ImageBase64": "data:image/jpg;base64," + extBase64(filepath.Join(str(f, "file_path"), str(f, "file_name")))})
+		if err != nil {
+			code := "ClientNetworkError"
+			var provider *platform.TencentError
+			if errors.As(err, &provider) {
+				code = provider.Code
+			}
+			platform.FailData(w, 701, err.Error(), code)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		_ = json.NewEncoder(w).Encode(legacyOCRResult(response, typ))
 		return
 	}
 	result, e := callOCRAdapter(r.Context(), url, "data:image/jpg;base64,"+extBase64(filepath.Join(str(f, "file_path"), str(f, "file_name"))), typ)
@@ -706,4 +725,41 @@ func callOCRAdapter(ctx context.Context, url, image string, typ int) (platform.J
 	defer resp.Body.Close()
 	e = json.NewDecoder(resp.Body).Decode(&result)
 	return result, e
+}
+
+// extImagesByRel 保留 Java 的空对象、可选 yyzz 和有序 lbts 字段。
+func (s *Service) extImagesByRel(w http.ResponseWriter, r *http.Request) {
+	m := bodyMap(r)
+	cond := "1=1"
+	args := []any{}
+	for _, key := range platform.SortedKeys(m) {
+		if !externalColumn(key) {
+			platform.Unknown(w)
+			return
+		}
+		if m[key] == nil {
+			cond += " AND " + key + " IS NULL"
+		} else {
+			cond += " AND " + key + "=?"
+			args = append(args, m[key])
+		}
+	}
+	rows, err := queryRows(s.pick(r), "SELECT * FROM chain_common_file WHERE "+cond, args...)
+	if err != nil {
+		platform.Unknown(w)
+		return
+	}
+	result := map[string]any{}
+	images := []map[string]any{}
+	for _, row := range rows {
+		preview := "data:image/jpg;base64," + extBase64(filepath.Join(str(row, "file_path"), str(row, "file_name")))
+		switch str(row, "file_type") {
+		case "3":
+			result["yyzz"] = preview
+		case "4":
+			images = append(images, map[string]any{"id": row["id"], "url": preview})
+		}
+		result["lbts"] = images
+	}
+	platform.Success(w, result)
 }

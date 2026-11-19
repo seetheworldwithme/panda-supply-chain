@@ -17,7 +17,7 @@ def camel_to_underline(s):
 # ── DB 列与类型 ──
 def db_schema():
     q = "SELECT table_name, column_name, data_type FROM information_schema.columns WHERE table_schema='chain' ORDER BY table_name, ordinal_position"
-    r = subprocess.run(["mysql", "-h127.0.0.1", "-uroot", "chain", "-N", "-B", "-e", q], capture_output=True, text=True)
+    r = subprocess.run(["mysql", "-uroot", "chain", "-N", "-B", "-e", q], capture_output=True, text=True, check=True)
     cols = collections.defaultdict(dict)  # table → col → datatype
     for line in r.stdout.splitlines():
         t, c, d = line.split('\t')
@@ -63,6 +63,8 @@ def parse_entity(path):
             fields.append({
                 "name": fname, "type": ftype, "kind": kind, "excel": excel, "jf": jf,
                 "fill": fill, "notbank": notbank, "sys": syscol,
+                "datecheck": "@DateColumn" in block, "numbercheck": "@NumberColumn" in block,
+                "dict": '@DictColumn' in block,
                 "carrier": exist_false or ftype not in KIND,
             })
             anns = []
@@ -97,7 +99,8 @@ for n in names:
  e=['table:'+j(table),'fill:'+str(fill).lower(),'echo:'+str(n not in ['BusMqConsumeLog','ChainCommonMqlog','ChainRequestLog','ChainGlobalConfiguration','ChainEqbFiles','ChainTlzfOrder','ChainTlzfLog','ChainTlzfContractLog','ChainTlzfConfig','ChainTlzfSaleEtc']).lower(),'keys:'+arr([x['name'] for x in fields]),'dbcols:'+arr([snake(x['name']) for x in non]),'q:[]sqlf{'+','.join('{'+j(x['name'])+','+j(x['kind'] if x['kind'] in ['i','D'] else 'w')+'}' for x in non if x['excel'])+'}','types:[]jf{'+','.join('{'+j(x['name'])+','+j(x['kind'])+'}' for x in fields)+'}', 'syscol:'+str('system_code' in DB.get(table,{})).lower()]
  for typ,key in [('BigDecimal','decimals'),('LocalDate','dates'),('Boolean','bools')]:e += [key+':'+arr([x['name'] for x in non if x['type']==typ])]
  e += ['isoTimes:'+arr([x['name'] for x in non if x['type']=='LocalDateTime' and not x['jf']])]
- e += ['excel:[]impField{'+','.join('{'+','.join([j(x['excel'][1]),j(snake(x['name'])),j(KIND.get(x['type'],x['kind'])),str(x['sys']).lower(),'false',str(x['notbank']).lower()])+'}' for x in non if x['excel'] and x['excel'][1])+'}']
+ e += ['excel:[]impField{'+','.join('{'+','.join([j(x['excel'][1]),j(snake(x['name'])),j(KIND.get(x['type'],x['kind'])),str(x['sys']).lower(),'false',str(x['notbank']).lower(),str(x['datecheck']).lower(),str(x['numbercheck']).lower()])+'}' for x in non if x['excel'])+'}']
+ e += ['searchLit:'+str('${maps.searchStr}' in sqls.get('listByPage','')).lower()]
  for meth,key in [('listByPage','listSQL'),('listNoPage','listNoSQL')]:e+=[key+':'+j(sqls.get(meth,sqls.get('listByPage','')))]
  entries.append('\nvar ent'+n+'=&ent{'+',\n'.join(e)+'}\n')
  lines += [j(n)+':ent'+n+',']

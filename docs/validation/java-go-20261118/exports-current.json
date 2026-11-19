@@ -1,0 +1,756 @@
+[
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthAuthority/exportExcel",
+      "body": {},
+      "account": "ptadmin",
+      "applytype": ""
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "de3770d703fb77fffdb1fa0971a6d84df8451ed50880fb6330fbab47f7bde9bf",
+    "go_sha256": "7100fdd9262eb2249b95580120b12a1e014093cd3d436b6447670cc0191bbc6f"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthAuthorityUser/exportExcel",
+      "body": {},
+      "account": "ptadmin",
+      "applytype": ""
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "203afcedee229ec49981287568e78d93278a6e21b02654f3e66ed3897587df64",
+    "go_sha256": "69a46601f252d50cd36e92c5ef2095ff0f31fe1aeed9ab1fdea1673e9cf0db5a"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-auth/chainAuthMenuUser/exportExcel",
+      "body": {},
+      "account": "ptadmin",
+      "applytype": ""
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "ab1e044708004019d121f41e62f84929723c72a01d7de03daa863dfd84810e2c",
+    "go_sha256": "c1416e212766fa1ad08a85aecd9f017924f55e8af58e2d9cedd8ee7aba03b8b1"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-common/chainCommonTemplate/exportExcel",
+      "body": {},
+      "account": "ptadmin",
+      "applytype": ""
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "2bd4f64ead8bd2cbbc412756022175865c977d7d8d630639e6079ea82e40dd76",
+    "go_sha256": "25bfdcc7e6046666f747804f44337c3d0a1e40d4e4ad7d5da2ff25d5f23bbc2d"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-common/chainGlobalConfiguration/exportExcel",
+      "body": {},
+      "account": "ptadmin",
+      "applytype": ""
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "9be885fc37d1de73c939737b831e328f6f9866b351173ddb3927b89444a26614",
+    "go_sha256": "ae20fdad62669b573e439fb36cbc73fd17f9ff4ef3e423194d1736c97262d728"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-common/chainMsg/exportExcel",
+      "body": {},
+      "account": "ptadmin",
+      "applytype": ""
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "b909fba4fa1c41219ba767f804229acdaca9b1f5eedc7a95bdbd62d2e4e9d8c5",
+    "go_sha256": "7f5c5750b4c815f03338f1c51fa55852ffa2b5e348baddfb4dbaee023e223135"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-common/chainScreenConfig/exportExcel",
+      "body": {},
+      "account": "ptadmin",
+      "applytype": ""
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "21c2d8b39c3242936088aef3bcff4fc191f646efabd11277deabe96d2bd43abc",
+    "go_sha256": "15de40b3dda9566087069daa8b8b39e1ebaba96c3163d5a7f1c791f1a066351b"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-common/chainEqbConfig/exportExcel",
+      "body": {},
+      "account": "ptadmin",
+      "applytype": ""
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "7a782f118b6ddfbc8498f8b3defaf61b2cc46d16e140f3dafbd0fcfa25736de8",
+    "go_sha256": "4759f892da9d213b88fea1325051ceb8d1d49c80b02714403c350ba2ff92180c"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-common/chainEqbFiles/exportExcel",
+      "body": {},
+      "account": "ptadmin",
+      "applytype": ""
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "9be3a8dca0af5b0bc1753815fb4d2a5ae5c431c8de003a0de7ebe87bee1c6e61",
+    "go_sha256": "922bc7514e6b6b903c8f161fa94edd64be3dacc96d5695b6d599354a2d5ea44b"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-common/chainTlzfConfig/exportExcel",
+      "body": {},
+      "account": "ptadmin",
+      "applytype": ""
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "6bfcf4be91e997f4c0c407430396e84754ebf858fe29471b489d66ed182284cb",
+    "go_sha256": "c61966f283adee29528b0a0fb41e60fb595f97bc273bf18eec168538be033fd3"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-common/chainTlzfLog/exportExcel",
+      "body": {},
+      "account": "ptadmin",
+      "applytype": ""
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 500,
+    "go_status": 500,
+    "differences": [],
+    "java_sha256": "11e236e030dff9fd7f6ee5653e67601f24a1197c419dec93cbb40e3da90a808e",
+    "go_sha256": "109938781bce6b05f2297d22de539720eb56db8c17cc5b94e82926c80662c9dd",
+    "java_code": "999",
+    "go_code": "999"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-common/chainTlzfSaleEtc/exportExcel",
+      "body": {},
+      "account": "ptadmin",
+      "applytype": ""
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "568281e4c31f0fd49863abedb5a98fb90922dba09bd38d635196b799938ca979",
+    "go_sha256": "36fa9d9922f33aa8c28847bec283223329da5d42410f23ad2f1449960be90998"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-contract/chainContractExtend/exportExcel",
+      "body": {},
+      "account": "ptadmin",
+      "applytype": ""
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "800e9f762bf97e28cbcfbed224356e5f07a518d10e810aedd507bc2662411065",
+    "go_sha256": "826dfd08b64f3d1faae9b647d8c471a6221f349b49d79df708f5018c570f5c44"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-logistics/chainLogisticsWeighingList/exportExcel",
+      "body": {},
+      "account": "ptadmin",
+      "applytype": ""
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "0bb60b67dee6cdc894aeb4851644242e256cd5a7c2ab798fb7c87d5c185220f4",
+    "go_sha256": "6ec24160123d1fe63c5daf3055afd0c0cb3814571bf33d1f43103346bead130d"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-capital/chainCapitalAccounts/exportExcel",
+      "body": {},
+      "account": "ptadmin",
+      "applytype": ""
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "9972208251c2bced31a5fc2d2293e0377496bb164b48d98ab21270b7d96be234",
+    "go_sha256": "58cb36c768bf87c3d7043be326763e7282da7a5f000b2c0bfd58435ce2f8f1b2"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-bill/chainBillSettlement/exportExcel",
+      "body": {},
+      "account": "ptadmin",
+      "applytype": ""
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "fb8ddf0e47af57b7e29afe1d011781ab29311f76dc96f749692c1d6f764b90dc",
+    "go_sha256": "7c78fd25884de74965c884b4289eaca2bfaf6bf4ebf8a7e3675fc9fd84857906"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-warehouse/busAdvertisement/exportExcel",
+      "body": {},
+      "account": "ptadmin",
+      "applytype": ""
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "a2923997701c2b2d1f632b71265850b76c60601008a3cdcf49fe1a800ee1caf5",
+    "go_sha256": "13cebe92bb4826e4d0aec7d9df757432b3f9609c890477e614574bea6c9880e1"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-warehouse/busAppConfig/exportExcel",
+      "body": {},
+      "account": "ptadmin",
+      "applytype": ""
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "242d77a59a04a8e8410007138422745e3a3b9dd7f17e6ff7a253ad82d1c1480f",
+    "go_sha256": "bebf43e8d1f72c0f25872b2a19f448f0be1e1b16cecd9db938d2b5ff39559970"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-warehouse/busBigProdect/exportExcel",
+      "body": {},
+      "account": "ptadmin",
+      "applytype": ""
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "93f32094e72e17c15f825b28ce5b53847de796e18a57ff74562901836f52b1dd",
+    "go_sha256": "8db72933ad0d7ae06281b8deab6d5bfb511edf774889764b75e1deb33deaf401"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-warehouse/busCommonFile/exportExcel",
+      "body": {},
+      "account": "ptadmin",
+      "applytype": ""
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "e86981c3bdccdee6851e7e535cc10df05b6cebedc2352c4a050a84403e36d193",
+    "go_sha256": "807b7425681a7a8280cd64834268b14b9057b073d454f34cbab70487230497f0"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-warehouse/busConfig/exportExcel",
+      "body": {},
+      "account": "ptadmin",
+      "applytype": ""
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "23d0a5242a77b9f098c881f9e5b76cf503464b0bb648044b30327a266542b658",
+    "go_sha256": "9889a04bd2340d7ee9e2b5a34906b7041b108f9d5bb8d6c2b835349c014725d3"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-warehouse/busCustManage/exportExcel",
+      "body": {},
+      "account": "ptadmin",
+      "applytype": ""
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "219dc52a674d15d032dabd434ed2f92c8dd1d4b54912491e02648fdbb5cdf2a7",
+    "go_sha256": "691224f8b7881e0ad5a22e2e17e38973593188078c487af6ffde8d0a4389a959"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-warehouse/busDelProduct/exportExcel",
+      "body": {},
+      "account": "ptadmin",
+      "applytype": ""
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "2c6c16ffd8a1ff2c0b67dc8c795a7e128781ab6ec0dc9681421541445cf3e5b1",
+    "go_sha256": "4549108870490c5170b974be8fc7872b15d10633becfcdbdcb31beb5d908ce75"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-warehouse/busEnterpriseLeasing/exportExcel",
+      "body": {},
+      "account": "ptadmin",
+      "applytype": ""
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "8bd316d9631bf13e6a3ef017e96ef2c1b6a94eb847fba01e5ef51efeef7495da",
+    "go_sha256": "ecbd696b62d4c082cc897063a4f3c1c82a772a26bf504bb8616844b1ac03d0b1"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-warehouse/busEtcProduct/exportExcel",
+      "body": {},
+      "account": "ptadmin",
+      "applytype": ""
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "7bd337a3b18a0735d6e242dd784c7850da2a1638a8700b099674e56d9f649da7",
+    "go_sha256": "2330a613144c6543e7516155c4156e66d99a177f74ab97c6abd69ed91f0c5edf"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-warehouse/busEventPro/exportExcel",
+      "body": {},
+      "account": "ptadmin",
+      "applytype": ""
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "dec4742baea2d91f392a4a420a39bfa46fe43868835dd5584527ce98c742ce72",
+    "go_sha256": "aff7e29d6bd22fe2f209df70aa85aff4fac333ee253f6632825649e3b2fbc4ec"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-warehouse/busEventRegistration/exportExcel",
+      "body": {},
+      "account": "ptadmin",
+      "applytype": ""
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "fdcbe3767c74ca4c415d829762fd2932e185e96921eadc1ba6a8f126099f110c",
+    "go_sha256": "ba807013583caceab309be0568139c6286b3931e9461d040de24732b7cf34ba7"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-warehouse/busExchangeAddress/exportExcel",
+      "body": {},
+      "account": "ptadmin",
+      "applytype": ""
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "beed43f149df4d82c017c4bf9ecd8dd3a83f0553e9d9dc9899afb81e35bf71f8",
+    "go_sha256": "65a5eeec3e010635713de00fe7be0fe72fe5e5d5c58c11ad667f9c8c155608c3"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-warehouse/busGlobalConfig/exportExcel",
+      "body": {},
+      "account": "ptadmin",
+      "applytype": ""
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "921725ba3380742cba87d36bdc7e7a0efefad809a75105d88ab1fc9e40b8661a",
+    "go_sha256": "f69dc474f7645fc9dbfe90caafa22ecde7f716c4a80e1f9cb6442ef85e7f510f"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-warehouse/busLoginLog/exportExcel",
+      "body": {},
+      "account": "ptadmin",
+      "applytype": ""
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "1388be06849e68a66d0e3c27c3abe3a4ffc9edeccf7653e27e728ac452dd5afc",
+    "go_sha256": "8f31afa7e3cc4ec972429f2fb4a73c4e7e18d7005fcb5eab7c16654cbe0013aa"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-warehouse/busMemberBenefits/exportExcel",
+      "body": {},
+      "account": "ptadmin",
+      "applytype": ""
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "765befda6c6b4762d06b27dc5b6c2ea8437ea549dfb45bd6d74c6d7f6f0e485e",
+    "go_sha256": "576743be1e717e5d1f9deb23c5ecbd186df86144ac4933427f6c6fbed47cf65e"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-warehouse/busMemberConfig/exportExcel",
+      "body": {},
+      "account": "ptadmin",
+      "applytype": ""
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "bf85d9b4ac1679767556856fd6240742204e1fdd96d3464170f028671f2f92b3",
+    "go_sha256": "783a738a3f2ab92d7b811356ede9505a3086335bbf3e50dbfc4d8981dcf11e5d"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-warehouse/busMember/exportExcel",
+      "body": {},
+      "account": "ptadmin",
+      "applytype": ""
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "838ea43f599c7d2b9df2be766374fd575f70c19b7b0a986d61e401459bb504ce",
+    "go_sha256": "cb219fdf7fa473d7a5ce9da27bdcb6e0f3a99c1904959b392db7d66556b79794"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-warehouse/busNotice/exportExcel",
+      "body": {},
+      "account": "ptadmin",
+      "applytype": ""
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "bc695eeea8af1f826ede06ba58408805eb618b975b91a556b68eb3609b04eef1",
+    "go_sha256": "0fcc16ce062fbe2bbdfb0d279dcab437c9605f328c10fc2ad3ba982a0868b070"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-warehouse/busNoticeMx/exportExcel",
+      "body": {},
+      "account": "ptadmin",
+      "applytype": ""
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "7d5b4a324fb423af20f24deb88753df5fb9e6871d992da6fefb6f4277b8b0d10",
+    "go_sha256": "d0b3dd5e154694f43fbc052788612c42a47b954127e412ba4de3342228fba6af"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-warehouse/busOrder/exportExcel",
+      "body": {},
+      "account": "ptadmin",
+      "applytype": ""
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "b30a47811f75781a006edc8644ddacb9a0756bcb9312c17389ecfefe567c6012",
+    "go_sha256": "ed5ff98513800e4fafaca050d0a4140ba50f6ba200d5d7789518009bc47b0acb"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-warehouse/busPackage/exportExcel",
+      "body": {},
+      "account": "ptadmin",
+      "applytype": ""
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "f79ce24da62d9ed76b5a1fe4ec390e04e23c8e74bc66cc19fac4722fc8050628",
+    "go_sha256": "d5d19098f883d682d9a05435810f9d4c982174bf5ddee3a2907bbbcd71c3dcb0"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-warehouse/busProBuser/exportExcel",
+      "body": {},
+      "account": "ptadmin",
+      "applytype": ""
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "18bd35b304c43ebcd2d1069b9ed0b81e3cc9ed970feb09a9f31a8eabb0d632a8",
+    "go_sha256": "3689ddefc134c4adcb7a74cf58b0b9cc8c65ee2f8ad90e4e81b41cd9cff048db"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-warehouse/busRedEnvelopeRange/exportExcel",
+      "body": {},
+      "account": "ptadmin",
+      "applytype": ""
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "57c61990d586077dea7ac2caf619f6b98dc247c3c2c0de07f5d261559f9df29f",
+    "go_sha256": "9b77dad5c4ab59ec5e55c366e59746282be1c72b2f3113f334d0526fb5649ecd"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-warehouse/busScoreExchangeLog/exportExcel",
+      "body": {},
+      "account": "ptadmin",
+      "applytype": ""
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "a11abd5d7b265c76eecebc615666969aed8304a7abfe2832245cc4c745f41692",
+    "go_sha256": "c7cee26e281d86df9ceeaccf933d7c260fff58e769166a81a054c9dacc228add"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-warehouse/busScorePro/exportExcel",
+      "body": {},
+      "account": "ptadmin",
+      "applytype": ""
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "52415f71075e6e42051405955f43d9e6f176eda00feca29fe864d93c624256f6",
+    "go_sha256": "924a35cdbe1a41b4480e552dfa01a3e2d6f58a66837c0e73975c0484c3c64d10"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-warehouse/busScoreRule/exportExcel",
+      "body": {},
+      "account": "ptadmin",
+      "applytype": ""
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "4693723d7453df85f34d7f459ca656d9c9a2053833980a1254afca8efe145aca",
+    "go_sha256": "689325617577a5f2f1eeee42469da8c22f681bc08471efedfa4ad312ecb77822"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-warehouse/busTag/exportExcel",
+      "body": {},
+      "account": "ptadmin",
+      "applytype": ""
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "88877461caec45f0ef68c6eb27d6d074557490a73901ba469ffd450294c44e0b",
+    "go_sha256": "d4561c94dbe3194e3d50a6a84c672410edcc1b47dba63bfd937dc2a36171c5e7"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-warehouse/busUserCoupon/exportExcel",
+      "body": {},
+      "account": "ptadmin",
+      "applytype": ""
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "154974d623163c5a122c0370cb7b73461441182a8831dcaf91ab4f5cebfc581d",
+    "go_sha256": "ce5e0d3117beb80dfa621a28fa6fcff341e32f913b04b61397ae63df7141848b"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-warehouse/busUserMember/exportExcel",
+      "body": {},
+      "account": "ptadmin",
+      "applytype": ""
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "f8fe93f9a7b31da9c7a8f72f37e14552b17cfe1d9976e8f3ba496f3f68d9913f",
+    "go_sha256": "6dadf76660e6c69dac9d76306a178834fd3f0426755309a03941810f18dbd7fd"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-warehouse/busUserPackage/exportExcel",
+      "body": {},
+      "account": "ptadmin",
+      "applytype": ""
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "6e492ac43f9a62b6f3b58be6f71d7b649247b0f125b55aa832d602a39fdf6030",
+    "go_sha256": "239a46b21e5f9e04b74e5c4ec47e305612dfaa47b25d8e4a1b7f9effd1918ad1"
+  },
+  {
+    "case": {
+      "method": "POST",
+      "path": "/saas-warehouse/busVerifyInfo/exportExcel",
+      "body": {},
+      "account": "ptadmin",
+      "applytype": ""
+    },
+    "account": "ptadmin",
+    "applytype": "",
+    "java_status": 200,
+    "go_status": 200,
+    "differences": [],
+    "java_sha256": "8b94e9bebabcb1dbd62917920d7ab33dc1dd4012e2c0e10d872916054b9622a2",
+    "go_sha256": "b950c05bf8a788ba662112b723b1813d325022cc5ce34909101e0e8e2e9c476c"
+  }
+]

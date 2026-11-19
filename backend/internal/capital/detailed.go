@@ -197,6 +197,10 @@ func dtListByPageSearch(m map[string]any) (string, []any, bool) {
 // dtListByPage mapper:显式列(IFNULL(khxje,money) 双列)+CONCAT 8 列 like,order by trans_time desc
 func (s *Service) dtListByPage(w http.ResponseWriter, r *http.Request) {
 	m := bodyMap(r)
+	if _, ok := m["page"].(map[string]any); !ok {
+		platform.Unknown(w) // Java mapper requires a Page object.
+		return
+	}
 	if !validateDT(m, dtDetailedSpace, dtDetailedDate, dtDetailedT) {
 		platform.Unknown(w)
 		return
@@ -388,8 +392,6 @@ func (s *Service) dtSaveBatch(w http.ResponseWriter, r *http.Request) {
 		}
 		vals := pick(row, entDetailed.cols...)
 		delete(vals, "id")
-		delete(vals, "create_time")
-		delete(vals, "update_time")
 		switch str(row, "detype") {
 		case "1":
 			vals["system_code"] = xs

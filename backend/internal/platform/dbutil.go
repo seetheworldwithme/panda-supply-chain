@@ -39,8 +39,9 @@ func GetByID(d *sql.DB, table string, id any) (map[string]any, error) {
 	return ms[0], nil
 }
 
-// ListWhere 等价 MP list(QueryWrapper.allEq(maps,false)):全部等值 AND 条件。
-// cond 键为下划线列名,空 map 查全表
+// ListWhere 等价 MP list(QueryWrapper.allEq(maps)):全部等值 AND 条件。
+// cond 键为下划线列名,空 map 查全表;显式 null → IS NULL(单参 allEq null2IsNull=true)。
+// 注:allEq(maps,false) 调用方应先在 cond 构造时剔除 null 键。
 func ListWhere(d *sql.DB, table string, cond map[string]any) ([]map[string]any, error) {
 	q := "SELECT * FROM " + table
 	var args []any
@@ -49,8 +50,12 @@ func ListWhere(d *sql.DB, table string, cond map[string]any) ([]map[string]any, 
 		CheckCols(cols)
 		var conds []string
 		for _, k := range cols {
-			conds = append(conds, k+" = ?")
-			args = append(args, cond[k])
+			if cond[k] == nil {
+				conds = append(conds, k+" IS NULL")
+			} else {
+				conds = append(conds, k+" = ?")
+				args = append(args, cond[k])
+			}
 		}
 		q += " WHERE " + strings.Join(conds, " AND ")
 	}
@@ -183,8 +188,12 @@ func DeleteByMap(d *sql.DB, table string, cond map[string]any) error {
 	var conds []string
 	var args []any
 	for _, k := range cols {
-		conds = append(conds, k+" = ?")
-		args = append(args, cond[k])
+		if cond[k] == nil {
+			conds = append(conds, k+" IS NULL")
+		} else {
+			conds = append(conds, k+" = ?")
+			args = append(args, cond[k])
+		}
 	}
 	_, err := d.Exec("DELETE FROM "+table+" WHERE "+strings.Join(conds, " AND "), args...)
 	return err
@@ -217,7 +226,15 @@ func TxGetByID(tx *sql.Tx, table string, id any) (map[string]any, error) {
 }
 
 func TxInsert(tx *sql.Tx, table string, vals map[string]any) (int64, error) {
-	vals = autoTimeVals(vals, true, true)
+	return txInsert(tx, table, vals, true)
+}
+
+func TxInsertNoFill(tx *sql.Tx, table string, vals map[string]any) (int64, error) {
+	return txInsert(tx, table, vals, false)
+}
+
+func txInsert(tx *sql.Tx, table string, vals map[string]any, fill bool) (int64, error) {
+	vals = autoTimeVals(vals, true, fill)
 	cols := SortedKeys(vals)
 	CheckCols(cols)
 	ph := strings.TrimSuffix(strings.Repeat("?,", len(cols)), ",")
@@ -233,7 +250,15 @@ func TxInsert(tx *sql.Tx, table string, vals map[string]any) (int64, error) {
 }
 
 func TxUpdateByID(tx *sql.Tx, table string, id any, vals map[string]any) error {
-	vals = autoTimeVals(vals, false, true)
+	return txUpdate(tx, table, id, vals, true)
+}
+
+func TxUpdateByIDNoFill(tx *sql.Tx, table string, id any, vals map[string]any) error {
+	return txUpdate(tx, table, id, vals, false)
+}
+
+func txUpdate(tx *sql.Tx, table string, id any, vals map[string]any, fill bool) error {
+	vals = autoTimeVals(vals, false, fill)
 	cols := SortedKeys(vals)
 	CheckCols(cols)
 	var sets []string
@@ -253,8 +278,12 @@ func TxDeleteByMap(tx *sql.Tx, table string, cond map[string]any) error {
 	var conds []string
 	var args []any
 	for _, k := range cols {
-		conds = append(conds, k+" = ?")
-		args = append(args, cond[k])
+		if cond[k] == nil {
+			conds = append(conds, k+" IS NULL")
+		} else {
+			conds = append(conds, k+" = ?")
+			args = append(args, cond[k])
+		}
 	}
 	_, err := tx.Exec("DELETE FROM "+table+" WHERE "+strings.Join(conds, " AND "), args...)
 	return err

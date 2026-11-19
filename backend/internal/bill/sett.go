@@ -34,6 +34,10 @@ func (s *Service) handleSett(w http.ResponseWriter, r *http.Request) {
 		platform.Success(w, entSettRow.rows(rows))
 	case strings.HasSuffix(p, "/listByPage"):
 		m := bodyMap(r)
+		if _, ok := m["page"].(map[string]any); !ok {
+			platform.Unknown(w)
+			return
+		}
 		ss := "%%" // MyBatis ${null} 输出空串
 		if v, ok := m["searchStr"]; ok && v != nil {
 			ss = "%" + str(m, "searchStr") + "%"

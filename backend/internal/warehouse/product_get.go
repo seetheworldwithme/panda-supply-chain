@@ -1,12 +1,4 @@
-// product_get.go POST /saas-warehouse/busProduct/getById(规格 3.3 = getBusProduct+updByVisitor)。
-// feign 全部换本地同库直查(实体 JSON 驼峰);微信/unipush 按本地失败形态。
-// 已登记差异(徐先生决策项):
-//  1. 分享红包 generateAmount 金额=区间内随机整数(Java Random 同分布,响应不含金额)。
-//  2. receiveAmount 核销链不实现:本地形态=微信商家转账 HTTP 失败被自身 catch →
-//     fail(603,"") 零落库(bus_red_envelope_record/batch/detail 与 clog 核销均不发生,
-//     响应不受影响),故只落 generateAmount+shareRedEnvelopes 各一条 bus_red_money_clog
-//     (Java 同一动作确实落 2 条,第二条 id 为 receiveAmount 的 clogId)。
-//  3. 短信/unipush 不发送;getDetailImg 不在本文件(规格 3.17,/home/ubuntu/uploadfiles 缺失)。
+// 煤种详情、访客记录与分享奖励。原两条红包流水及收款人逻辑保持。
 package warehouse
 
 import (
@@ -468,7 +460,7 @@ func (s *Service) bpUpdByVisitor(w http.ResponseWriter, r *http.Request, d *sql.
 			platform.Unknown(w)
 			return false
 		}
-		if lifeCnt == 0 && !s.bpShareRed(w, d, uid, now) {
+		if lifeCnt == 0 && !s.bpShareRed(w, r, d, uid, now, suv) {
 			return false
 		}
 	}
@@ -489,8 +481,8 @@ func (s *Service) bpUpdByVisitor(w http.ResponseWriter, r *http.Request, d *sql.
 // bpShareRed = shareRedEnvelopes 的 generateAmount 部分(已核实的落库面):
 // bus_red_envelope_range getOne(receive_type=5;0 行 NPE/多行 TooManyResults/边界坏值 → 999),
 // 金额=[min,max] 闭区间随机整数;同一动作 Java 落 2 条 bus_red_money_clog
-// (generateAmount 内一条+shareRedEnvelopes 一条);receiveAmount 核销链=登记差异(文件头)。
-func (s *Service) bpShareRed(w http.ResponseWriter, d *sql.DB, uid, now string) bool {
+// (generateAmount 内一条+shareRedEnvelopes 一条)，第二条用于提现。
+func (s *Service) bpShareRed(w http.ResponseWriter, r *http.Request, d *sql.DB, uid, now string, recipient any) bool {
 	rg, err := queryCam(d, "SELECT * FROM bus_red_envelope_range WHERE receive_type=5")
 	if err != nil {
 		platform.Unknown(w)
@@ -506,13 +498,16 @@ func (s *Service) bpShareRed(w http.ResponseWriter, d *sql.DB, uid, now string) 
 		return false
 	}
 	amt := strconv.Itoa(lo + rand.Intn(hi-lo+1))
+	var clogID int64
 	for i := 0; i < 2; i++ {
-		if _, err := d.Exec("INSERT INTO bus_red_money_clog (user_id, receive_type, create_amount, is_write_off, create_time, update_time) VALUES (?,?,?,0,?,?)",
-			uid, 5, amt, now, now); err != nil {
+		result, err := d.Exec("INSERT INTO bus_red_money_clog (user_id, receive_type, create_amount, is_write_off, create_time, update_time) VALUES (?,?,?,0,?,?)", uid, 5, amt, now, now)
+		if err != nil {
 			platform.Unknown(w)
 			return false
 		}
+		clogID, _ = result.LastInsertId()
 	}
+	_, _, _ = s.redReceive(r, map[string]any{"clogId": clogID, "receiveType": 5, "receiveAmount": num(amt), "userId": recipient})
 	return true
 }
 

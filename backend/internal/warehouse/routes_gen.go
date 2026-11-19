@@ -17,7 +17,7 @@ var tplCtls = []tplCtl{
 	{"/busCustManage", entBusCustManage, 'A', true, false, false, false, []string{}},
 	{"/busDelProduct", entBusDelProduct, 'C', true, false, false, true, []string{}},
 	{"/busEnterpriseIntroduction", entBusEnterpriseIntroduction, 'A', true, false, false, false, []string{}},
-	{"/busEnterpriseLeasing", entBusEnterpriseLeasing, 'C', true, false, false, true, []string{"/listByPage"}},
+	{"/busEnterpriseLeasing", entBusEnterpriseLeasing, 'C', true, false, false, true, []string{"/listByPage", "/add", "/updateById"}},
 	{"/busEtcProduct", entBusEtcProduct, 'B', true, false, false, false, []string{}},
 	{"/busEventPro", entBusEventPro, 'A', true, false, false, false, []string{}},
 	{"/busEventRegistration", entBusEventRegistration, 'A', true, false, false, false, []string{}},

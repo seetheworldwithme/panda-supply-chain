@@ -114,8 +114,10 @@ func (e *ent) shapeRows(rows []map[string]any, cols []string) []map[string]any {
 	out := make([]map[string]any, 0, len(rows))
 	for _, row := range rows {
 		m := make(map[string]any, len(e.keys))
+		folded := make(map[string]any, len(cols))
 		for _, c := range cols {
 			m[camelCol(c)] = row[c]
+			folded[strings.ToLower(camelCol(c))] = row[c]
 		}
 		// 只保留实体键(DB 外列被 Java 实体映射丢弃,如 bus_package.is_default);
 		// 先按键名直查(快照列/子查询别名等同名场景),未命中再按位置用 dbcols 反查
@@ -123,6 +125,10 @@ func (e *ent) shapeRows(rows []map[string]any, cols []string) []map[string]any {
 		filtered := make(map[string]any, len(e.keys))
 		for i, k := range e.keys {
 			if v, ok := m[k]; ok {
+				filtered[k] = v
+				continue
+			}
+			if v, ok := folded[strings.ToLower(k)]; ok {
 				filtered[k] = v
 				continue
 			}
@@ -211,6 +217,10 @@ func (e *ent) decorate(m map[string]any) {
 		case "D":
 			if s, ok := v.(string); ok && len(s) == 19 {
 				m[k] = s[:10]
+			}
+		case "t":
+			if value, ok := v.(string); ok && len(value) >= 19 && value[10] == 'T' {
+				m[k] = value[:10] + " " + value[11:19]
 			}
 		case "T":
 			if s, ok := v.(string); ok && len(s) == 19 {
@@ -815,6 +825,7 @@ func (s *Service) tplUpdBatch(w http.ResponseWriter, r *http.Request, e *ent) {
 		platform.Unknown(w)
 		return
 	}
+	entities := make([]map[string]any, 0, len(items))
 	for _, it := range items {
 		em, _ := it.(map[string]any)
 		if em == nil {
@@ -825,9 +836,26 @@ func (s *Service) tplUpdBatch(w http.ResponseWriter, r *http.Request, e *ent) {
 			platform.Unknown(w)
 			return
 		}
-		vals := pick(em, e.dbcols)
-		delete(vals, "id")
-		if _, err := s.update(r, e, em["id"], vals); err != nil {
+		entities = append(entities, em)
+	}
+	if len(entities) > 0 {
+		err := platform.WithTx(s.pick(r), func(tx *sql.Tx) error {
+			for _, em := range entities {
+				vals := pick(em, e.dbcols)
+				delete(vals, "id")
+				var err error
+				if e.fill {
+					err = platform.TxUpdateByID(tx, e.table, em["id"], vals)
+				} else {
+					err = platform.TxUpdateByIDNoFill(tx, e.table, em["id"], vals)
+				}
+				if err != nil {
+					return err
+				}
+			}
+			return nil
+		})
+		if err != nil {
 			platform.Unknown(w)
 			return
 		}

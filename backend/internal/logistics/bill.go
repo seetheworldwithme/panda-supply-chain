@@ -60,6 +60,10 @@ func (s *Service) billList(w http.ResponseWriter, r *http.Request) {
 // billListByPage 全字段搜索分页:searchStr 缺省字面 "null"
 func (s *Service) billListByPage(w http.ResponseWriter, r *http.Request) {
 	m := bodyMap(r)
+	if _, ok := m["page"].(map[string]any); !ok {
+		platform.Unknown(w) // Java mapper requires a Page object.
+		return
+	}
 	d := s.pick(r)
 	current, size := pageOf(m)
 	where := "WHERE " + billListQuery() + searchStrOf(m) + "%'"

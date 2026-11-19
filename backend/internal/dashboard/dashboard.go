@@ -50,7 +50,6 @@ func Register(mux *http.ServeMux, s *Service) {
 	// getById(getEtc)由 authadmin 包注册:企业档案页需要嵌套 pubFlows/urcs 等完整实体形状,
 	// 此处一期简化版(snake 裸行)已删除,避免同路径重复注册
 	post(mux, "/saas-common/chainAreaInfo/selByParent", s.selByParent)
-	post(mux, "/saas-common/upload/getImgByRelId", s.getImgByRelId)
 
 	// ── saas-bill:chainBill/chainBillRate 统计 9 条已移交 bill 包精确实现(五期) ──
 

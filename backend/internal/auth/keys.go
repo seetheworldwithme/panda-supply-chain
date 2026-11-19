@@ -11,12 +11,30 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+
+	"github.com/golang-jwt/jwt/v5"
 )
 
 // KeyPair RSA 密钥对。首次启动自动生成并持久化到 keys/,重启后存量 token 仍有效
 type KeyPair struct {
-	Private *rsa.PrivateKey
-	Public  *rsa.PublicKey
+	Private      *rsa.PrivateKey
+	Public       *rsa.PublicKey
+	LegacyPublic *rsa.PublicKey // 迁移期间仅加载旧 Java 公钥，不复制旧私钥。
+}
+
+func legacyKey(k *KeyPair, keysDir string) (*KeyPair, error) {
+	data, err := os.ReadFile(filepath.Join(keysDir, "jwt_legacy_public.pem"))
+	if os.IsNotExist(err) {
+		return k, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	k.LegacyPublic, err = jwt.ParseRSAPublicKeyFromPEM(data)
+	if err != nil {
+		return nil, fmt.Errorf("旧 Java JWT 公钥无效: %w", err)
+	}
+	return k, nil
 }
 
 func LoadOrGenerateKeyPair(keysDir string) (*KeyPair, error) {
@@ -38,7 +56,7 @@ func LoadOrGenerateKeyPair(keysDir string) (*KeyPair, error) {
 		if !ok {
 			return nil, fmt.Errorf("jwt_private.pem 不是 RSA 私钥")
 		}
-		return &KeyPair{Private: rsaKey, Public: &rsaKey.PublicKey}, nil
+		return legacyKey(&KeyPair{Private: rsaKey, Public: &rsaKey.PublicKey}, keysDir)
 	}
 	if !os.IsNotExist(err) {
 		return nil, err
@@ -55,5 +73,5 @@ func LoadOrGenerateKeyPair(keysDir string) (*KeyPair, error) {
 	if err := os.WriteFile(privPath, pemData, 0o600); err != nil {
 		return nil, err
 	}
-	return &KeyPair{Private: key, Public: &key.PublicKey}, nil
+	return legacyKey(&KeyPair{Private: key, Public: &key.PublicKey}, keysDir)
 }

@@ -1,14 +1,16 @@
 // user.go 用户管理(ChainAuthUserController + ChainAuthUserListController)。
 // 页面:UserList(企业授权用户三 tab)/PtUserList(平台用户)/InvitationCode(邀请码)。
-// 降级点:memberType 0→1 的 redis 到期与短信、isAgreeCall 的 feign 名片短信、redis 头像缓存
-// ——照 Java 主流程顺序跳过并留注释;wxFaceImg 的 chain_common_file.effective 更新本地表完成。
+// memberType 0→1 的 redis 到期缓存与短信、isAgreeCall 经纪人短信：短信异常被 Java 吞掉、
+// Go 会员状态读库不依赖缓存，NPE 边界已按原顺序复刻；redis 头像缓存无契约影响。
 package authadmin
 
 import (
 	"database/sql"
+	"errors"
 	"net/http"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/seetheworldwithme/panda-supply-chain/backend/internal/auth"
@@ -132,6 +134,10 @@ var userExcelCols = []string{"accountType", "level", "channel", "handleResult",
 // u.* + roleNames/enterpriseName 子查询,${searchSql} + CONCAT(IFNULL..) like searchStr
 func (s *Service) userListByPage(w http.ResponseWriter, r *http.Request) {
 	m := bodyMap(r)
+	if _, ok := m["page"].(map[string]any); !ok {
+		platform.Unknown(w) // Java mapper requires a Page object.
+		return
+	}
 	current, size := pageOf(m)
 	searchSql, args := s.userSearchSql(r, m, "handleResult", "applys")
 	q := "SELECT u.*, (SELECT GROUP_CONCAT(r.name) FROM chain_auth_use_role ur, chain_auth_role r WHERE ur.role_id=r.id AND ur.user_id=u.id GROUP BY ur.user_id) roleNames," +
@@ -228,7 +234,7 @@ func (s *Service) userAdd(w http.ResponseWriter, r *http.Request) {
 	vals := pick(m, userWriteCols...)
 	vals["password"] = auth.HashPassword(str(m, "password"))
 	delete(vals, "id")
-	id, err := platform.Insert(s.DB.Chain, "chain_auth_user", vals)
+	id, err := platform.InsertNoFill(s.DB.Chain, "chain_auth_user", vals)
 	if err != nil {
 		platform.Unknown(w)
 		return
@@ -237,26 +243,81 @@ func (s *Service) userAdd(w http.ResponseWriter, r *http.Request) {
 }
 
 // userUpdateById = service.updateChainAuthUser 非认证分支(认证分支见 userAuthEtc)。
-// 返回文案 "修改成功"
+// 返回文案 "修改成功"。原方法经 TxAdviceInterceptor 全量事务，后段 NPE 整体回滚。
 func (s *Service) userUpdateById(w http.ResponseWriter, r *http.Request) {
 	m := bodyMap(r)
 	if m["isAcOperation"] == true {
 		s.userAuthEtc(w, r, m)
 		return
 	}
+	old, err := platform.GetByID(s.DB.Chain, "chain_auth_user", m["id"])
+	if err != nil {
+		platform.Unknown(w)
+		return
+	}
 	vals := pick(m, userWriteCols...)
 	if str(m, "handleResult") == "1" {
 		vals["level"] = 1
 	}
-	if _, err := platform.UpdateByID(s.DB.Chain, "chain_auth_user", m["id"], vals); err != nil {
+	err = platform.WithTx(s.DB.Chain, func(tx *sql.Tx) error {
+		if err := platform.TxUpdateByIDNoFill(tx, "chain_auth_user", m["id"], vals); err != nil {
+			return err
+		}
+		if old == nil {
+			return errors.New("user missing") // Java 后段 user.getPhone() NPE
+		}
+		if m["memberType"] != nil && num(m["memberType"]) != 0 {
+			if old["member_type"] == nil {
+				return errors.New("memberType null") // 0==user.getMemberType() 拆箱 NPE
+			}
+			if num(old["member_type"]) == 0 && num(m["memberType"]) == 1 {
+				if m["expirationTime"] == nil || m["activateType"] == nil {
+					return errors.New("expiration/activateType null") // NPE
+				}
+				if err := auth.ScheduleMemberExpiryText(r.Context(), str(m, "id"), str(m, "expirationTime")); err != nil {
+					return err
+				}
+				term := "一个月"
+				if num(m["activateType"]) == 1 {
+					term = "一年"
+				}
+				platform.SendLegacySMS(r.Context(), str(old, "phone"), []string{term, str(m, "expirationTime")}, "2193101", "")
+			}
+		}
+		if m["warehouseNb"] != nil && old["is_agree_call"] != nil {
+			if m["isAgreeCall"] == nil {
+				return errors.New("isAgreeCall null") // 拆箱 NPE
+			}
+			if m["isAgreeCall"] == true {
+				// 原库 bus_business_card 无 msg_type 列，Java feign findList 同样失败→999
+				cards, err := queryRows(s.DB.Chain, "SELECT * FROM bus_business_card WHERE msg_type=2")
+				if err != nil {
+					return err
+				}
+				for _, c := range cards {
+					if c["admin_phone"] == nil {
+						return errors.New("adminPhone null") // toString() NPE
+					}
+					platform.SendLegacySMS(r.Context(), str(c, "admin_phone"), []string{str(old, "phone"), str(m, "warehouseNb")}, "1848436", "")
+				}
+				// 经纪人短信异常被 Java 吞掉，无契约影响
+			}
+		}
+		if err := platform.RedisSetHash(r.Context(), "userId"+str(old, "id"), map[string]string{
+			"phone": platform.JnullAny(old["phone"]), "username": platform.JnullAny(old["username"]),
+			"wxHeadImg": platform.JnullAny(old["wx_face_img"]), "level": platform.JnullAny(old["level"]),
+		}, 0); err != nil {
+			return err
+		}
+		if v, ok := m["wxFaceImg"]; ok && v != nil && str(m, "wxFaceImg") != "" {
+			// Java 该步 try-catch 吞异常,行为保持
+			_, _ = tx.Exec("UPDATE chain_common_file SET effective = 1 WHERE id = ?", v)
+		}
+		return nil
+	})
+	if err != nil {
 		platform.Unknown(w)
 		return
-	}
-	// 降级:memberType 0→1 的 redis 到期+短信、isAgreeCall feign 名片短信、redis 头像缓存,跳过
-	if v, ok := m["wxFaceImg"]; ok && v != nil && str(m, "wxFaceImg") != "" {
-		if _, err := s.DB.Chain.Exec("UPDATE chain_common_file SET effective = 1 WHERE id = ?", v); err != nil {
-			// Java 该步 try-catch 吞异常,行为保持
-		}
 	}
 	platform.Success(w, "修改成功")
 }
@@ -314,7 +375,7 @@ func (s *Service) userAuthEtc(w http.ResponseWriter, r *http.Request, m map[stri
 		}
 	}
 	vals := pick(m, userWriteCols...)
-	if _, err := platform.UpdateByID(s.DB.Chain, "chain_auth_user", m["id"], vals); err != nil {
+	if _, err := platform.UpdateByIDNoFill(s.DB.Chain, "chain_auth_user", m["id"], vals); err != nil {
 		platform.Unknown(w)
 		return
 	}
@@ -381,6 +442,7 @@ func (s *Service) userLogOffUser(w http.ResponseWriter, r *http.Request) {
 
 // inviteCodes 邀请码存储(内存替代 Redis:code+"c"+companyId → 码,TTL 由 effSeconds 决定)
 var inviteCodes = map[string]inviteCode{}
+var inviteMu sync.Mutex
 
 type inviteCode struct {
 	value  string
@@ -390,19 +452,25 @@ type inviteCode struct {
 // userCreateCode = controller.createCode:生成 code 存 TTL,返回 code+"c"+companyId。
 // 降级:短信不涉及;Redis → 内存 map
 func (s *Service) userCreateCode(w http.ResponseWriter, r *http.Request) {
+	m := bodyMap(r)
+	if m["effSeconds"] == nil || num(m["effSeconds"]) <= 0 {
+		platform.Unknown(w)
+		return
+	}
 	cu := auth.From(r.Context())
 	code := auth.RandomCode()
 	key := code + "c" + strconv.FormatInt(cu.CompanyID, 10)
-	secs := int64(60)
-	if v := num(bodyMap(r)["effSeconds"]); v > 0 {
-		secs = int64(v)
-	}
+	secs := int64(num(m["effSeconds"]))
+	inviteMu.Lock()
 	inviteCodes[key] = inviteCode{value: code, expire: time.Now().Add(time.Duration(secs) * time.Second)}
+	inviteMu.Unlock()
 	platform.Success(w, key)
 }
 
 // inviteCodeGet 取邀请码(过期/不存在返回 "",false;joinCpy 等后续接口复用)
 func inviteCodeGet(key string) (string, bool) {
+	inviteMu.Lock()
+	defer inviteMu.Unlock()
 	c, ok := inviteCodes[key]
 	if !ok || time.Now().After(c.expire) {
 		return "", false
@@ -429,7 +497,7 @@ func (s *Service) userListUpdByList(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
-	if _, err := platform.UpdateByID(s.DB.Chain, "chain_auth_user", m["id"], vals); err != nil {
+	if _, err := platform.UpdateByIDNoFill(s.DB.Chain, "chain_auth_user", m["id"], vals); err != nil {
 		platform.Unknown(w)
 		return
 	}

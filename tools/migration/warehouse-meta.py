@@ -49,7 +49,7 @@ def mapper_sqls(name):
 # ── DB 列与类型 ──
 def db_schema():
     q = "SELECT table_name, column_name, data_type FROM information_schema.columns WHERE table_schema='chain' ORDER BY table_name, ordinal_position"
-    r = subprocess.run(["mysql", "-h127.0.0.1", "-uroot", "chain", "-N", "-B", "-e", q], capture_output=True, text=True)
+    r = subprocess.run(["mysql", "-uroot", "chain", "-N", "-B", "-e", q], capture_output=True, text=True, check=True)
     cols = collections.defaultdict(dict)  # table → col → datatype
     for line in r.stdout.splitlines():
         t, c, d = line.split('\t')
@@ -95,6 +95,7 @@ def parse_entity(path):
             fields.append({
                 "name": fname, "type": ftype, "kind": kind, "excel": excel, "jf": jf,
                 "fill": fill, "notbank": notbank, "sys": syscol,
+                "datecheck": "@DateColumn" in block, "numbercheck": "@NumberColumn" in block,
                 "carrier": exist_false or ftype not in KIND,
             })
             anns = []  # annotations belong only to the immediately following field
@@ -142,7 +143,7 @@ def emit():
         # getSql 候选:有 @ExcelColumn 注解(含空头)的非载体字段
         q = [f for f in noncarrier if f["excel"]]
         # excel 导入导出列:@ExcelColumn 且 value 非空
-        excel = [f for f in noncarrier if f["excel"] and f["excel"].group(1) != ""]
+        excel = [f for f in noncarrier if f["excel"]]
         decimals = [f["name"] for f in noncarrier if f["type"] == "BigDecimal"]
         dates = [f["name"] for f in noncarrier if f["type"] == "LocalDate"]
         iso = [f["name"] for f in noncarrier if f["type"] == "LocalDateTime" and not f["jf"]]
@@ -170,7 +171,7 @@ def emit():
         keys = [f["name"] for f in fields]
         noncarrier = [f for f in fields if not f["carrier"]]
         q = [f for f in noncarrier if f["excel"]]
-        excel = [f for f in noncarrier if f["excel"] and f["excel"].group(1) != ""]
+        excel = [f for f in noncarrier if f["excel"]]
         decimals = [f["name"] for f in noncarrier if f["type"] == "BigDecimal"]
         dates = [f["name"] for f in noncarrier if f["type"] == "LocalDate"]
         iso = [f["name"] for f in noncarrier if f["type"] == "LocalDateTime" and not f["jf"]]
@@ -189,9 +190,9 @@ def emit():
                 kind = KIND[f["type"]]
                 notbank = 'true' if f["notbank"] else 'false'
                 sysf = 'true' if f["sys"] else 'false'
-                lines.append('\t\t{%s, %s, %s, %s, false, %s},' % (
+                lines.append('\t\t{%s, %s, %s, %s, false, %s, %s, %s},' % (
                     json.dumps(f["excel"].group(1), ensure_ascii=False),
-                    json.dumps(camel_to_underline(f["name"])), json.dumps(kind), sysf, notbank))
+                    json.dumps(camel_to_underline(f["name"])), json.dumps(kind), sysf, notbank, str(f["datecheck"]).lower(), str(f["numbercheck"]).lower()))
             lines.append('\t},')
         else:
             lines.append('\texcel: nil,')
