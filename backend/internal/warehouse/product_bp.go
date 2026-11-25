@@ -328,6 +328,9 @@ func (s *Service) bpSelCheckPro(w http.ResponseWriter, r *http.Request) {
 		if v == nil || k == "searchStr" {
 			continue
 		}
+		if !e.knownKey(k) { // Java getSql 忽略实体里没有的键
+			continue
+		}
 		if e.typeOf(k) == "x" || k == "page" || k == "ids" {
 			continue
 		}
@@ -344,10 +347,15 @@ func (s *Service) bpSelCheckPro(w http.ResponseWriter, r *http.Request) {
 	}
 	inner := "%null%"
 	if v, has := m["searchStr"]; has && v != nil {
-		inner = "%" + v.(string) + "%"
+		sv, okS := bindVal("s", v)
+		if !okS { // 非字符串值原先直接类型断言 panic
+			platform.Unknown(w)
+			return
+		}
+		inner = "%" + sv.(string) + "%"
 	}
 	q := "select (select product_name from bus_big_prodect where id=bus_product.fst_pro_id) fstName, (select product_name from bus_big_prodect where id=bus_product.big_pro_id) secName, (select product_name from bus_big_prodect where id=bus_product.three_pro_id) thName, (select warehouse_video from bus_warehouse where id=bus_product.warehouse_id) warehouseVideo, (select warehouse_img from bus_warehouse where id=bus_product.warehouse_id) warehouseImg, bus_product.* from bus_product " +
-		sqlStr + " and CONCAT(IFNULL(warehouse_nb, ''),IFNULL(region, ''),IFNULL(product_name, ''),IFNULL(resource_number, ''),IFNULL(send_addres, '')) like '%" + inner + "%'  order by update_time desc"
+		sqlStr + " and CONCAT(IFNULL(warehouse_nb, ''),IFNULL(region, ''),IFNULL(product_name, ''),IFNULL(resource_number, ''),IFNULL(send_addres, '')) like '%" + sqlEscape(inner) + "%'  order by update_time desc"
 	rows := s.qEntEnt2(w, r, e, q, args...)
 	if rows == nil {
 		return

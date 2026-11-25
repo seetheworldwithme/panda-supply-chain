@@ -111,6 +111,15 @@ func (s *Service) tplListByPageWrap(w http.ResponseWriter, r *http.Request, e *e
 	}
 	rec := &capWriter{header: http.Header{}}
 	s.tplListByPage(rec, r, e, family)
+	if rec.code > http.StatusOK {
+		// 内层已是失败响应(如 500/999):Java 走 GlobalExceptionHandler,不会再包一层,原样透传
+		for k, vs := range rec.header {
+			w.Header()[k] = vs
+		}
+		w.WriteHeader(rec.code)
+		_, _ = w.Write(rec.buf)
+		return
+	}
 	var inner any
 	_ = json.Unmarshal(rec.buf, &inner)
 	platform.Success(w, inner)

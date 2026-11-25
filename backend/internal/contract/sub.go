@@ -61,9 +61,10 @@ func (s *Service) extendListByPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	current, size := pageOf(m)
-	cond := "WHERE CONCAT(id) like '%" + searchStrOf(m) + "%'"
+	cond := "WHERE CONCAT(id) like ?"
+	sarg := []any{"%" + searchStrOf(m) + "%"}
 	page, err := paged(s.pick(r), "SELECT * FROM chain_contract_extend "+cond+" ORDER BY create_time DESC",
-		"SELECT COUNT(*) FROM chain_contract_extend "+cond, nil, current, size)
+		"SELECT COUNT(*) FROM chain_contract_extend "+cond, sarg, current, size)
 	if err != nil {
 		platform.Unknown(w)
 		return
@@ -281,10 +282,12 @@ func (s *Service) supplierMoney(w http.ResponseWriter, r *http.Request, sign flo
 		platform.Unknown(w) // BigDecimal null NPE
 		return
 	}
-	cur := num(row[col])
-	amt := num(m[key])
-	val := cur + sign*amt
-	if _, err := d.Exec("UPDATE chain_contract_supplier SET "+col+" = ? WHERE id = ?", val, m["id"]); err != nil {
+	// 原先 float64 相加再回写:大额丢精度、并发加款丢更新;交给 MySQL 做十进制加减(与 Java BigDecimal 等价)
+	op := "-"
+	if sign > 0 {
+		op = "+"
+	}
+	if _, err := d.Exec("UPDATE chain_contract_supplier SET "+col+"=IFNULL("+col+",0)"+op+"? WHERE id = ?", m[key], m["id"]); err != nil {
 		platform.Unknown(w)
 		return
 	}
@@ -574,10 +577,10 @@ func (s *Service) filesListByPage(w http.ResponseWriter, r *http.Request) {
 		"eqbFlowId", "createTime", "updateTime", "remark1", "remark2", "remark3", "remark4",
 		"remark5"}, nil, map[string]bool{"id": true, "sysFlowId": true, "eqbFlowId": true})
 	if v, ok := m["startTime"]; ok && v != nil {
-		searchSql += " and DATE_FORMAT(create_time, '%Y-%m-%d')>= '" + str(m, "startTime") + "'"
+		searchSql += " and DATE_FORMAT(create_time, '%Y-%m-%d')>= " + sqlQuote(str(m, "startTime"))
 	}
 	if v, ok := m["endTime"]; ok && v != nil {
-		searchSql += " and DATE_FORMAT(create_time, '%Y-%m-%d')<= '" + str(m, "endTime") + "'"
+		searchSql += " and DATE_FORMAT(create_time, '%Y-%m-%d')<= " + sqlQuote(str(m, "endTime"))
 	}
 	var ss any
 	if v, ok := m["searchStr"]; ok && v != nil {

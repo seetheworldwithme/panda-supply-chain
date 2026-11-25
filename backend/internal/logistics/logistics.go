@@ -178,8 +178,13 @@ func int64Of(m map[string]any, k string) (int64, bool) {
 func pick(m map[string]any, cols ...string) map[string]any {
 	u := platform.Underscore(m)
 	out := make(map[string]any, len(cols))
+	// 列名大小写不敏感匹配:Invoicing_time 这类驼峰列名原先永远匹配不上,接口传入的 invoicingTime 被静默丢弃
+	lower := make(map[string]any, len(u))
+	for k, v := range u {
+		lower[strings.ToLower(k)] = v
+	}
 	for _, c := range cols {
-		if v, ok := u[c]; ok {
+		if v, ok := lower[strings.ToLower(c)]; ok {
 			out[c] = v
 		}
 	}
@@ -203,8 +208,17 @@ func searchStrOf(m map[string]any) string {
 	if v, ok := m["searchStr"]; !ok || v == nil {
 		return "" // MyBatis ${searchStr} 对 null 输出空串 → like '%%'(8765 实测;非 "null" 字面)
 	}
-	return strings.TrimSpace(str(m, "searchStr"))
+	return sqlEscape(strings.TrimSpace(str(m, "searchStr"))) // 调用方把它字面拼进 like '...':不转义即 SQL 注入
 }
+
+// sqlEscape 转义要字面拼进 SQL 字符串的值(反斜杠、单引号)。Java mapper 的 ${} 是字面注入,
+// 照搬就是 SQL 注入;良性输入转义后拼出的 SQL 与原先逐字相同。
+func sqlEscape(v string) string {
+	return strings.ReplaceAll(strings.ReplaceAll(v, "\\", "\\\\"), "'", "''")
+}
+
+// sqlString 值 → 带引号的 MySQL 字符串字面量(用于原先裸拼接的等值条件)。
+func sqlString(v string) string { return "'" + sqlEscape(v) + "'" }
 
 // paged count + 窗口查询(MP IPage 形状;countQ 不带 order by)
 func paged(d *sql.DB, q, countQ string, args []any, current, size int64) (map[string]any, error) {

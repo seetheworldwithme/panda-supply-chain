@@ -576,7 +576,11 @@ func (s *Service) stCountSett(w http.ResponseWriter, r *http.Request) {
 		platform.Unknown(w)
 		return
 	}
-	ms, _ := platform.ScanMaps(rows)
+	ms, errS := platform.ScanMaps(rows)
+	if errS != nil { // 迭代中断连时原先返回全 0 的"成功"
+		platform.Unknown(w)
+		return
+	}
 	st, et := str(m, "startTime"), str(m, "endTime")
 	cglb, xslb, ok2 := bucketSeries(series, ms, "type", "1", "2", st, et)
 	if !ok2 {

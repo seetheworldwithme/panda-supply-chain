@@ -78,7 +78,7 @@ func wxVerifyNotify(params map[string]string, key string) bool {
 }
 
 func (s *Service) billPayNotify(w http.ResponseWriter, r *http.Request) {
-	body, err := io.ReadAll(r.Body)
+	body, err := io.ReadAll(io.LimitReader(r.Body, 1<<20)) // 公网回调:微信通知体很小,封顶防超大包打 OOM
 	if err != nil {
 		platform.Unknown(w)
 		return
@@ -90,7 +90,9 @@ func (s *Service) billPayNotify(w http.ResponseWriter, r *http.Request) {
 	}
 	key := platform.LoadWxConfig().MchSecret
 	if key == "" {
-		key = "null" // Java null 密钥拼接语义
+		// 没配商户密钥就无法验签:不能退化成字面 "null" 去比对,否则伪造的通知会被当成已支付
+		w.WriteHeader(http.StatusOK) // 与验签失败一致:Java return null → 200 空体
+		return
 	}
 	if !wxVerifyNotify(params, key) || params["return_code"] != "SUCCESS" {
 		w.WriteHeader(http.StatusOK) // Java return null → 200 空体
@@ -100,7 +102,7 @@ func (s *Service) billPayNotify(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Service) billAppPayNotify(w http.ResponseWriter, r *http.Request) {
-	body, err := io.ReadAll(r.Body)
+	body, err := io.ReadAll(io.LimitReader(r.Body, 1<<20)) // 公网回调:微信通知体很小,封顶防超大包打 OOM
 	if err != nil {
 		platform.Unknown(w)
 		return
@@ -323,7 +325,7 @@ func (s *Service) miniAppPay(r *http.Request, openID, amount, orderNb, billRemar
 		return nil
 	}
 	req.Header.Set("Content-Type", "text/xml")
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := (&http.Client{Timeout: 15 * time.Second}).Do(req) // DefaultClient 无超时,微信接口挂起会一直占着调用方的事务连接
 	if err != nil {
 		return nil
 	}

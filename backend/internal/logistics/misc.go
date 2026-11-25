@@ -388,7 +388,10 @@ func (s *Service) twAddBatch(w http.ResponseWriter, r *http.Request) {
 			platform.Unknown(w)
 			return
 		}
-		e["batchNumber"] = batchNumber
+		e["batchNumber"] = nil // 缺 BatchNumber 头时落 NULL,与查重条件 IS NULL 对齐;原先落空串致重复校验失效
+		if batchNumber != "" {
+			e["batchNumber"] = batchNumber
+		}
 		vals := pick(e, entTw.cols...)
 		delete(vals, "id")
 		if _, err := platform.InsertNoFill(d, "chain_logistics_third_waybill", vals); err != nil {
@@ -489,7 +492,7 @@ func (s *Service) twUpdateBatch(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		var id sql.NullInt64
-		_ = d.QueryRow("SELECT id FROM chain_logistics_third_waybill WHERE bill_number LIKE ?", str(e, "billNumber")).Scan(&id)
+		_ = d.QueryRow("SELECT id FROM chain_logistics_third_waybill WHERE bill_number = ?", str(e, "billNumber")).Scan(&id)
 		if !id.Valid {
 			vals := pick(e, entTw.cols...)
 			delete(vals, "id")
@@ -791,9 +794,9 @@ func (s *Service) wlListByPage(w http.ResponseWriter, r *http.Request) {
 	}
 	// notBindOrder/orderId 手工分支(值原样内插)
 	if v, ok := m["notBindOrder"]; ok && v != nil {
-		cond += " and (order_id is null or order_id='' or order_id=" + str(m, "orderId") + ")"
+		cond += " and (order_id is null or order_id='' or order_id=" + sqlString(str(m, "orderId")) + ")"
 	} else if v, ok := m["orderId"]; ok && v != nil {
-		cond += " and order_id =" + str(m, "orderId")
+		cond += " and order_id =" + sqlString(str(m, "orderId"))
 	}
 	if v, ok := m["searchStr"]; ok && v != nil {
 		cond += " and " + wlConcat + " like ?"

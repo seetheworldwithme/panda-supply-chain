@@ -13,6 +13,9 @@ import (
 	"time"
 )
 
+// sofficeGate LibreOffice 子进程并发闸门:每个实例几百 MB 内存,不限并发时几十个并发上传就能把 8G 机器 OOM。
+var sofficeGate = make(chan struct{}, 2)
+
 // OpenLegacyExcel normalizes a BIFF workbook for the existing OOXML reader.
 // The converter runs in a new profile and sees only the bounded temporary input.
 func OpenLegacyExcel(input io.Reader) (*os.File, func(), error) {
@@ -39,6 +42,8 @@ func OpenLegacyExcel(input io.Reader) (*os.File, func(), error) {
 		bin = "soffice"
 	}
 	profile := (&url.URL{Scheme: "file", Path: filepath.Join(work, "profile")}).String()
+	sofficeGate <- struct{}{}
+	defer func() { <-sofficeGate }()
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 	if err = exec.CommandContext(ctx, bin, "-env:UserInstallation="+profile, "--headless", "--convert-to", "xlsx", "--outdir", work, src).Run(); err != nil {

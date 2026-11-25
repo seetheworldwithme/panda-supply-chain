@@ -70,7 +70,7 @@ func registerExternal(mux *http.ServeMux, s *Service) {
 		if method == "POST" && (path == "/upload/getByRelId" || path == "/upload/getShareToken" || path == "/upload/preFIle" || path == "/upload/getError" || path == "/TenOcrController/getOcrResult") {
 			next := h
 			h = func(w http.ResponseWriter, r *http.Request) {
-				b, err := io.ReadAll(r.Body)
+				b, err := io.ReadAll(io.LimitReader(r.Body, 32<<20))
 				var m map[string]any
 				if err != nil || json.Unmarshal(b, &m) != nil || m == nil {
 					platform.Unknown(w)
@@ -202,6 +202,9 @@ func (s *Service) extFile(r *http.Request, name string) (map[string]any, error) 
 		return nil, fmt.Errorf("selectOne returned more than one")
 	}
 	if len(rows) == 1 {
+		if !extRowUsable(rows[0], name) {
+			return nil, nil
+		}
 		return rows[0], nil
 	}
 	imgs, err := queryRows(d, "SELECT * FROM chain_common_img WHERE file_name=? OR id=?", name, name)
@@ -212,12 +215,19 @@ func (s *Service) extFile(r *http.Request, name string) (map[string]any, error) 
 		return nil, fmt.Errorf("selectOne returned more than one")
 	}
 	if len(imgs) == 1 {
+		if !extRowUsable(imgs[0], name) {
+			return nil, nil
+		}
 		return map[string]any{"file_path": imgs[0]["file_path"]}, nil
 	}
 	return nil, nil
 }
 func (s *Service) extDownload(w http.ResponseWriter, r *http.Request) {
 	name := r.URL.Query().Get("fileName")
+	if name != "" && (name != filepath.Base(name) || name == "..") {
+		platform.FailMsg(w, "未找到对应文件") // 不接受路径分隔符:否则能读到 SFTP 目录之外的任意文件
+		return
+	}
 	p := os.Getenv("PANDA_TL_SFTP_DIR") + name
 	real := name
 	if _, err := os.Stat(p); err != nil {
@@ -227,6 +237,10 @@ func (s *Service) extDownload(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if f == nil {
+			platform.FailMsg(w, "未找到对应文件")
+			return
+		}
+		if !extRowUsable(f, "") {
 			platform.FailMsg(w, "未找到对应文件")
 			return
 		}
@@ -267,7 +281,7 @@ func (s *Service) extImage(w http.ResponseWriter, r *http.Request) {
 func (s *Service) extStream(w http.ResponseWriter, r *http.Request) {
 	name := r.URL.Query().Get("fileName")
 	f, err := s.extFile(r, name)
-	if err != nil || f == nil {
+	if err != nil || f == nil || name == "" || name != filepath.Base(name) {
 		platform.Unknown(w)
 		return
 	}
@@ -293,6 +307,12 @@ func (s *Service) extStream(w http.ResponseWriter, r *http.Request) {
 	if typ == "" {
 		typ = "application/octet-stream"
 	}
+	// 仅图片与 PDF 允许内联;HTML/SVG 等一律强制下载,否则同域下传一个 .html 就能盗走登录 token
+	if !extIsImage(name) && strings.ToLower(filepath.Ext(name)) != ".pdf" {
+		typ = "application/octet-stream"
+		w.Header().Set("Content-Disposition", mime.FormatMediaType("attachment", map[string]string{"filename": name}))
+	}
+	w.Header().Set("X-Content-Type-Options", "nosniff")
 	w.Header().Set("Content-Type", typ)
 	w.Write(b)
 }
@@ -365,6 +385,10 @@ func serveVideo(w http.ResponseWriter, r *http.Request, p string, play bool) {
 
 func (s *Service) extPreview(w http.ResponseWriter, r *http.Request) {
 	m := bodyMap(r)
+	if len(m) == 0 { // 空条件=全表:逐行读盘转 base64 会打满内存
+		platform.Unknown(w)
+		return
+	}
 	cond := "1=1"
 	args := []any{}
 	for _, k := range platform.SortedKeys(m) {
@@ -386,6 +410,9 @@ func (s *Service) extPreview(w http.ResponseWriter, r *http.Request) {
 	}
 	out := []map[string]any{}
 	for _, row := range rows {
+		if !extRowUsable(row, "") {
+			continue
+		}
 		out = append(out, map[string]any{"fileName": row["file_name"], "filePath": "data:image/jpg;base64," + extBase64(filepath.Join(str(row, "file_path"), str(row, "file_name")))})
 	}
 	if len(out) == 0 {
@@ -395,6 +422,10 @@ func (s *Service) extPreview(w http.ResponseWriter, r *http.Request) {
 		}
 		f, err := platform.GetByID(s.pick(r), "chain_common_file", m["file_id"])
 		if err != nil || f == nil {
+			platform.Unknown(w)
+			return
+		}
+		if !extRowUsable(f, "") {
 			platform.Unknown(w)
 			return
 		}
@@ -550,7 +581,7 @@ func (s *Service) extUpload(w http.ResponseWriter, r *http.Request, logged bool)
 		}
 		if logged && (strings.Contains(name, ".doc") || strings.Contains(name, ".docx")) {
 			imgdir := filepath.Join(externalRoot(), "convertFiles")
-			preview := strconv.FormatInt(time.Now().UnixMilli(), 10) + ".pdf"
+			preview := platform.PreviewName()
 			if e = platform.RenderDocumentPDF(r.Context(), p, filepath.Join(imgdir, preview)); e != nil {
 				break
 			}
@@ -576,6 +607,10 @@ func (s *Service) extBigUpload(w http.ResponseWriter, r *http.Request) {
 	chunk, e1 := strconv.Atoi(r.FormValue("chunkNumber"))
 	total, e2 := strconv.Atoi(r.FormValue("totalChunks"))
 	if len(fhs) == 0 || name == "" || e1 != nil || e2 != nil {
+		platform.Unknown(w)
+		return
+	}
+	if name != filepath.Base(name) || name == ".." { // 只允许纯文件名:带分隔符就能把分片写到上传目录之外
 		platform.Unknown(w)
 		return
 	}
@@ -730,6 +765,10 @@ func callOCRAdapter(ctx context.Context, url, image string, typ int) (platform.J
 // extImagesByRel 保留 Java 的空对象、可选 yyzz 和有序 lbts 字段。
 func (s *Service) extImagesByRel(w http.ResponseWriter, r *http.Request) {
 	m := bodyMap(r)
+	if len(m) == 0 {
+		platform.Success(w, map[string]any{}) // 空条件=全表读盘
+		return
+	}
 	cond := "1=1"
 	args := []any{}
 	for _, key := range platform.SortedKeys(m) {
@@ -752,6 +791,9 @@ func (s *Service) extImagesByRel(w http.ResponseWriter, r *http.Request) {
 	result := map[string]any{}
 	images := []map[string]any{}
 	for _, row := range rows {
+		if !extRowUsable(row, "") {
+			continue
+		}
 		preview := "data:image/jpg;base64," + extBase64(filepath.Join(str(row, "file_path"), str(row, "file_name")))
 		switch str(row, "file_type") {
 		case "3":
@@ -762,4 +804,13 @@ func (s *Service) extImagesByRel(w http.ResponseWriter, r *http.Request) {
 		result["lbts"] = images
 	}
 	platform.Success(w, result)
+}
+
+// extRowUsable 文件行的磁盘路径只接受"非空目录 + 纯文件名":
+// 目录为空时会相对进程工作目录读文件(.env、keys/ 等),文件名带分隔符则可穿越到任意路径。
+func extRowUsable(row map[string]any, name string) bool {
+	if name == "" {
+		name = str(row, "file_name")
+	}
+	return str(row, "file_path") != "" && name != "" && name != ".." && name == filepath.Base(name)
 }

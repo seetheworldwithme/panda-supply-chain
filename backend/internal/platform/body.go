@@ -27,6 +27,8 @@ func ValidateJavaBodies(next http.Handler) http.Handler {
 		var raw []byte
 		var err error
 		if r.Body != nil {
+			// JSON 路由的请求体封顶 32MB:此前无上限,公开路由(/saas-auth/code/phone)可被超大包打 OOM
+			r.Body = http.MaxBytesReader(w, r.Body, 32<<20)
 			raw, err = io.ReadAll(r.Body)
 		}
 		if err != nil {

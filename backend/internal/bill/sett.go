@@ -43,9 +43,9 @@ func (s *Service) handleSett(w http.ResponseWriter, r *http.Request) {
 			ss = "%" + str(m, "searchStr") + "%"
 		}
 		current, size := pageOf(m)
-		q := "select * from chain_bill_settlement where CONCAT(id) like '" + ss + "' order by create_time desc"
-		countQ := "SELECT count(1) FROM chain_bill_settlement where CONCAT(id) like '" + ss + "'"
-		ip, err := paged(d, q, countQ, nil, current, size)
+		q := "select * from chain_bill_settlement where CONCAT(id) like ? order by create_time desc"
+		countQ := "SELECT count(1) FROM chain_bill_settlement where CONCAT(id) like ?"
+		ip, err := paged(d, q, countQ, []any{ss}, current, size)
 		if err != nil {
 			platform.Unknown(w)
 			return

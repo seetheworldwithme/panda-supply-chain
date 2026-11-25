@@ -10,12 +10,14 @@ export default{
         // 保留两位小数
         Vue.filter('ToFiexd', function(value) {
             let time = null;
+            if (value == null || value === '') { return '' } // 空值不设防会在渲染期抛 TypeError,整表不刷新
             time = (value*1).toFixed(2);
             return time
         }),
         // 银行交易时间过滤
         Vue.filter('orderStrTime', function(value) {
             let time = null;
+            if (value == null || value === '') { return '' } // 空值不设防会在渲染期抛 TypeError,整表不刷新
             time = value.substr(0, 4) + '-' + value.substr(4, 2) + '-' + value.substr(6, 2) + ' ' + value.substr(8, 2) + ':' + value.substr(10, 2) + ':' + value.substr(12, 2);
             return time
         }),
@@ -45,23 +47,27 @@ export default{
         // 年月日过滤
         Vue.filter('Time', function(value) {
             let time = "";
+            if (value == null || value === '') { return '' } // 空值不设防会在渲染期抛 TypeError,整表不刷新
             time = value.substring(0,10);
             return time
         }),
         // 年月日时分秒过滤
         Vue.filter('Times', function(value) {
             let time = "";
+            if (value == null || value === '') { return '' } // 空值不设防会在渲染期抛 TypeError,整表不刷新
             time = value.substring(0,10)  + ' ' + value.substring(11,19)
             return time
         }),
         // 月份过滤
         Vue.filter('timeDate', function(value) {
             let time = "";
+            if (value == null || value === '') { return '' } // 空值不设防会在渲染期抛 TypeError,整表不刷新
             time = value.substring(0,7);
             return time
         }),
         // 银行卡号过滤
         Vue.filter('cardCode', function(value) {
+            if (value == null || value === '') { return '' } // 空值不设防会在渲染期抛 TypeError,整表不刷新
             let newStr = value.replace(/\d(?=(?:\d{4})+\b)/g, `$& `);
             return String(newStr)
         }),
@@ -76,8 +82,9 @@ export default{
         }),
         // 体表盘金额过滤
         Vue.filter('newcurrency', function(value = '0', currencyType = '',limit=2) {
+            if (value == null || value === '') { return '' } // 空值不设防会在渲染期抛 TypeError,整表不刷新
             let res;
-            value = value.toFixed(limit);
+            value = (value*1).toFixed(limit);
             let prev = value.toString().split('.')[0]; // 获取整数部分
             let next = value.toString().split('.')[1];
             res = prev.toString().replace(/(\d)(?=(?:\d{3})+$)/g, '$1,') + '.' + next;

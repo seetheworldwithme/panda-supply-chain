@@ -19,6 +19,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"io"
 	"math/big"
@@ -669,6 +670,13 @@ func parseXlsx(f multipart.File) (*xlsx, error) {
 	rels := map[string]string{}
 	var refs []sheetRef
 	var sheetXMLs []struct{ name, data string }
+	// 解压总量封顶 256MB:zip 炸弹/超大工作簿不能把整个进程的内存读满(Go 没有 -Xmx 兜底)
+	var total uint64
+	for _, zf := range zr.File {
+		if total += zf.UncompressedSize64; total > 256<<20 {
+			return nil, errors.New("工作簿解压后过大")
+		}
+	}
 	for _, zf := range zr.File {
 		switch {
 		case zf.Name == "xl/sharedStrings.xml":
@@ -724,7 +732,10 @@ func readZip(zf *zip.File) ([]byte, error) {
 		return nil, err
 	}
 	defer rc.Close()
-	return io.ReadAll(rc)
+	if zf.UncompressedSize64 > 64<<20 {
+		return nil, errors.New("工作表解压后过大")
+	}
+	return io.ReadAll(io.LimitReader(rc, 64<<20))
 }
 
 func parseRels(data string) map[string]string {
@@ -915,7 +926,7 @@ func parseSheetRows(data string, xl *xlsx) []xlsxRow {
 					}
 					// openpyxl 等写入方会省略空单元格 → 必须按 r 属性回填真实列位
 					if ref != "" {
-						if ci, err := colIndex(ref); err == nil {
+						if ci, err := colIndex(ref); err == nil && ci >= 0 && ci < 16384 && ci-len(row.cells) <= 256 { // Excel 最大列 XFD,且离前一列不超过 256 列:稀疏坐标补齐会把内存放大上万倍
 							for len(row.cells) < ci {
 								row.cells = append(row.cells, xlsxCell{kind: "missing"})
 							}

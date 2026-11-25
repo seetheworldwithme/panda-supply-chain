@@ -41,7 +41,7 @@ func init() {
 
 // bodyMapStrict @RequestBody Map 版:空体按 {};非对象 JSON(如 [])Jackson 绑定失败 → 999
 func bodyMapStrict(w http.ResponseWriter, r *http.Request) (map[string]any, bool) {
-	raw, err := io.ReadAll(r.Body)
+	raw, err := io.ReadAll(io.LimitReader(r.Body, 32<<20))
 	if err != nil {
 		platform.Unknown(w)
 		return nil, false
@@ -392,6 +392,7 @@ func (s *Service) cardSearchByUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	userInfo := entChainAuthUserLive.shapeRows(urows, ucols)[0]
+	userInfo["password"] = nil // 任意登录用户可调,不回传口令散列
 	var etcInfo any
 	if companyId := userInfo["companyId"]; companyId != nil {
 		erow, err := platform.GetByID(s.pick(r), "chain_basic_enterprise", companyId)
@@ -693,14 +694,22 @@ func (s *Service) vlAllLog(w http.ResponseWriter, r *http.Request) {
 	var args []any
 	// Generic StringHelper.getSql(Map) contributes no predicates in Java.
 	if v, has := m["target_user_id"]; has && v != nil {
-		sqlStr += " and target_user_id=" + strOf(v) // 字面注入(Java maps.get→字符串拼接)
+		// Java 是 maps.get → 字面拼接;这里按整数绑定(非整数照旧 999),防 SQL 注入
+		tid, okT := bindVal("i", v)
+		if !okT || tid == nil {
+			platform.Unknown(w)
+			return
+		}
+		sqlStr += " and target_user_id=?"
+		args = append(args, tid)
 	}
-	inner := ""
+	inner := "%%" // 缺键时 Java 得空串 → like '%%'
 	if v, has := m["searchStr"]; has && v != nil {
-		inner = strOf(v)
+		inner = "%" + strOf(v) + "%"
 	}
 	q := "select *, (select count(1) from bus_user_care where care_user_id=bus_visitor_log.target_user_id) ifCare from bus_visitor_log " +
-		sqlStr + " and CONCAT(id) like '%" + inner + "%' order by create_time desc"
+		sqlStr + " and CONCAT(id) like ? order by create_time desc"
+	args = append(args, inner)
 	rows := s.qEntEnt2(w, r, entBusVisitorLog, q, args...)
 	if rows == nil {
 		return

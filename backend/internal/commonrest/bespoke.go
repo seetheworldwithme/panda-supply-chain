@@ -99,7 +99,7 @@ func (s *Service) selPtAmt(w http.ResponseWriter, r *http.Request) {
 		id = currentUser(r).CompanyID
 	}
 	var v *string
-	if err := s.pick(r).QueryRow("SELECT sum(residue_freeze_amt) FROM chain_contract WHERE sales_unit_id=" + javaStr(id)).Scan(&v); err != nil {
+	if err := s.pick(r).QueryRow("SELECT sum(residue_freeze_amt) FROM chain_contract WHERE sales_unit_id=?", id).Scan(&v); err != nil {
 		platform.Unknown(w)
 		return
 	}

@@ -20,7 +20,7 @@ func checkBankSignature(r *http.Request) bool {
 	if r.Header.Get("CMB-BodySign") == "" {
 		return false
 	}
-	body, err := io.ReadAll(r.Body)
+	body, err := io.ReadAll(io.LimitReader(r.Body, 1<<20)) // 鉴权判定之前就读 body:必须封顶
 	r.Body = io.NopCloser(bytes.NewReader(body))
 	if err != nil {
 		return false
@@ -49,7 +49,7 @@ func checkEsignSignature(r *http.Request) bool {
 	if !strings.Contains(r.URL.Path, "getSignCallBack") {
 		return false
 	}
-	body, err := io.ReadAll(r.Body)
+	body, err := io.ReadAll(io.LimitReader(r.Body, 1<<20)) // 鉴权判定之前就读 body:必须封顶
 	r.Body = io.NopCloser(bytes.NewReader(body))
 	return err == nil && platform.VerifyEsignCallback(r, body)
 }

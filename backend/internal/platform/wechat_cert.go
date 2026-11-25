@@ -23,6 +23,7 @@ var wechatCertificates struct {
 	identity  [32]byte
 	certs     map[string]*x509.Certificate
 	refreshed time.Time
+	attempted time.Time // 最近一次因未知序列号触发下载的时间
 }
 
 // WechatPlatformCertificate 复刻原 SDK 的商户签名下载、APIv3 解密及财付通 CA 校验。
@@ -62,6 +63,14 @@ func WechatPlatformCertificate(ctx context.Context, cfg WxLocalConfig, serial st
 		return latest
 	}
 	cert := selectCert()
+	if cert == nil && serial != "" {
+		// 回调里的序列号来自未鉴权请求:未知序列号一分钟内只下载一次,
+		// 否则随机序列号就能让下单/回调全部堵在这把全局锁上(下载超时 30s)。
+		if time.Since(wechatCertificates.attempted) < time.Minute {
+			return nil, fmt.Errorf("微信平台证书序号不存在")
+		}
+		wechatCertificates.attempted = time.Now()
+	}
 	if cert != nil && (cfg.APIV3Key == "" || time.Since(wechatCertificates.refreshed) < time.Hour) {
 		return cert, nil
 	}

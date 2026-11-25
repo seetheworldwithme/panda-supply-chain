@@ -12,6 +12,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/seetheworldwithme/panda-supply-chain/backend/internal/auth"
+
 	"github.com/seetheworldwithme/panda-supply-chain/backend/internal/platform"
 )
 
@@ -376,10 +378,12 @@ func (s *Service) payBillInfo(w http.ResponseWriter, r *http.Request) {
 // payTransMsgCallBack 招行回调:rbody 取自网关塞的 request attribute,本地直连(无网关
 // filter)时 Java 侧 attr null → .toString() NPE → 恒 999(8765 实测),照实复刻。
 func (s *Service) payTransMsgCallBack(w http.ResponseWriter, r *http.Request) {
-	if r.Header.Get("CMB-BodySign") == "" {
+	// 必须是 RSA 验签通过的回调:原先只看请求头里有没有 CMB-BodySign,
+	// 带有效 JWT 的请求不验签也能把订单改成"已支付"
+	if !auth.From(r.Context()).BankSigned {
 		platform.Unknown(w)
 		return
-	} // 无网关 rbody 时 Java NPE。
+	}
 	m := bodyMap(r)
 	// 原 Java transMsgCallBack 由 REQUIRED 事务包裹，后段失败要撤销回调日志以允许重试。
 	if err := platform.WithTx(s.pick(r), func(tx *sql.Tx) error { return bankCallback(r, m, tx) }); err != nil {

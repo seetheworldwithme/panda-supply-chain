@@ -253,9 +253,9 @@ func fromDetail(d *sql.DB, detId any) map[string]any {
 			continue
 		}
 		if idx == 0 {
-			sqlCond += " (hx_code like '%" + s + "%'"
+			sqlCond += " (hx_code like " + sqlQuote("%"+s+"%")
 		} else {
-			sqlCond += " or hx_code like '%" + s + "%'"
+			sqlCond += " or hx_code like " + sqlQuote("%"+s+"%")
 		}
 		idx++
 	}
@@ -384,9 +384,9 @@ func (s *Service) getLogistics(w http.ResponseWriter, r *http.Request) {
 	d := s.pick(r)
 	current, size := pageOf(m)
 	searchSql, sargs := getSqlEq(m, logisticsExcelCols, map[string]bool{"id": true}, logisticsIntFields)
-	cid := "null"
+	cid, cargs := "null", []any{}
 	if v, ok := m["id"]; ok && v != nil {
-		cid = str(m, "id")
+		cid, cargs = "?", []any{v} // 原先字面拼接(可注入)
 	}
 	// searchStr:getMaps 值 %v%,缺失 → 参数 null(like null 永假)
 	var ss any
@@ -394,7 +394,7 @@ func (s *Service) getLogistics(w http.ResponseWriter, r *http.Request) {
 		ss = "%" + str(m, "searchStr") + "%"
 	}
 	concat := "CONCAT(IFNULL(bill_number, ''), IFNULL(trans_time,''), IFNULL(car_number, ''), IFNULL(loading_address, ''), IFNULL(unloading_point, ''), IFNULL(subject_matter, ''), IFNULL(freight_unit, ''), IFNULL(freight_amount, 0), IFNULL(original_tonnage, ''), IFNULL(tonnage_paid, ''), IFNULL(pay_money, ''), IFNULL(carriage_platform, ''))"
-	args := append(append([]any{}, sargs...), ss)
+	args := append(append(append([]any{}, sargs...), cargs...), ss)
 	q := "SELECT l.* FROM chain_logistics l, chain_contract c " + searchSql +
 		" and l.order_id=c.order_id and c.id = " + cid + " and " + concat + " like ?"
 	countQ := "SELECT count(*) FROM chain_logistics l, chain_contract c " + searchSql +

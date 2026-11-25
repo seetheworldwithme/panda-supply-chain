@@ -218,7 +218,7 @@ func (s *Service) mapConds(m map[string]any, e *ent) (string, bool) {
 		}
 		switch v := m[k].(type) {
 		case string:
-			cs = append(cs, k+" = '"+v+"'")
+			cs = append(cs, k+" = '"+sqlEscape(v)+"'")
 		case nil:
 			cs = append(cs, k+" = null")
 		default:
@@ -555,7 +555,7 @@ func (s *Service) orderListByPage(w http.ResponseWriter, r *http.Request) {
 			platform.Unknown(w)
 			return
 		}
-		cond += " and bus_order.create_phone = '" + phone + "'"
+		cond += " and bus_order.create_phone = '" + sqlEscape(phone) + "'"
 	}
 	q := strings.Replace(entBusOrder.listSQL, "${searchSql}", cond, 1)
 	search := "%null%"
@@ -564,7 +564,7 @@ func (s *Service) orderListByPage(w http.ResponseWriter, r *http.Request) {
 			search = sv.(string) // searchLit:SQL 已含 '%...%' 包裹
 		}
 	}
-	q = strings.Replace(q, "${maps.searchStr}", search, 1)
+	q = strings.Replace(q, "${maps.searchStr}", sqlEscape(search), 1)
 	countQ := "SELECT COUNT(*) FROM (" + stripOrderBy(q) + ") cnt"
 	current, size := int64(1), int64(10)
 	pageObj, hasPage := m["page"].(map[string]any)
@@ -1011,7 +1011,7 @@ func (s *Service) orderList(w http.ResponseWriter, r *http.Request) {
 		if m["searchStr"] != nil {
 			search = javaStr(m["searchStr"])
 		}
-		q += " AND CONCAT(bus_order.id) LIKE '%" + search + "%' ORDER BY create_time DESC"
+		q += " AND CONCAT(bus_order.id) LIKE '%" + sqlEscape(search) + "%' ORDER BY create_time DESC"
 	} else {
 		for _, k := range platform.SortedKeys(m) {
 			if !isDbcol(entBusOrder, k) {

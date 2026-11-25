@@ -476,16 +476,8 @@ export default {
     methods: {
         // 删除轮播
         handleRemove(file) {
-            let arr = [];
-            this.enfileList.forEach((value,index,array)=>{
-                if(value.id == file.id){
-                    array.splice(value,1)
-                }else{
-                    arr.push(value)
-                }
-                
-            })
-            this.enfileList = arr;
+            // splice(value,1) 的起始位是对象 → 被当成 0,会连相邻图片一起挤掉
+            this.enfileList = this.enfileList.filter(v => v.id != file.id);
         },
         handlePictureCardPreview(file) {
             this.dialogImageUrl = file.url;
@@ -590,7 +582,7 @@ export default {
                 "image/jpg"
             ];
             const isImg = types.indexOf(file.type) == -1;
-            const isLt3M = file.size / 1024 / 1024 /1024 < 3;
+            const isLt3M = file.size / 1024 / 1024 < 3;
             if (isImg) {
                 this.$message.error("上传营业执照图片只能是 JPG PNG JPEG 格式!");
             }

@@ -3,6 +3,7 @@ package capital
 
 import (
 	"database/sql"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -54,12 +55,22 @@ func echoOf(ent *entShape, m map[string]any, extra map[string]any) map[string]an
 	return out
 }
 
+var colNameRe = regexp.MustCompile(`^[a-z_][a-zA-Z0-9_]*$`)
+
 // writeVals body 实体 → 入库列(Underscore 基础上处理 renames 反向:msgtext→msgText、
 // ordersubtype→orderSubtype 等驼峰列)
 func writeVals(ent *entShape, m map[string]any) map[string]any {
 	u := platform.Underscore(m)
 	out := make(map[string]any, len(u)+len(ent.renames))
+	// 载体键和非列名键不入库:Java 忽略非实体字段(MP 的 exist=false);
+	// 照单全收轻则 1054 报错,重则非法键名触发 CheckCols panic
+	for _, k := range ent.carriers {
+		delete(u, k)
+	}
 	for k, v := range u {
+		if !colNameRe.MatchString(k) {
+			continue
+		}
 		out[k] = v
 	}
 	for camelCol, jsonKey := range ent.renames {

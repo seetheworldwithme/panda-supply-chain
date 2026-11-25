@@ -250,9 +250,10 @@ export default {
                                 day = "拒签";
                                 break;
                         }
-                        arr.push('<div>' +res.data.data[key].signerName + ' : ' + day + '</div>')
+                        // 签署方姓名是用户输入,拼进 HTML 前必须转义(否则对方点"查询签署"即执行脚本)
+                        arr.push('<div>' + String(res.data.data[key].signerName == null ? '' : res.data.data[key].signerName).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])) + ' : ' + day + '</div>')
                     }
-                    let a = '<strong>' + arr.toString().replace(",","") + '</strong>';
+                    let a = '<strong>' + arr.join('') + '</strong>';
                     this.$notify({
                         title: data.topicName,
                         dangerouslyUseHTMLString: true,

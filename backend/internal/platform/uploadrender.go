@@ -3,7 +3,9 @@ package platform
 import (
 	"bytes"
 	"context"
+	"crypto/rand"
 	"database/sql"
+	"encoding/hex"
 	"fmt"
 	"image"
 	_ "image/gif"
@@ -23,6 +25,11 @@ import (
 // 大图字节与 Thumbnailator 编码器存在差异，尺寸/大小契约一致（见差异报告）。
 func CompressUploadImage(b []byte) ([]byte, error) {
 	if len(b) < 800*1024 {
+		return b, nil
+	}
+	// 先只读图片头:像素超过 5000 万(解码约 200MB)的图不解码、原样保留。
+	// 否则几 KB 的"解压炸弹"图就能让整个进程 OOM(Java 有 -Xmx 兜底,Go 没有)。
+	if cfg, _, e := image.DecodeConfig(bytes.NewReader(b)); e != nil || int64(cfg.Width)*int64(cfg.Height) > 50_000_000 {
 		return b, nil
 	}
 	im, format, e := image.Decode(bytes.NewReader(b))
@@ -62,6 +69,14 @@ func CompressUploadImage(b []byte) ([]byte, error) {
 		}
 	}
 	return b, nil
+}
+
+// PreviewName 预览 PDF 文件名:毫秒时间戳 + 4 位随机十六进制。只用毫秒时间戳时,
+// 并发上传在同一毫秒会互相覆盖共享目录 convertFiles 里的预览文件(跨租户串档)。
+func PreviewName() string {
+	var b [2]byte
+	_, _ = rand.Read(b[:])
+	return strconv.FormatInt(time.Now().UnixMilli(), 10) + hex.EncodeToString(b[:]) + ".pdf"
 }
 
 // CompressFileRow 对照 compressedFile：写压缩副本并插 source_id 关联行，失败返回 0（Java catch 同值）。
@@ -118,6 +133,8 @@ func RenderExcelUpload(ctx context.Context, src, outdir string) ([]string, error
 	if e != nil {
 		return nil, e
 	}
+	sofficeGate <- struct{}{}
+	defer func() { <-sofficeGate }()
 	ctx, cancel := context.WithTimeout(ctx, 60*time.Second)
 	defer cancel()
 	profile := (&url.URL{Scheme: "file", Path: filepath.Join(tmp, "profile")}).String()
@@ -175,6 +192,8 @@ func RenderDocumentPDF(ctx context.Context, src, target string) error {
 	if err != nil {
 		return err
 	}
+	sofficeGate <- struct{}{}
+	defer func() { <-sofficeGate }()
 	ctx, cancel := context.WithTimeout(ctx, 60*time.Second)
 	defer cancel()
 	profile := (&url.URL{Scheme: "file", Path: filepath.Join(tmp, "profile")}).String()

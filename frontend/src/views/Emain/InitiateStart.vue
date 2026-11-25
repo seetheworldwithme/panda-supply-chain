@@ -457,6 +457,9 @@ export default {
        },
         // 新建签署信息表单提交
         AddDatasubmitForm(formName) {
+            const now = Date.now();
+            if (this._submitLock && now - this._submitLock < 3000) return; // 防重:双击会发起两条签署流程
+            this._submitLock = now;
             this.$refs[formName].validate((valid) => {
                 if (valid) {
                     if(this.AddData.field){

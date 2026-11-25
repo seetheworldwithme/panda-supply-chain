@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
+	"regexp"
 	"strings"
 
 	"github.com/seetheworldwithme/panda-supply-chain/backend/internal/platform"
@@ -67,6 +69,10 @@ func (s *Service) esignExternal(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	flow := platform.JnullAny(m["eqbFlowId"])
+	if !flowIDRe.MatchString(flow) { // 路径由请求值拼出:不校验就能让服务器替调用方签名请求 e签宝的任意路径
+		platform.FailMsg(w, "签署流程ID无效")
+		return
+	}
 	path := "/v1/signflows/" + flow
 	key := "signers"
 	switch {
@@ -79,7 +85,7 @@ func (s *Service) esignExternal(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if strings.Contains(r.URL.Path, "/v3/") {
-			path = "/v3/signflows/" + flow + "/executeUrl?signerAccount=" + platform.JnullAny(user["phone"])
+			path = "/v3/signflows/" + flow + "/executeUrl?signerAccount=" + url.QueryEscape(platform.JnullAny(user["phone"]))
 		} else {
 			path += "/executeUrl?accountId=" + platform.JnullAny(user["eqb_per_id"])
 		}
@@ -128,7 +134,7 @@ func (s *Service) esignFlow(w http.ResponseWriter, r *http.Request, launch bool)
 			if etc == nil || etc["sign_free_count"] == nil || etc["sign_charge_count"] == nil {
 				return fmt.Errorf("Java 签章份数为 null")
 			}
-			if num(etc["sign_free_count"])+num(etc["sign_charge_count"]) == 0 {
+			if num(etc["sign_free_count"])+num(etc["sign_charge_count"]) <= 0 { // 份数被并发扣成负数后,==0 的判断会永久失效
 				code, text = 602, "签章剩余份数不足，请联系平台管理员"
 				return nil
 			}
@@ -242,7 +248,7 @@ func (s *Service) esignFlow(w http.ResponseWriter, r *http.Request, launch bool)
 			return fmt.Errorf("Java 签章企业或份数为 null")
 		}
 		if num(etc["sign_free_count"]) > 0 {
-			_, err = tx.Exec("UPDATE chain_basic_enterprise SET sign_free_count=sign_free_count-1 WHERE id=?", u.CompanyID)
+			_, err = tx.Exec("UPDATE chain_basic_enterprise SET sign_free_count=sign_free_count-1 WHERE id=? AND sign_free_count>0", u.CompanyID) // 条件自减:并发双击不会扣成负数
 		}
 		return err // 原 Java 即使尚有人未确认也扣免费份数，不额外修正。
 	})
@@ -358,3 +364,6 @@ func esignPayload(flow, cfg map[string]any, singers []map[string]any, v3 bool) (
 	payload["signers"] = list
 	return payload, nil
 }
+
+// e签宝流程/文件 ID 只允许字母数字与 -_:它会拼进出站请求路径,不能出现 / . ? 等字符
+var flowIDRe = regexp.MustCompile(`^[A-Za-z0-9_-]+$`)

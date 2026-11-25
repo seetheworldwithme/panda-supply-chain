@@ -29,6 +29,7 @@ func bpUserShape(row map[string]any) map[string]any {
 		return nil
 	}
 	row = entChainAuthUser.decorateRow(row)
+	row["password"] = nil // 详情页会带出用户行,不回传口令散列
 	for _, k := range []string{"searchStr", "page", "ids", "newPassword", "code", "effSeconds", "userRoles", "roleNames", "startTime", "endTime"} {
 		row[k] = nil
 	}
@@ -140,7 +141,6 @@ func (s *Service) bpGetById(w http.ResponseWriter, r *http.Request) {
 		platform.Unknown(w) // 0 == getStatus() 拆箱 NPE
 		return
 	}
-	println("DBGSTATUS raw=", fmt.Sprintf("%v", rows[0]["status"]), "shaped=", fmt.Sprintf("%v", p["status"]), "id=", fmt.Sprintf("%v", p["id"]), "warseCodeNil=", p["warseCode"] == nil)
 	if num(p["status"]) == 0 && p["warseCode"] == nil {
 		where := " where warse_code like '0%'" // companyId null 或 ∉{44,420} 走此分支,不炸
 		switch int(num(p["companyId"])) {

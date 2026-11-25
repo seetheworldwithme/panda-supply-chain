@@ -73,7 +73,7 @@ export const staticRouterMap=[
   },
   {
     // E签宝发起签署
-    path:'/InitiateStart ',
+    path:'/InitiateStart',
     name:'InitiateStart',
     component: ()=> import('../views/Emain/InitiateStart.vue'),
   },

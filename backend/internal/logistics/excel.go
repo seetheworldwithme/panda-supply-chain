@@ -192,7 +192,7 @@ var (
 		{"装煤时间", "coal_loading_time", "t", false, false, false},
 		{"净重", "net_weight", "d", false, false, false},
 		{"实收净重", "ss_net_weight", "d", false, false, false},
-		{"开票时间", "Invoicing_time", "t", false, false, false},
+		{"开票时间", "invoicing_time", "t", false, false, false},
 		{"实收套打时间", "sstd_time", "t", false, false, false},
 		{"上传时间", "upload_time", "t", false, false, false},
 		{"实收状态", "ss_status", "s", false, false, false},
@@ -958,6 +958,13 @@ func parseXlsx(f multipart.File) (*xlsx, error) {
 	rels := map[string]string{}
 	var refs []sheetRef
 	var sheetXMLs []struct{ name, data string }
+	// 解压总量封顶 256MB:zip 炸弹/超大工作簿不能把整个进程的内存读满(Go 没有 -Xmx 兜底)
+	var total uint64
+	for _, zf := range zr.File {
+		if total += zf.UncompressedSize64; total > 256<<20 {
+			return nil, errors.New("工作簿解压后过大")
+		}
+	}
 	for _, zf := range zr.File {
 		switch {
 		case zf.Name == "xl/sharedStrings.xml":
@@ -1013,37 +1020,16 @@ func readZip(zf *zip.File) ([]byte, error) {
 		return nil, err
 	}
 	defer rc.Close()
-	return io.ReadAll(rc)
+	if zf.UncompressedSize64 > 64<<20 {
+		return nil, errors.New("工作表解压后过大")
+	}
+	return io.ReadAll(io.LimitReader(rc, 64<<20))
 }
 
+// parseSharedStrings 共享字符串按 <si> 聚合:富文本单元格(多个 <r><t>)是一整条,
+// 按 <t> 拆会让其后所有字符串单元格的索引后移,导入时整列错位还"导入成功"。
 func parseSharedStrings(data string) []string {
-	var out []string
-	dec := xml.NewDecoder(strings.NewReader(data))
-	inT := false
-	cur := strings.Builder{}
-	for {
-		tok, err := dec.Token()
-		if err != nil {
-			break
-		}
-		switch t := tok.(type) {
-		case xml.StartElement:
-			if t.Name.Local == "t" {
-				inT = true
-				cur.Reset()
-			}
-		case xml.CharData:
-			if inT {
-				cur.Write(t)
-			}
-		case xml.EndElement:
-			if t.Name.Local == "t" {
-				out = append(out, cur.String())
-				inT = false
-			}
-		}
-	}
-	return out
+	return platform.ExcelSharedStrings(data)
 }
 
 func parseRels(data string) map[string]string {
@@ -1234,7 +1220,7 @@ func parseSheetRows(data string, xl *xlsx) []xlsxRow {
 					}
 					// openpyxl 等写入方会省略空单元格 → 必须按 r 属性回填真实列位
 					if ref != "" {
-						if ci, err := colIndex(ref); err == nil {
+						if ci, err := colIndex(ref); err == nil && ci >= 0 && ci < 16384 && ci-len(row.cells) <= 256 { // Excel 最大列 XFD,且离前一列不超过 256 列:稀疏坐标补齐会把内存放大上万倍
 							for len(row.cells) < ci {
 								row.cells = append(row.cells, xlsxCell{kind: "blank"})
 							}

@@ -88,9 +88,9 @@ var brelrge = '/saas-warehouse/busRedEnvelopeRange/'; 		                    // �
 var verifyInfo = '/saas-warehouse/busVerifyInfo/'                               // 煤仓核实信息
 var accessrecords = '/saas-warehouse/busVisitorRecord/'                         // 访问人数表
 var getSignUrl = '/saas-common/chainEqbFlow/'                                   // 电子签章
-var busEnterpriseLeasing = '/saas-warehouse//busEnterpriseLeasing/'             // 租赁售卖
-var busconfig = '/saas-warehouse//busMemberConfig/'                             // 会员管理
-var busbenfig = '/saas-warehouse//busMemberBenefits/'                           // 会员权限
+var busEnterpriseLeasing = '/saas-warehouse/busEnterpriseLeasing/'             // 租赁售卖
+var busconfig = '/saas-warehouse/busMemberConfig/'                             // 会员管理
+var busbenfig = '/saas-warehouse/busMemberBenefits/'                           // 会员权限
 
 
  

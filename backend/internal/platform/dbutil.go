@@ -205,8 +205,8 @@ func WithTx(d *sql.DB, fn func(tx *sql.Tx) error) error {
 	if err != nil {
 		return err
 	}
+	defer tx.Rollback() // 提交后再回滚只返回 ErrTxDone;fn 内 panic 时也把连接还回池里(池仅 20 条)
 	if err := fn(tx); err != nil {
-		_ = tx.Rollback()
 		return err
 	}
 	return tx.Commit()

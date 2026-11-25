@@ -68,7 +68,7 @@ func WechatV3JSON(ctx context.Context, method, path string, body map[string]any)
 		return nil, err
 	}
 	defer res.Body.Close()
-	raw, err := io.ReadAll(res.Body)
+	raw, err := io.ReadAll(io.LimitReader(res.Body, 16<<20))
 	if err != nil {
 		return nil, err
 	}

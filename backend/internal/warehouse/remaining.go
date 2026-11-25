@@ -190,7 +190,7 @@ func (s *Service) infoImport(w http.ResponseWriter, r *http.Request, e *ent) {
 		row["province"] = "山西省"
 		row["import_batch_number"] = time.Now().Format("20060102150405")
 		if city := btsStr(row["city"]); strings.TrimSpace(city) != "" {
-			rows, err := queryRows(s.pick(r), "SELECT code FROM chain_area_info WHERE name LIKE '"+city+"'")
+			rows, err := queryRows(s.pick(r), "SELECT code FROM chain_area_info WHERE name LIKE ?", city)
 			if err != nil || len(rows) > 1 {
 				platform.Unknown(w)
 				return
@@ -206,7 +206,7 @@ func (s *Service) infoImport(w http.ResponseWriter, r *http.Request, e *ent) {
 			if code == nil {
 				code = "null"
 			}
-			rows, err := queryRows(s.pick(r), "SELECT code FROM chain_area_info WHERE name LIKE '"+area+"' AND parent_code=?", code)
+			rows, err := queryRows(s.pick(r), "SELECT code FROM chain_area_info WHERE name LIKE ? AND parent_code=?", area, code)
 			if err != nil || len(rows) > 1 {
 				platform.Unknown(w)
 				return

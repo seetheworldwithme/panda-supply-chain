@@ -255,7 +255,7 @@ func taxRateCompute(bills []map[string]any, start, end string) (map[string]any, 
 				res[cur] = 0
 			}
 		}
-		cur = st.AddDate(0, i, 0).Format("2006-01")
+		cur = time.Date(st.Year(), st.Month()+time.Month(i), 1, 0, 0, 0, 0, time.Local).Format("2006-01") // 按月首日推进:月末起点经 AddDate 会跳过下个月
 		i++
 		if strings.ReplaceAll(cur, "-", "") > strings.ReplaceAll(et.Format("2006-01"), "-", "") {
 			break
@@ -512,7 +512,7 @@ func fillMonths(res map[string]any, start, end string) bool {
 		if _, has := res[cur]; !has {
 			res[cur] = 0
 		}
-		cur = st.AddDate(0, i, 0).Format("2006-01")
+		cur = time.Date(st.Year(), st.Month()+time.Month(i), 1, 0, 0, 0, 0, time.Local).Format("2006-01") // 按月首日推进:月末起点经 AddDate 会跳过下个月
 		i++
 		if strings.ReplaceAll(cur, "-", "") > strings.ReplaceAll(et.Format("2006-01"), "-", "") {
 			break

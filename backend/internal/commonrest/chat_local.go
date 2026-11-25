@@ -36,7 +36,9 @@ func (s *Service) registerChatLocal(mux *http.ServeMux) {
 			platform.Success(w, nil)
 			return
 		}
-		platform.Success(w, authRestEnts["ChainAuthChatAuthorization"].shapeOne(rows[0]))
+		info := authRestEnts["ChainAuthChatAuthorization"].shapeOne(rows[0])
+		info["secret"] = nil // AppSecret 不能下发给调用方(保留键,响应形状不变)
+		platform.Success(w, info)
 	})
 	for _, mode := range []string{"loginByAccount", "buslogin", "loginCarSystem"} {
 		path := "/saas-auth/chainAuthChat/" + mode

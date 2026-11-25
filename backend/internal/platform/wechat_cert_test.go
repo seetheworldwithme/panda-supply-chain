@@ -120,8 +120,13 @@ func TestWechatPlatformCertificateBootstrapsAndRotates(t *testing.T) {
 	if _, err := WechatPlatformCertificate(context.Background(), cfg, "66"); err != nil {
 		t.Fatal("回调证书选择不可复用", err)
 	}
+	before := downloads
 	if _, err := WechatPlatformCertificate(context.Background(), cfg, "FFFF"); err == nil {
 		t.Fatal("未知序列号未拒绝")
+	}
+	// 未鉴权回调可随意填序列号:未知序列号一分钟内不得反复下载(下载全程占全局锁)。
+	if _, err := WechatPlatformCertificate(context.Background(), cfg, "EEEE"); err == nil || downloads != before {
+		t.Fatalf("未知序列号不应重复下载: downloads=%d before=%d err=%v", downloads, before, err)
 	}
 	tamper = true
 	if _, err := downloadWechatCertificates(context.Background(), cfg); err == nil {

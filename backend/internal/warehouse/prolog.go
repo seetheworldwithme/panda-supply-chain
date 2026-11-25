@@ -135,15 +135,18 @@ func (s *Service) plSelBuserTeamData(w http.ResponseWriter, r *http.Request) {
 	if v, has := m["wareIdentity"]; has && v != nil {
 		where += " and ware_identity = " + str(m, "wareIdentity")
 	}
+	// 空串日期:Java 绑定得 null 后跳过该条件;Go 的 bindVal 返回 (nil, true),不判空会对 nil 断言 panic
 	if v, has := m["startTime"]; has && v != nil {
-		st, _ := bindVal("D", v)
-		proWhere += " and DATE_FORMAT(create_time, '%Y-%m-%d')>= " + st.(string)
-		where += " and DATE_FORMAT(create_time, '%Y-%m-%d')>= " + st.(string)
+		if st, okD := bindVal("D", v); okD && st != nil {
+			proWhere += " and DATE_FORMAT(create_time, '%Y-%m-%d')>= " + st.(string)
+			where += " and DATE_FORMAT(create_time, '%Y-%m-%d')>= " + st.(string)
+		}
 	}
 	if v, has := m["endTime"]; has && v != nil {
-		et, _ := bindVal("D", v)
-		proWhere += " and DATE_FORMAT(create_time, '%Y-%m-%d')<= " + et.(string)
-		where += " and DATE_FORMAT(create_time, '%Y-%m-%d')>= " + strOr(m, "startTime", "") // 原 bug:用 startTime
+		if et, okD := bindVal("D", v); okD && et != nil {
+			proWhere += " and DATE_FORMAT(create_time, '%Y-%m-%d')<= " + et.(string)
+			where += " and DATE_FORMAT(create_time, '%Y-%m-%d')>= " + strOr(m, "startTime", "") // 原 bug:用 startTime
+		}
 	}
 	d := s.pick(r)
 	res := counts(w, d, map[string]string{
@@ -239,13 +242,15 @@ func (s *Service) plSelVisisted(w http.ResponseWriter, r *http.Request) {
 		platform.Unknown(w)
 		return
 	}
-	if v, has := m["startTime"]; has && v != nil {
-		st, _ := bindVal("D", v)
-		sqlStr += " and DATE_FORMAT(pl.create_time, '%Y-%m-%d')>= " + st.(string)
+	if v, has := m["startTime"]; has && v != nil { // 空串 → nil,跳过(同上)
+		if st, okD := bindVal("D", v); okD && st != nil {
+			sqlStr += " and DATE_FORMAT(pl.create_time, '%Y-%m-%d')>= " + st.(string)
+		}
 	}
 	if v, has := m["endTime"]; has && v != nil {
-		et, _ := bindVal("D", v)
-		sqlStr += " and DATE_FORMAT(pl.create_time, '%Y-%m-%d')<= " + et.(string)
+		if et, okD := bindVal("D", v); okD && et != nil {
+			sqlStr += " and DATE_FORMAT(pl.create_time, '%Y-%m-%d')<= " + et.(string)
+		}
 	}
 	uid := str(m, "userId")
 	if uid == "" {
@@ -397,7 +402,7 @@ func (s *Service) plSelCallData(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if bv != nil {
-			phone = "'" + bv.(string) + "'"
+			phone = "'" + sqlEscape(bv.(string)) + "'"
 		}
 	}
 	q := "SELECT target_user_phone, target_user_name, (target_user_phone= '13934568608' or target_user_phone='15536587788') isService, (target_user_phone= '18636842628' or target_user_phone='19135022011' or target_user_phone='13383516668') isPtjjr, count(1) callCount from bus_phone_log where call_user_phone=" + phone + " and pro_id =" + strOrNull(m, "proId") + " GROUP BY target_user_phone"

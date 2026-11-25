@@ -83,7 +83,7 @@ func (s *Service) contractSign(r *http.Request, m map[string]any, update bool) (
 }
 
 func (s *Service) esignCallback(w http.ResponseWriter, r *http.Request) {
-	body, err := io.ReadAll(r.Body)
+	body, err := io.ReadAll(io.LimitReader(r.Body, 1<<20))
 	if err != nil || !platform.VerifyEsignCallback(r, body) {
 		platform.Unknown(w)
 		return
@@ -129,7 +129,7 @@ func (s *Service) esignUpload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer file.Close()
-	data, err := io.ReadAll(file)
+	data, err := io.ReadAll(io.LimitReader(file, 32<<20)) // e签宝上传文件封顶 32MB
 	if err != nil {
 		platform.Unknown(w)
 		return
@@ -162,7 +162,7 @@ func (s *Service) esignUpload(w http.ResponseWriter, r *http.Request) {
 		}
 		if strings.Contains(name, ".doc") {
 			previewDir := filepath.Join(root, "convertFiles")
-			preview := fmt.Sprintf("%d.pdf", time.Now().UnixMilli())
+			preview := platform.PreviewName()
 			if err = platform.RenderDocumentPDF(r.Context(), filepath.Join(dir, name), filepath.Join(previewDir, preview)); err != nil {
 				return err
 			}
@@ -183,7 +183,7 @@ func (s *Service) esignUpload(w http.ResponseWriter, r *http.Request) {
 		}
 		response := platform.EsignUpload(r.Context(), str(message, "uploadUrl"), data)
 		if str(response, "errCode") == "0" {
-			for {
+			for i := 0; i < 100; i++ { // 最多等 5 分钟:无限轮询会一直占着事务连接(连接池仅 20 条)
 				res = platform.EsignJSON(r.Context(), "GET", "/v1/files/"+platform.JnullAny(message["fileId"])+"/status", nil)
 				state, ok := res["data"].(map[string]any)
 				if !ok {
@@ -202,6 +202,9 @@ func (s *Service) esignUpload(w http.ResponseWriter, r *http.Request) {
 					return r.Context().Err()
 				case <-time.After(3 * time.Second):
 				}
+			}
+			if result["field"] == nil {
+				return fmt.Errorf("e签宝文件状态等待超时")
 			}
 		}
 		return nil

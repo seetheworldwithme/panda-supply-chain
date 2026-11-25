@@ -39,6 +39,12 @@ func VerifyEsignCallback(r *http.Request, raw []byte) bool {
 	if os.Getenv("appSecret") == "" {
 		return false
 	}
+	// 签名只防篡改不防重放:时间戳偏离本机超过 10 分钟的回调直接拒绝(服务器时钟需保持同步)。
+	const window = 10 * 60 * 1000
+	now := time.Now().UnixMilli()
+	if ts, e := strconv.ParseInt(r.Header.Get("X-Tsign-Open-TIMESTAMP"), 10, 64); e != nil || ts > now+window || ts < now-window {
+		return false
+	}
 	query := r.URL.Query()
 	keys := make([]string, 0, len(query))
 	for key := range query {
@@ -77,7 +83,7 @@ func esignRequest(ctx context.Context, method, endpoint, path string, data []byt
 		return empty
 	}
 	defer res.Body.Close()
-	data, err = io.ReadAll(res.Body)
+	data, err = io.ReadAll(io.LimitReader(res.Body, 16<<20))
 	if err != nil {
 		return empty
 	}

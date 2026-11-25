@@ -53,13 +53,13 @@ func dtof(m map[string]any, k string) (any, bool) {
 func loListByPageSearch(m map[string]any) string {
 	sqlStr := "where 1=1 "
 	if _, ok := dtof(m, "loadingAddress"); ok {
-		sqlStr += " and loading_address like '%" + str(m, "loadingAddress") + "%'"
+		sqlStr += " and loading_address like '%" + sqlEscape(str(m, "loadingAddress")) + "%'"
 	}
 	if _, ok := dtof(m, "unloadingPoint"); ok {
-		sqlStr += " and unloading_point like '%" + str(m, "unloadingPoint") + "%'"
+		sqlStr += " and unloading_point like '%" + sqlEscape(str(m, "unloadingPoint")) + "%'"
 	}
 	if _, ok := dtof(m, "billNumber"); ok {
-		sqlStr += " and bill_number like '%" + str(m, "billNumber") + "%'"
+		sqlStr += " and bill_number like '%" + sqlEscape(str(m, "billNumber")) + "%'"
 	}
 	if _, ok := dtof(m, "transTime"); ok {
 		t, err := parseLocalDateTime(str(m, "transTime"))
@@ -84,12 +84,12 @@ func loListByPageSearch(m map[string]any) string {
 		sqlStr += " and DATE_FORMAT(trans_time, '%Y-%m-%d') <= '" + t.Format("2006-01-02") + "'"
 	}
 	if _, ok := dtof(m, "carriagePlatform"); ok {
-		sqlStr += " and carriage_platform = " + str(m, "carriagePlatform")
+		sqlStr += " and carriage_platform = " + sqlString(str(m, "carriagePlatform"))
 	}
 	if _, ok := dtof(m, "notBindOrder"); ok {
-		sqlStr += " and (order_id is null or order_id='' or order_id=" + str(m, "orderId") + ")"
+		sqlStr += " and (order_id is null or order_id='' or order_id=" + sqlString(str(m, "orderId")) + ")"
 	} else if _, ok := dtof(m, "orderId"); ok {
-		sqlStr += " and order_id =" + str(m, "orderId")
+		sqlStr += " and order_id =" + sqlString(str(m, "orderId"))
 	}
 	return sqlStr
 }
@@ -403,14 +403,17 @@ func tencentSearch(address string) (area, location string, err error) {
 	if err != nil {
 		return "", "", err
 	}
-	cnt, _ := res["count"].(float64) // 错误响应无 count 键 → Java getCount() 拆箱 NPE → 同 0 条
-	if cnt <= 0 {
+	// bodyMap 走 UseNumber,count 是 json.Number:原先按 float64 断言恒得 0,功能永远"更新 0 条"
+	if num(res["count"]) <= 0 { // 错误响应无 count 键 → Java getCount() 拆箱 NPE → 同 0 条
 		return "", "", fmt.Errorf("无结果")
 	}
-	data := res["data"].([]any)
+	data, _ := res["data"].([]any) // 第三方返回异常结构时不 panic
+	if len(data) == 0 {
+		return "", "", fmt.Errorf("无结果")
+	}
 	first, _ := data[0].(map[string]any)
 	if ad, ok := first["ad_info"].(map[string]any); ok && ad["district"] != nil {
-		area = ad["district"].(string)
+		area, _ = ad["district"].(string)
 		res2, err := mapSearch(area)
 		if err != nil {
 			return "", "", err

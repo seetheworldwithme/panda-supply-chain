@@ -339,8 +339,9 @@ func (s *Service) smallListByPage(w http.ResponseWriter, r *http.Request, d *sql
 		if v, ok := m["searchStr"]; ok && v != nil {
 			ss = "%" + str(m, "searchStr") + "%"
 		}
-		q = "select * from chain_capital_detail_settlement where CONCAT(id) like '" + ss + "' order by create_time desc"
-		countQ = "SELECT count(1) FROM chain_capital_detail_settlement where CONCAT(id) like '" + ss + "'"
+		q = "select * from chain_capital_detail_settlement where CONCAT(id) like ? order by create_time desc"
+		countQ = "SELECT count(1) FROM chain_capital_detail_settlement where CONCAT(id) like ?"
+		args = []any{ss} // 原先字面内插,可注入
 		shape = def.ent.rows
 	default:
 		platform.Unknown(w)

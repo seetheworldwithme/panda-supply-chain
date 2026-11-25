@@ -402,7 +402,7 @@ export default {
           if(res.data.code == 999){
             that.isDisabled = false;
           }
-          if(res.data.code == 2006){
+          if(res.data.code != 200){ // 账号不存在(2002)或请求异常后必须恢复按钮,否则只能刷新页面
             that.isDisabled = false;
           }
         })

@@ -166,7 +166,9 @@ func (s *Service) bpAdd(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	s.bpLog(w, r, d, "新增了煤种，新增信息为：\n"+s.custLog(m, true), "1")
+	if !s.bpLog(w, r, d, "新增了煤种，新增信息为：\n"+s.custLog(m, true), "1") {
+		return
+	}
 	if score < 0 {
 		return
 	}
@@ -183,13 +185,15 @@ func (s *Service) bpNameOf(d *sql.DB, id string) *string {
 }
 
 // bpLog 写 bus_common_log(无 fill 实体:create_time 走库默认)
-func (s *Service) bpLog(w http.ResponseWriter, r *http.Request, d *sql.DB, operation, opType string) {
+func (s *Service) bpLog(w http.ResponseWriter, r *http.Request, d *sql.DB, operation, opType string) bool {
 	u := currentUser(r)
 	_, err := d.Exec("INSERT INTO chain_common_log (user_id, user_name, operation, operation_type) VALUES (?,?,?,?)",
 		strconvI64(u.UserID), u.Username, operation, opType)
-	if err != nil {
+	if err != nil { // 日志失败后调用方必须中止,不能再往下写并回"成功"
 		platform.Unknown(w)
+		return false
 	}
+	return true
 }
 
 // bpUpdUserScore 对照 updUserScore(规格 2 节);返回 score,负数表示已写 999 响应
@@ -365,7 +369,10 @@ func (s *Service) bpUpdateById(w http.ResponseWriter, r *http.Request) {
 		platform.Unknown(w)
 		return
 	}
-	bp := bpRows[0]
+	bp := platform.Camelize(bpRows[0]) // 原始行是下划线列名,下面却全按驼峰键读取:原先全部取空
+	for k, v := range bpRows[0] {
+		bp[k] = v
+	}
 	associationId := str(bp, "associationId")
 	if associationId == "" {
 		associationId = uuid32()
@@ -450,7 +457,9 @@ func (s *Service) bpUpdateById(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
-	s.bpLog(w, r, d, "修改了煤种："+str(bp, "thName")+s.custLog(m, false), "2")
+	if !s.bpLog(w, r, d, "修改了煤种："+str(bp, "thName")+s.custLog(m, false), "2") {
+		return
+	}
 	score := s.bpOriginalUpdPriceScore(w, d, bp, m)
 	if score < 0 {
 		return
@@ -492,13 +501,19 @@ func (s *Service) bpDeleteById(w http.ResponseWriter, r *http.Request) {
 		platform.Unknown(w)
 		return
 	}
-	s.bpSaveDelLog(w, r, d, bp)
+	if !s.bpSaveDelLog(w, r, d, bp) {
+		return
+	}
 	platform.Success(w, "删除成功，id为："+id)
 }
 
 // bpDelBatch = delBatch:逐 id 备份+日志,末尾批量 DELETE
 func (s *Service) bpDelBatch(w http.ResponseWriter, r *http.Request) {
 	m := bodyMap(r)
+	if !entBusProduct.validateBody(m) { // ids 必须是整数数组:否则下面 id 会被拼进 SQL
+		platform.Unknown(w)
+		return
+	}
 	ids, _ := m["ids"].([]any)
 	d := s.pick(r)
 	for _, iv := range ids {
@@ -512,7 +527,9 @@ func (s *Service) bpDelBatch(w http.ResponseWriter, r *http.Request) {
 			platform.Unknown(w)
 			return
 		}
-		s.bpSaveDelLog(w, r, d, bp)
+		if !s.bpSaveDelLog(w, r, d, bp) {
+			return
+		}
 	}
 	if len(ids) > 0 {
 		ph := strings.TrimSuffix(strings.Repeat("?,", len(ids)), ",")
@@ -527,7 +544,8 @@ func (s *Service) bpDelBatch(w http.ResponseWriter, r *http.Request) {
 }
 
 // bpSaveDelLog 删除日志(remark 指标串,content 固定文案)
-func (s *Service) bpSaveDelLog(w http.ResponseWriter, r *http.Request, d *sql.DB, bp map[string]any) {
+func (s *Service) bpSaveDelLog(w http.ResponseWriter, r *http.Request, d *sql.DB, bp map[string]any) bool {
+	bp = platform.Camelize(bp) // 调用方传的是下划线原始行
 	var segs []string
 	for k, label := range map[string]string{"ashContent": "灰分Ad%≤", "waterContent": "水分Mt%≤", "std": "全硫St.d%≤", "volatiles": "挥发分Vdaf%≤", "bondIndex": "粘结指数G≥"} {
 		if v := decStr(bp[k]); v != "" && v != "0" {
@@ -540,7 +558,9 @@ func (s *Service) bpSaveDelLog(w http.ResponseWriter, r *http.Request, d *sql.DB
 		strconvI64(currentUser(r).UserID), str(bp, "id"), content)
 	if err != nil {
 		platform.Unknown(w)
+		return false
 	}
+	return true
 }
 
 // bpImportExcel = importExcel+saveIrt(规格 3.7):errInfos 前缀"产品sheet中，";
@@ -578,6 +598,13 @@ func (s *Service) bpImportExcel(w http.ResponseWriter, r *http.Request) {
 		platform.Success(w, irt)
 		return
 	}
+	// Java saveBatch 自带事务:原先逐行自动提交,第 k 行失败后前 k-1 行已落库,重试即翻倍
+	tx, err := s.pick(r).Begin()
+	if err != nil {
+		platform.Unknown(w)
+		return
+	}
+	defer tx.Rollback()
 	u := currentUser(r)
 	for i, row := range irt.DataList {
 		vals := insertVals(row)
@@ -585,7 +612,7 @@ func (s *Service) bpImportExcel(w http.ResponseWriter, r *http.Request) {
 		vals["create_user_id"] = strconvI64(u.UserID)
 		vals["create_phone"] = u.Account
 		vals["status"] = "1"
-		nid, err := platform.Insert(s.pick(r), "bus_product", vals)
+		nid, err := platform.TxInsert(tx, "bus_product", vals)
 		if err != nil {
 			platform.Unknown(w)
 			return
@@ -594,6 +621,10 @@ func (s *Service) bpImportExcel(w http.ResponseWriter, r *http.Request) {
 		echo["createUserId"] = json.Number(strconvI64(u.UserID))
 		echo["status"] = json.Number("1")
 		irt.DataList[i] = echo
+	}
+	if err := tx.Commit(); err != nil {
+		platform.Unknown(w)
+		return
 	}
 	irt.SucInfos = []any{"云仓产品管理数据成功 " + strconv.Itoa(len(irt.DataList))}
 	platform.Success(w, irt)

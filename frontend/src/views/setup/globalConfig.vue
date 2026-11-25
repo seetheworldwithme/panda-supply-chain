@@ -156,7 +156,7 @@ export default {
         // 最小值input失去焦点
         loseFcous(val){
             let eagstr = /(^[1-9]([0-9]+)?(\.[0-9]{1,2})?$)|(^(0){1}$)|(^[0-9]\.[0-9]([0-9])?$)/;
-            if(eagstr.test(this.newSjhxje) && this.newmaxe*1 >= 10){
+            if(eagstr.test(this.newSjhxje) && this.newSjhxje*1 >= 10){
                 if(val.maxAmount*1 > this.newSjhxje*1){
                     val.sjhxblone = false;
                     val.minAmount = this.newSjhxje *1;

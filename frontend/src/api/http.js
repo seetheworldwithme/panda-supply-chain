@@ -26,8 +26,16 @@ instance.interceptors.response.use(
     response => {   
         // 如果返回的状态码为200，说明接口请求成功，可以正常拿到数据     
         // 否则的话抛出错误
-        if (response.status === 200) {   
-           if(response.data.msg != '成功' && response.data.code !=701){
+        if (response.status === 200) {
+           // 网关级未授权:HTTP 200 + body code 403 且无 data 键(token 失效/账号被停用)。
+           // 原先只弹一条提示,用户被搁浅在当前页,刷新后白屏:这里清掉登录态并整页回到登录页。
+           if(response.data && response.data.code === 403 && response.data.data === undefined){
+               sessionStorage.removeItem('Authorization');
+               window.location.reload();
+               return Promise.reject(response);
+           }
+           // 二进制响应(图形验证码、文件流)没有 msg/code,不能当业务消息弹
+           if(response.data && Object.prototype.toString.call(response.data) !== '[object Blob]' && response.data.msg != '成功' && response.data.code !=701){
                 Message({
                     message:response.data.msg,
                     type:'success',

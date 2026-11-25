@@ -53,7 +53,7 @@ func init() {
 // vidBody 对照 @RequestBody 必填体:零字节/纯空白/坏 JSON → 999(8765 实测 toLike/
 // cancelCare/allLikeCount 零字节均 999;{bad 同 999);body "null" 绑 null 按 {} 处理
 func vidBody(w http.ResponseWriter, r *http.Request) (map[string]any, bool) {
-	b, err := io.ReadAll(r.Body)
+	b, err := io.ReadAll(io.LimitReader(r.Body, 1<<20))
 	if err != nil || len(bytes.TrimSpace(b)) == 0 {
 		platform.Unknown(w)
 		return nil, false

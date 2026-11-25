@@ -286,3 +286,9 @@ func mapShapeRows(d *sql.DB, table string, rows []map[string]any) []map[string]a
 	}
 	return out
 }
+
+// sqlEscape 转义要字面拼进 SQL 字符串的值(反斜杠、单引号)。Java mapper 的 ${} 是字面注入,
+// 照搬就是 SQL 注入;良性输入转义后拼出的 SQL 与原先逐字相同。
+func sqlEscape(v string) string {
+	return strings.ReplaceAll(strings.ReplaceAll(v, "\\", "\\\\"), "'", "''")
+}

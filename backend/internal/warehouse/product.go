@@ -33,6 +33,9 @@ func (s *Service) mapGetSql3(e *ent, m map[string]any, unstr string) (string, []
 		if v == nil || strings.Contains(unstr, k) {
 			continue
 		}
+		if !e.knownKey(k) {
+			continue
+		}
 		if e.typeOf(k) == "x" || k == "searchStr" || k == "page" || k == "ids" {
 			continue // checkFields:非实体字段不拼
 		}
@@ -58,10 +61,10 @@ func (s *Service) bigFindList(w http.ResponseWriter, r *http.Request) {
 	sqlStr, args := "where 1=1", []any{}
 	secSql := " (big_pro_id = bus_big_prodect.id or three_pro_id = bus_big_prodect.id)"
 	if v, has := m["parent_id"]; has && v != nil {
-		sqlStr += " and parent_id like '%," + str(m, "parent_id") + ",%'"
+		sqlStr += " and parent_id like '%," + sqlEscape(str(m, "parent_id")) + ",%'"
 	}
 	if v, has := m["fst_pro_id"]; has && v != nil {
-		sqlStr += " and fst_pro_id like '%" + str(m, "fst_pro_id") + "%'"
+		sqlStr += " and fst_pro_id like '%" + sqlEscape(str(m, "fst_pro_id")) + "%'"
 		secSql += " and fst_pro_id = " + str(m, "fst_pro_id")
 	} else {
 		secSql += " or fst_pro_id = bus_big_prodect.id"
@@ -90,10 +93,10 @@ func (s *Service) bigAllProductType(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if v, has := m["parent_id"]; has && v != nil {
-		sqlStr += " and parent_id like '%," + str(m, "parent_id") + ",%'"
+		sqlStr += " and parent_id like '%," + sqlEscape(str(m, "parent_id")) + ",%'"
 	}
 	if v, has := m["fst_pro_id"]; has && v != nil {
-		sqlStr += " and fst_pro_id like '%" + str(m, "fst_pro_id") + "%'"
+		sqlStr += " and fst_pro_id like '%" + sqlEscape(str(m, "fst_pro_id")) + "%'"
 	}
 	rows, err := queryCam(s.pick(r), "select * from bus_big_prodect "+sqlStr+" order by order_nb asc", args...)
 	if err != nil {
@@ -109,7 +112,7 @@ func (s *Service) bigAllThirdType(w http.ResponseWriter, r *http.Request) {
 	m := bodyMap(r)
 	existWhere := "SELECT 1 from bus_product p where bp.id=p.three_pro_id and status=1"
 	if _, has := m["isGroupSearch"]; has && m["isGroupSearch"] != nil {
-		existWhere += " and (company_id = " + str(m, "groupId") + " or group_id = " + str(m, "groupId") + ")"
+		existWhere += " and (company_id = '" + sqlEscape(str(m, "groupId")) + "' or group_id = '" + sqlEscape(str(m, "groupId")) + "')"
 	}
 	if _, has := m["wareIdentity"]; has && m["wareIdentity"] != nil {
 		existWhere += " and ware_identity=" + str(m, "wareIdentity")

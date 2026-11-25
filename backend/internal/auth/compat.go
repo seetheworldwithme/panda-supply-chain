@@ -111,9 +111,7 @@ func (s *Service) Logout(w http.ResponseWriter, r *http.Request) {
 
 func (s *Service) IssuePhoneCode(phone string) string {
 	code := randomCode()
-	s.mu.Lock()
-	s.sms[phone+"_PhoneYzm"] = smsCode{value: code, expire: time.Now().Add(60 * time.Second)}
-	s.mu.Unlock()
+	s.storeCode(phone+"_PhoneYzm", code)
 	return code
 }
 

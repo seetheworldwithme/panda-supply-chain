@@ -230,7 +230,7 @@ func (s *Service) bpListByPage(w http.ResponseWriter, r *http.Request) {
 		{"provinceCode", "province_code"}, {"cityCode", "city_code"}, {"areaCode", "area_code"},
 	} {
 		if v := bpB("s", m[cd.key]); v != nil {
-			sqlStr += " and " + cd.col + " = " + v.(string)
+			sqlStr += " and " + cd.col + " = '" + sqlEscape(v.(string)) + "'" // 行政区划码原先裸拼接(可注入)
 		}
 	}
 	// 5. 6 个日期区间(#{maps.X} 参数化,LocalDate 原值绑定)
@@ -463,7 +463,7 @@ func (s *Service) bpListByPage(w http.ResponseWriter, r *http.Request) {
 		if !searchNil {
 			inner = searchArg.(string)
 		}
-		q = strings.Replace(q, "${maps.searchStr}", inner, 1)
+		q = strings.Replace(q, "${maps.searchStr}", sqlEscape(inner), 1)
 		rows := s.qEntEnt2(w, r, e, q, append([]any{uidStr}, args...)...)
 		if rows == nil {
 			return
@@ -480,7 +480,7 @@ func (s *Service) bpListByPage(w http.ResponseWriter, r *http.Request) {
 	if !searchNil {
 		inner = searchArg.(string)
 	}
-	q = strings.Replace(q, "${maps.searchStr}", inner, 1)
+	q = strings.Replace(q, "${maps.searchStr}", sqlEscape(inner), 1)
 	rows, total := s.bpIPage(w, r, q, append([]any{uidStr}, args...), current, size)
 	if rows == nil {
 		return

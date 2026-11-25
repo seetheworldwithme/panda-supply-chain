@@ -1255,6 +1255,8 @@ export default {
               type: 'warning'
             });
           }else{
+            if (this._payLock && Date.now() - this._payLock < 5000) return; // 防重:双击会生成两笔担保支付订单
+            this._payLock = Date.now();
             this.api.confirmPay.payment(this.AddData)
             .then(res=>{
               if(res.data.code == 200){

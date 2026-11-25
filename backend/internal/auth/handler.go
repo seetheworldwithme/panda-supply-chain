@@ -40,6 +40,20 @@ type smsCode struct {
 	expire time.Time
 }
 
+// storeCode 写入验证码并清理过期项。键含客户端可控的 IP(X-Forwarded-For)/手机号,
+// 未鉴权接口可以无限造新键:只增不删会把内存越撑越大。
+func (s *Service) storeCode(key, code string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	now := time.Now()
+	for k, sc := range s.sms {
+		if !now.Before(sc.expire) {
+			delete(s.sms, k)
+		}
+	}
+	s.sms[key] = smsCode{value: code, expire: now.Add(60 * time.Second)}
+}
+
 func NewService(db *sql.DB, kp *KeyPair) *Service {
 	return &Service{DB: db, KP: kp, sms: map[string]smsCode{}}
 }
@@ -275,7 +289,8 @@ func (s *Service) ImageCode(w http.ResponseWriter, r *http.Request) {
 	for key, dest := range map[string]*int{"width": &width, "height": &height} {
 		if r.URL.Query().Has(key) {
 			n, err := strconv.Atoi(r.URL.Query().Get(key))
-			if err != nil || n <= 0 || n > 4096 {
+			// 图形固定按 67×23 绘制,画布再大也只是留白;未鉴权接口要封顶,防单请求申请几十 MB
+			if err != nil || n <= 0 || n > 512 {
 				platform.Unknown(w)
 				return
 			}
@@ -309,9 +324,7 @@ func (s *Service) ImageCode(w http.ResponseWriter, r *http.Request) {
 	for i := 0; i < 155; i++ {
 		img.Set(rng(width), rng(height), color.RGBA{R: 180, G: 190, B: 180, A: 255})
 	}
-	s.mu.Lock()
-	s.sms[imageCodeKey(r)] = smsCode{value: code, expire: time.Now().Add(60 * time.Second)}
-	s.mu.Unlock()
+	s.storeCode(imageCodeKey(r), code)
 	w.Header().Set("Cache-Control", "no-store, no-cache")
 	w.Header().Set("Content-Type", "image/jpeg")
 	_ = jpeg.Encode(w, img, &jpeg.Options{Quality: 75})
@@ -332,6 +345,10 @@ func (s *Service) UpdatePwd(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		platform.FailMsg(w, "参数错误")
+		return
+	}
+	if body.NewPassword == "" { // 空密码落库后该账号将永远无法登录(登录拒绝空密码)
+		platform.FailMsg(w, "新密码不能为空")
 		return
 	}
 	var id int64

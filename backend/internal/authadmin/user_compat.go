@@ -225,6 +225,10 @@ func (s *Service) userCarWrite(w http.ResponseWriter, r *http.Request, create bo
 			return
 		}
 		vals["password"] = auth.HashPassword(password)
+		if vals["password"] == "" { // bcrypt 拒绝超过 72 字节的口令:不能把空口令落库
+			platform.Unknown(w)
+			return
+		}
 		vals["applys"] = "2"
 		vals["handle_result"] = "1"
 		vals["level"] = 1
@@ -269,6 +273,10 @@ func (s *Service) userSetPwd(w http.ResponseWriter, r *http.Request) {
 	}
 	vals := pick(m, userWriteCols...)
 	vals["password"] = auth.HashPassword(password)
+	if vals["password"] == "" { // bcrypt 拒绝超过 72 字节的口令并返回空串:不能把空口令落库
+		platform.Unknown(w)
+		return
+	}
 	if _, err := platform.UpdateByIDNoFill(s.DB.Chain, "chain_auth_user", m["id"], vals); err != nil {
 		platform.Unknown(w)
 		return
@@ -375,6 +383,10 @@ func (s *Service) userJoinCompany(w http.ResponseWriter, r *http.Request) {
 	vals["company_id"] = cid
 	vals["handle_result"] = "0"
 	vals["password"] = auth.HashPassword(str(m, "password"))
+	if vals["password"] == "" { // bcrypt 拒绝超过 72 字节的口令并返回空串:不能把空口令落库
+		platform.Unknown(w)
+		return
+	}
 	if _, err := platform.UpdateByIDNoFill(s.DB.Chain, "chain_auth_user", m["id"], vals); err != nil {
 		platform.Unknown(w)
 		return

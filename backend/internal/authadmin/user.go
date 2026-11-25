@@ -74,6 +74,7 @@ func shapeUser(rows []map[string]any) []map[string]any {
 		if et, ok := r["expirationTime"]; ok && et != nil {
 			r["expirationTimeStr"] = str(r, "expirationTime")[:10]
 		}
+		r["password"] = nil // 用户列表/详情对任意登录用户开放:不回传口令散列(保留键,响应形状不变)
 		fillNulls(r, userFillKeys)
 		fillNulls(r, userCarriers)
 	}
@@ -233,6 +234,10 @@ func (s *Service) userAdd(w http.ResponseWriter, r *http.Request) {
 	}
 	vals := pick(m, userWriteCols...)
 	vals["password"] = auth.HashPassword(str(m, "password"))
+	if vals["password"] == "" { // bcrypt 拒绝超过 72 字节的口令并返回空串:不能把空口令落库
+		platform.Unknown(w)
+		return
+	}
 	delete(vals, "id")
 	id, err := platform.InsertNoFill(s.DB.Chain, "chain_auth_user", vals)
 	if err != nil {
@@ -462,7 +467,13 @@ func (s *Service) userCreateCode(w http.ResponseWriter, r *http.Request) {
 	key := code + "c" + strconv.FormatInt(cu.CompanyID, 10)
 	secs := int64(num(m["effSeconds"]))
 	inviteMu.Lock()
-	inviteCodes[key] = inviteCode{value: code, expire: time.Now().Add(time.Duration(secs) * time.Second)}
+	now := time.Now()
+	for k, c := range inviteCodes { // 只增不删会被刷爆:生成时顺手清掉过期的
+		if now.After(c.expire) {
+			delete(inviteCodes, k)
+		}
+	}
+	inviteCodes[key] = inviteCode{value: code, expire: now.Add(time.Duration(secs) * time.Second)}
 	inviteMu.Unlock()
 	platform.Success(w, key)
 }

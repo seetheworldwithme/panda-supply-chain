@@ -14,6 +14,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -144,13 +145,14 @@ func TestEsignBusinessUsesServerFlow(t *testing.T) {
 		t.Fatal(err)
 	}
 	body := `{"action":"SIGN_FLOW_FINISH","flowStatus":2,"flowId":"fixture-flow"}`
+	stamp := strconv.FormatInt(time.Now().UnixMilli(), 10) // e签宝回调时间戳为毫秒
 	callback := func(valid bool) *httptest.ResponseRecorder {
 		r := httptest.NewRequest("POST", "/saas-common/chainEqbFlow/getSignCallBack", strings.NewReader(body))
-		r.Header.Set("X-Tsign-Open-TIMESTAMP", "fixture-time")
+		r.Header.Set("X-Tsign-Open-TIMESTAMP", stamp)
 		sig := "bad"
 		if valid {
 			mac := hmac.New(sha256.New, []byte("fixture-callback-key"))
-			mac.Write([]byte("fixture-time" + body))
+			mac.Write([]byte(stamp + body))
 			sig = hex.EncodeToString(mac.Sum(nil))
 		}
 		r.Header.Set("X-Tsign-Open-SIGNATURE", sig)
@@ -164,6 +166,13 @@ func TestEsignBusinessUsesServerFlow(t *testing.T) {
 	if w := callback(true); w.Code != 200 || !strings.Contains(w.Body.String(), `"code":200`) {
 		t.Fatalf("真实验签回调失败: %d %s", w.Code, w.Body.String())
 	}
+	// 签名正确但时间戳已过期(重放)→ 网关拒绝
+	fresh := stamp
+	stamp = strconv.FormatInt(time.Now().Add(-time.Hour).UnixMilli(), 10)
+	if w := callback(true); !strings.Contains(w.Body.String(), `"code":403`) {
+		t.Fatalf("过期时间戳的回调未被拒绝: %d %s", w.Code, w.Body.String())
+	}
+	stamp = fresh
 	if err = d.QueryRow("SELECT is_esign_complete FROM chain_contract WHERE id=1").Scan(&status); err != nil || status != 1 {
 		t.Fatalf("签章回调未更新合同: %d %v", status, err)
 	}

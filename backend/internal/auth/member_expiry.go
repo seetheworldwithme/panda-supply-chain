@@ -63,8 +63,8 @@ func (s *Service) handleMemberExpired(ctx context.Context, key string, now time.
 		if err != nil {
 			return err
 		}
-		// 原 cancelMember mapper 使用 ${userId}，且降级不写 update_time。
-		if _, err = s.DB.ExecContext(ctx, "UPDATE chain_auth_user SET member_type=0 WHERE id="+userID); err != nil {
+		// 原 cancelMember mapper 使用 ${userId};这里改参数化,Redis 键名里的内容不进 SQL 文本。
+		if _, err = s.DB.ExecContext(ctx, "UPDATE chain_auth_user SET member_type=0 WHERE id = ?", userID); err != nil {
 			return err
 		}
 		if user == nil {

@@ -50,12 +50,15 @@ func (s *Service) supplierListByPage(w http.ResponseWriter, r *http.Request) {
 	}
 	current, size := pageOf(m)
 	sql := "where 1=1 "
+	args := []any{}
 	if v, ok := m["partnerType"]; ok && v != nil {
-		sql += " and partner_type = " + str(m, "partnerType")
+		sql += " and partner_type = ?" // 原先字面拼接(可注入)
+		args = append(args, v)
 	}
-	cond := sql + " and CONCAT(enterprise_name) like '%" + searchStrOf(m) + "%'"
+	cond := sql + " and CONCAT(enterprise_name) like ?"
+	args = append(args, "%"+searchStrOf(m)+"%")
 	q := "SELECT * FROM chain_contract_supplier " + cond + " ORDER BY create_time DESC"
-	page, err := paged(s.DB.Chain, q, "SELECT COUNT(*) FROM chain_contract_supplier "+cond, nil, current, size)
+	page, err := paged(s.DB.Chain, q, "SELECT COUNT(*) FROM chain_contract_supplier "+cond, args, current, size)
 	if err != nil {
 		platform.Unknown(w)
 		return

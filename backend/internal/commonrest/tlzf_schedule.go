@@ -20,7 +20,10 @@ func (s *Service) startTLTask() {
 	if s.tlTasks == nil {
 		s.tlTasks = map[string]context.CancelFunc{}
 	}
-	s.tlTasks[tlTaskName] = cancel // 保留 Java 重复 start 覆盖缓存而未取消旧任务的行为。
+	if old := s.tlTasks[tlTaskName]; old != nil {
+		old() // 先取消旧任务:否则每次支付/确认都常驻一个每 5 秒查库的 goroutine,只增不减
+	}
+	s.tlTasks[tlTaskName] = cancel
 	s.tlTasksMu.Unlock()
 	go func() {
 		for {

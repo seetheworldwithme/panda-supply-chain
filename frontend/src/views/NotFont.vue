@@ -15,6 +15,7 @@
             to(){
                 sessionStorage.clear();
                 this.$router.push({name:'Login'});
+                window.location.reload(); // 整页刷新:路由表和按钮权限是按上一个账号裁剪过的,同标签页换账号会继承
             }
         }
     }

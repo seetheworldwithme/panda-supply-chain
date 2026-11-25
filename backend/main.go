@@ -8,6 +8,9 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
+
+	"github.com/go-sql-driver/mysql"
 
 	"github.com/seetheworldwithme/panda-supply-chain/backend/internal/auth"
 	"github.com/seetheworldwithme/panda-supply-chain/backend/internal/authadmin"
@@ -51,9 +54,11 @@ func main() {
 		}
 	}()
 
-	handler := cors(auth.Middleware(kp, database.Chain, database.Zjjg)(platform.ValidateJavaBodies(mux)))
+	handler := cors(limitBody(auth.Middleware(kp, database.Chain, database.Zjjg)(platform.ValidateJavaBodies(mux))))
 	log.Printf("云管理 Go 后端监听 :%s (chain=%s)", cfg.Port, maskDSN(cfg.ChainDSN))
-	log.Fatal(http.ListenAndServe(":"+cfg.Port, handler))
+	// 只设请求头与空闲超时(防慢连接拖垮服务);不设读写超时,避免掐断大附件上传下载和长导出
+	srv := &http.Server{Addr: ":" + cfg.Port, Handler: handler, ReadHeaderTimeout: 10 * time.Second, IdleTimeout: 2 * time.Minute}
+	log.Fatal(srv.ListenAndServe())
 }
 
 // newMux 供服务启动和离线路由核查共用。
@@ -136,6 +141,15 @@ func newMuxWithJobs(database *db.DB, kp *auth.KeyPair, jobs *platform.Jobs) *htt
 	return mux
 }
 
+// limitBody 全局请求体封顶 512MB:分片上传的单片远小于此;不设上限则任何 multipart 上传
+// 都能把系统临时目录写满、把内存读满(multipart/导入路由不在 JSON 请求体契约里)
+func limitBody(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		r.Body = http.MaxBytesReader(w, r.Body, 512<<20)
+		next.ServeHTTP(w, r)
+	})
+}
+
 // cors 对照 Java 网关的跨域放行:前端各端口直连 8765,允许任意来源与所需请求头
 func cors(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -151,16 +165,13 @@ func cors(next http.Handler) http.Handler {
 	})
 }
 
-// maskDSN 日志里隐藏 DSN 中的密码段(约定不把凭据写进日志)
+// maskDSN 日志里隐藏 DSN 中的密码段(约定不把凭据写进日志)。用驱动自带的解析/格式化,
+// 不靠"首个冒号的位置"猜:用户名一长(≥12 字符)那种猜法会把密码原样打进日志。
 func maskDSN(dsn string) string {
-	for i := 0; i < len(dsn); i++ {
-		if dsn[i] == ':' && i < 12 {
-			for j := i; j < len(dsn); j++ {
-				if dsn[j] == '@' {
-					return dsn[:i+1] + "***" + dsn[j:]
-				}
-			}
-		}
+	cfg, err := mysql.ParseDSN(dsn)
+	if err != nil {
+		return "(非法 DSN)"
 	}
-	return dsn
+	cfg.Passwd = "***"
+	return cfg.FormatDSN()
 }

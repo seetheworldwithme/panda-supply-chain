@@ -43,6 +43,17 @@ func (e *ent) typeOf(name string) string {
 	return "s"
 }
 
+// knownKey 请求键是否是实体字段或列名。Java getSql 对实体里没有的键直接忽略;
+// 原先未知键按字符串放行并被拼成列名,键名本身成了 SQL 注入面。
+func (e *ent) knownKey(name string) bool {
+	for _, f := range e.types {
+		if f.Name == name {
+			return true
+		}
+	}
+	return isDbcol(e, name)
+}
+
 // javaStr 值的 Java toString 形态(数字、true/false、LocalDateTime 空格→T、BigDecimal 保字面)
 func javaStr(v any) string {
 	switch t := v.(type) {
@@ -562,16 +573,23 @@ func (s *Service) tplListByPage(w http.ResponseWriter, r *http.Request, e *ent, 
 	}
 	// 逐实体 mapper SQL(生成清单):${searchSql} 替换、#{maps.searchStr} 参数化、
 	// ${maps.searchStr} 字面注入(getMaps 已包 %v%,模板再包一层 → '%v%' 语义;缺失为字面 null)
-	q := strings.Replace(e.listSQL, "${searchSql}", sqlStr, 1)
-	if e.searchLit {
-		inner := "%null%"
-		if s, ok2 := search.(string); ok2 {
-			inner = s
-		}
-		q = strings.Replace(q, "${maps.searchStr}", inner, 1)
+	// Java 无 page 时走 mapper 的 listNoPage(BusProLogServiceImpl.listByPage 实证),SQL 取 listNoSQL
+	_, hasPage := m["page"].(map[string]any)
+	baseSQL := e.listSQL
+	if !hasPage {
+		baseSQL = e.listNoSQL
 	}
+	q := strings.Replace(baseSQL, "${searchSql}", sqlStr, 1)
 	baseArgs := args
-	if !e.searchLit {
+	if e.searchLit {
+		// Java mapper 是 like '%${maps.searchStr}%' 字面注入(照搬即 SQL 注入):改为参数绑定,
+		// 良性输入语义不变;searchStr 缺失时 Java 得到的是字面 null。
+		baseArgs = append(args, "%null%")
+		if s, ok2 := search.(string); ok2 {
+			baseArgs[len(baseArgs)-1] = s
+		}
+		q = strings.Replace(q, "'%${maps.searchStr}%'", "?", 1)
+	} else {
 		q = strings.Replace(q, "#{maps.searchStr}", "?", 1)
 		baseArgs = append(args, search)
 	}
@@ -579,7 +597,7 @@ func (s *Service) tplListByPage(w http.ResponseWriter, r *http.Request, e *ent, 
 	where := q
 
 	current, size := int64(1), int64(10)
-	pageObj, hasPage := m["page"].(map[string]any)
+	pageObj, _ := m["page"].(map[string]any)
 	if hasPage {
 		if v, ok := pageObj["current"]; ok && v != nil {
 			current = int64(num(v))
@@ -737,9 +755,11 @@ func (s *Service) tplDelBatch(w http.ResponseWriter, r *http.Request, e *ent, wi
 
 // tplUpdBatch 对照 /updBatch:MP updateBatchById(逐行非空子集+fill);空数组短路成功
 func (s *Service) tplUpdBatch(w http.ResponseWriter, r *http.Request, e *ent) {
-	var items []any
 	// Java @RequestBody List<T>:对象体({})Jackson 绑定失败 → 999(实测)
-	if err := json.NewDecoder(r.Body).Decode(&items); err != nil {
+	dec := json.NewDecoder(r.Body)
+	dec.UseNumber() // 与 bodyMap 一致:金额/大整数不经 float64,避免丢精度或改错行
+	var items []any
+	if err := dec.Decode(&items); err != nil {
 		platform.Unknown(w)
 		return
 	}

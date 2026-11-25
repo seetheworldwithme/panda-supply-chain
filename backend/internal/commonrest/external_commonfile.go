@@ -13,7 +13,7 @@ import (
 )
 
 func commonFileBody(w http.ResponseWriter, r *http.Request) (map[string]any, bool) {
-	b, e := io.ReadAll(r.Body)
+	b, e := io.ReadAll(io.LimitReader(r.Body, 16<<20))
 	var m map[string]any
 	if e != nil || json.Unmarshal(b, &m) != nil || m == nil {
 		platform.Unknown(w)
@@ -90,6 +90,11 @@ func (s *Service) commonFileDelete(w http.ResponseWriter, r *http.Request) {
 func fileWriteVals(e *ent, m map[string]any) map[string]any {
 	vals := pick(m, e.dbcols)
 	delete(vals, "id")
+	// 物理目录不接受客户端改写,文件名只接受纯文件名:这两列会被预览/下载/删除接口直接当磁盘路径用
+	delete(vals, "file_path")
+	if v, ok := vals["file_name"].(string); ok && (v == "" || v != filepath.Base(v) || v == ".." || v == ".") {
+		delete(vals, "file_name")
+	}
 	for k, v := range vals {
 		if v == nil {
 			delete(vals, k)
@@ -191,6 +196,10 @@ func (s *Service) commonFileDelRel(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
+	if len(m) == 0 { // 空条件等于全表:不能把所有附件连同磁盘文件一起删掉
+		platform.Success(w, "删除成功")
+		return
+	}
 	cond := "1=1"
 	args := []any{}
 	for _, k := range platform.SortedKeys(m) {
@@ -219,7 +228,7 @@ func (s *Service) commonFileDelRel(w http.ResponseWriter, r *http.Request) {
 	platform.Success(w, "删除成功")
 }
 func (s *Service) commonFileUpdBatch(w http.ResponseWriter, r *http.Request) {
-	b, err := io.ReadAll(r.Body)
+	b, err := io.ReadAll(io.LimitReader(r.Body, 16<<20))
 	var ms []map[string]any
 	if err != nil || json.Unmarshal(b, &ms) != nil || bytes.Equal(bytes.TrimSpace(b), []byte("null")) {
 		platform.Unknown(w)

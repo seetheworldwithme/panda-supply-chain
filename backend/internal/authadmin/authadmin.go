@@ -190,7 +190,7 @@ func pageOf(m map[string]any) (current, size int64) {
 		if v := num(p["current"]); v > 0 {
 			current = int64(v)
 		}
-		if v := num(p["size"]); v > 0 {
+		if v := num(p["size"]); v >= 1 { // 0<size<1 取整为 0 → IPage 整数除零 panic
 			size = int64(v)
 		}
 	}

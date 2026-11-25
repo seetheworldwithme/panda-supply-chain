@@ -95,52 +95,53 @@ func (s *Service) listByPage(w http.ResponseWriter, r *http.Request) {
 		searchSql += " and c.id = ?"
 		args = append(args, v)
 	}
-	if v, ok := m["fileStatus"]; ok && v != nil {
+	if v, ok := m["fileStatus"]; ok && v != nil && v != "" { // 前端未选筛选时发空串:Java 绑定为 null 即不拼条件,原先空串被当成 false/空日期
 		searchSql += " and c.file_status = ?"
 		args = append(args, v)
 	}
-	if v, ok := m["isEsign"]; ok && v != nil {
+	if v, ok := m["isEsign"]; ok && v != nil && v != "" { // 前端未选筛选时发空串:Java 绑定为 null 即不拼条件,原先空串被当成 false/空日期
 		searchSql += " and c.is_esign is " + boolLiteral(v)
 	}
-	if v, ok := m["isEsignComplete"]; ok && v != nil {
+	if v, ok := m["isEsignComplete"]; ok && v != nil && v != "" { // 前端未选筛选时发空串:Java 绑定为 null 即不拼条件,原先空串被当成 false/空日期
 		searchSql += " and c.is_esign_complete is " + boolLiteral(v)
 	}
-	if v, ok := m["isPayOnline"]; ok && v != nil {
+	if v, ok := m["isPayOnline"]; ok && v != nil && v != "" { // 前端未选筛选时发空串:Java 绑定为 null 即不拼条件,原先空串被当成 false/空日期
 		searchSql += " and c.is_pay_online is " + boolLiteral(v)
 	}
-	if v, ok := m["startTime"]; ok && v != nil {
+	if v, ok := m["startTime"]; ok && v != nil && v != "" { // 前端未选筛选时发空串:Java 绑定为 null 即不拼条件,原先空串被当成 false/空日期
 		searchSql += " and concat(month, '-01') >= ?"
 		args = append(args, firstDay(str(m, "startTime")))
 	}
-	if v, ok := m["endTime"]; ok && v != nil {
+	if v, ok := m["endTime"]; ok && v != nil && v != "" { // 前端未选筛选时发空串:Java 绑定为 null 即不拼条件,原先空串被当成 false/空日期
 		searchSql += " and concat(month, '-01') <= ?"
 		args = append(args, lastDay(str(m, "endTime")))
 	}
-	if v, ok := m["contractStatus"]; ok && v != nil {
+	if v, ok := m["contractStatus"]; ok && v != nil && v != "" { // 前端未选筛选时发空串:Java 绑定为 null 即不拼条件,原先空串被当成 false/空日期
 		searchSql += " and c.contract_status = ?"
 		args = append(args, v)
 	}
-	if v, ok := m["salesUnitId"]; ok && v != nil {
+	if v, ok := m["salesUnitId"]; ok && v != nil && v != "" { // 前端未选筛选时发空串:Java 绑定为 null 即不拼条件,原先空串被当成 false/空日期
 		searchSql += " and c.sales_unit_id = ?"
 		args = append(args, v)
 	}
-	if v, ok := m["buyerUnitId"]; ok && v != nil {
+	if v, ok := m["buyerUnitId"]; ok && v != nil && v != "" { // 前端未选筛选时发空串:Java 绑定为 null 即不拼条件,原先空串被当成 false/空日期
 		searchSql += " and c.buyer_unit_id = ?"
 		args = append(args, v)
 	}
-	if v, ok := m["ctStartTime"]; ok && v != nil {
-		searchSql += " and DATE_FORMAT(c.create_time, '%Y-%m-%d')>= '" + str(m, "ctStartTime") + "'"
+	if v, ok := m["ctStartTime"]; ok && v != nil && v != "" { // 前端未选筛选时发空串:Java 绑定为 null 即不拼条件,原先空串被当成 false/空日期
+		searchSql += " and DATE_FORMAT(c.create_time, '%Y-%m-%d')>= " + sqlQuote(str(m, "ctStartTime"))
 	}
-	if v, ok := m["ctEndTime"]; ok && v != nil {
-		searchSql += " and DATE_FORMAT(c.create_time, '%Y-%m-%d')<= '" + str(m, "ctEndTime") + "'"
+	if v, ok := m["ctEndTime"]; ok && v != nil && v != "" { // 前端未选筛选时发空串:Java 绑定为 null 即不拼条件,原先空串被当成 false/空日期
+		searchSql += " and DATE_FORMAT(c.create_time, '%Y-%m-%d')<= " + sqlQuote(str(m, "ctEndTime"))
 	}
-	if v, ok := m["isEffect"]; ok && v != nil {
+	if v, ok := m["isEffect"]; ok && v != nil && v != "" { // 前端未选筛选时发空串:Java 绑定为 null 即不拼条件,原先空串被当成 false/空日期
 		searchSql += " and is_effect is " + boolLiteral(v)
 	}
 	if ids, ok := m["ids"].([]any); ok && len(ids) > 0 {
 		var parts []string
 		for _, it := range ids {
-			parts = append(parts, "c.id like "+str(map[string]any{"x": it}, "x"))
+			parts = append(parts, "c.id like ?")
+			args = append(args, str(map[string]any{"x": it}, "x"))
 		}
 		searchSql += " and (" + strings.Join(parts, " or ") + ")"
 	}
@@ -196,7 +197,7 @@ func orNull(s string) string {
 	if s == "" {
 		return "null"
 	}
-	return s
+	return sqlQuote(s)
 }
 
 func boolLiteral(v any) string {

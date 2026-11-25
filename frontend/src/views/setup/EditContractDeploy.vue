@@ -533,7 +533,9 @@ export default {
         // 模块标题
         this.purTitle = this.$route.meta.title;
         // 接收主页单条数据
-        this.AddData = JSON.parse(sessionStorage.getItem('queryAll'));
+        const queryAll = sessionStorage.getItem('queryAll');
+        if (!queryAll) { this.$router.replace({name:'ContractDeploy'}); return } // 保存/取消后 queryAll 被清,后退到本页会整页报错
+        this.AddData = JSON.parse(queryAll);
     },
     methods: {
         /* 

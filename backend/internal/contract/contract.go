@@ -784,20 +784,37 @@ func (s *Service) deleteById(w http.ResponseWriter, r *http.Request) {
 		platform.Unknown(w)
 		return
 	}
-	s.removeContract(s.pick(r), id)
+	if err := s.removeContract(s.pick(r), id); err != nil {
+		platform.Unknown(w)
+		return
+	}
 	platform.Success(w, "删除成功，id为："+strconv.FormatInt(id, 10))
 }
 
 // removeContract 5 表清理:主行、运单关联、扩展、文件(relation_id)、结算/发票解绑
-func (s *Service) removeContract(d *sql.DB, id int64) {
-	_, _ = d.Exec("DELETE FROM chain_contract WHERE id = ?", id)
-	_, _ = d.Exec("DELETE FROM chain_logistics_contract WHERE contract_id = ?", id)
-	_, _ = d.Exec("DELETE FROM chain_contract_extend WHERE contract_id = ?", id)
-	// delByRelId:文件行删除(saas-common removeFile 同时清文件盘;盘文件清理为债务)
-	_, _ = d.Exec("DELETE FROM chain_common_file WHERE relation_id = ?", id)
-	// 解除结算单/发票对应关系(updSment/updBill)
-	_, _ = d.Exec("UPDATE chain_capital_settlement SET contract_id=null, contract_code=null, contract_name=null WHERE contract_id = ?", id)
-	_, _ = d.Exec("UPDATE chain_bill SET contract_id=null, contract_code=null, contract_name=null WHERE contract_id = ?", id)
+// 收进一个事务并检查错误:原先逐条吞错,合同没删掉却把结算单/发票解绑了,还回"删除成功"。
+func (s *Service) removeContract(d *sql.DB, id int64) error {
+	return platform.WithTx(d, func(tx *sql.Tx) error {
+		if _, err := tx.Exec("DELETE FROM chain_contract WHERE id = ?", id); err != nil {
+			return err
+		}
+		if _, err := tx.Exec("DELETE FROM chain_logistics_contract WHERE contract_id = ?", id); err != nil {
+			return err
+		}
+		if _, err := tx.Exec("DELETE FROM chain_contract_extend WHERE contract_id = ?", id); err != nil {
+			return err
+		}
+		// delByRelId:文件行删除(saas-common removeFile 同时清文件盘;盘文件清理为债务)
+		if _, err := tx.Exec("DELETE FROM chain_common_file WHERE relation_id = ?", id); err != nil {
+			return err
+		}
+		// 解除结算单/发票对应关系(updSment/updBill)
+		if _, err := tx.Exec("UPDATE chain_capital_settlement SET contract_id=null, contract_code=null, contract_name=null WHERE contract_id = ?", id); err != nil {
+			return err
+		}
+		_, err := tx.Exec("UPDATE chain_bill SET contract_id=null, contract_code=null, contract_name=null WHERE contract_id = ?", id)
+		return err
+	})
 }
 
 // delBatch = removeContracts:Java `cc.getIsPayOnline() && cc.getCreateUserId() != uid`
@@ -854,7 +871,10 @@ func (s *Service) delBatch(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	for _, id := range numIds {
-		s.removeContract(d, id)
+		if err := s.removeContract(d, id); err != nil {
+			platform.Unknown(w)
+			return
+		}
 	}
 	platform.Success(w, "删除成功")
 }
@@ -891,10 +911,11 @@ func (s *Service) delOnce(w http.ResponseWriter, r *http.Request) {
 		conds = append(conds, k+" = ?")
 		args = append(args, v)
 	}
-	where := ""
-	if len(conds) > 0 {
-		where = " WHERE " + strings.Join(conds, " AND ")
+	if len(conds) == 0 { // 没有任何条件等于无条件清空 7 张业务表,任何情况下都不能执行
+		platform.Unknown(w)
+		return
 	}
+	where := " WHERE " + strings.Join(conds, " AND ")
 	var cnt int64
 	if err := d.QueryRow("SELECT count(1) FROM chain_contract"+where, args...).Scan(&cnt); err != nil || cnt == 0 {
 		platform.Fail(w, 602, "批次号不存在")
@@ -908,4 +929,10 @@ func (s *Service) delOnce(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	platform.Success(w, nil)
+}
+
+// sqlQuote 把值转义成 MySQL 字符串字面量。Java mapper 的 ${} 是字面注入,照搬即 SQL 注入;
+// 良性输入转义后拼出的 SQL 与原先逐字相同。
+func sqlQuote(v string) string {
+	return "'" + strings.ReplaceAll(strings.ReplaceAll(v, "\\", "\\\\"), "'", "''") + "'"
 }

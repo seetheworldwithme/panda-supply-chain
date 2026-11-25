@@ -504,7 +504,8 @@ export default {
     },
     BuyerhandleClose(){
       this.dialogFormVisible = false;
-      this.ruleForm = {}
+      // 不能把表单模型换成空对象:新属性不在 data() 里声明会失去响应性,再打开弹窗输入框异常
+      this.$refs.ruleForm && this.$refs.ruleForm.resetFields()
     },
     //消息回调
     oldlognews() {
@@ -565,6 +566,7 @@ export default {
       if (command === "c") {
         sessionStorage.clear();
         this.$router.push({name:'Login'});
+        window.location.reload(); // 整页刷新:路由表和按钮权限是按上一个账号裁剪过的,同标签页换账号会继承
         this.$router.go(0);
       }
     },

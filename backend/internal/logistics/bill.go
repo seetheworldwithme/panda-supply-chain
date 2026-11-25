@@ -505,7 +505,7 @@ func fillMonthSeries(res map[string]any, start, end string) {
 		if _, has := res[mo]; !has {
 			res[mo] = 0
 		}
-		cur = s.AddDate(0, i, 0)
+		cur = time.Date(s.Year(), s.Month()+time.Month(i), 1, 0, 0, 0, 0, time.Local) // 按月首日推进:月末起点经 AddDate 会跳过下个月
 		if cur.Format("200601") > e.Format("200601") {
 			break
 		}
@@ -563,5 +563,5 @@ func rawId(m map[string]any, k string) string {
 	if n, ok := v.(json.Number); ok {
 		return n.String()
 	}
-	return str(m, k)
+	return sqlString(str(m, k)) // 字符串 id 原先裸拼接(可注入);JSON 数字保持原样
 }

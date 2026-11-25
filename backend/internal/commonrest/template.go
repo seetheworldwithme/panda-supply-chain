@@ -7,6 +7,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"net/http"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -581,7 +582,7 @@ func (s *Service) tplListByPage(w http.ResponseWriter, r *http.Request, e *ent, 
 	// ${maps.searchStr} 字面注入(getMaps 已包 %v%,模板再包一层 → '%v%' 语义;缺失为字面 null)
 	q := strings.Replace(e.listSQL, "${searchSql}", sqlStr, 1)
 	if strings.Contains(q, "${searchStr}") {
-		q = strings.ReplaceAll(q, "${searchStr}", javaStr(m["searchStr"]))
+		q = strings.ReplaceAll(q, "${searchStr}", sqlEscape(javaStr(m["searchStr"])))
 	}
 	if e.table == "chain_common_address" {
 		sqlStr = "where 1=1"
@@ -595,7 +596,7 @@ func (s *Service) tplListByPage(w http.ResponseWriter, r *http.Request, e *ent, 
 		if s, ok2 := search.(string); ok2 {
 			inner = s
 		}
-		q = strings.Replace(q, "${maps.searchStr}", inner, 1)
+		q = strings.Replace(q, "${maps.searchStr}", sqlEscape(inner), 1)
 	}
 	baseArgs := args
 	if !e.searchLit && strings.Contains(q, "#{maps.searchStr}") {
@@ -721,6 +722,10 @@ func (s *Service) tplAdd(w http.ResponseWriter, r *http.Request, e *ent) {
 		}
 	}
 	vals := pick(m, e.dbcols)
+	if msg := confineFilePath(vals, e.table, true); msg != "" {
+		platform.FailMsg(w, msg)
+		return
+	}
 	delete(vals, "id")
 	id, err := s.insert(r, e, vals)
 	if err != nil {
@@ -767,6 +772,10 @@ func (s *Service) tplUpdateById(w http.ResponseWriter, r *http.Request, e *ent) 
 		}
 	}
 	vals := pick(m, e.dbcols)
+	if msg := confineFilePath(vals, e.table, false); msg != "" {
+		platform.FailMsg(w, msg)
+		return
+	}
 	delete(vals, "id")
 	if _, err := s.update(r, e, m["id"], vals); err != nil {
 		platform.Unknown(w)
@@ -819,9 +828,11 @@ func (s *Service) tplDelBatch(w http.ResponseWriter, r *http.Request, e *ent, wi
 
 // tplUpdBatch 对照 /updBatch:MP updateBatchById(逐行非空子集+fill);空数组短路成功
 func (s *Service) tplUpdBatch(w http.ResponseWriter, r *http.Request, e *ent) {
-	var items []any
 	// Java @RequestBody List<T>:对象体({})Jackson 绑定失败 → 999(实测)
-	if err := json.NewDecoder(r.Body).Decode(&items); err != nil {
+	dec := json.NewDecoder(r.Body)
+	dec.UseNumber() // 与 bodyMap 一致:金额/大整数不经 float64
+	var items []any
+	if err := dec.Decode(&items); err != nil {
 		platform.Unknown(w)
 		return
 	}
@@ -909,4 +920,33 @@ func (e *ent) echoBody(m map[string]any) map[string]any {
 		out[jacksonName(k)] = v
 	}
 	return out
+}
+
+// sqlEscape 转义要字面拼进 SQL 字符串的值(反斜杠、单引号)。Java mapper 的 ${} 是字面注入,
+// 照搬就是 SQL 注入;良性输入转义后拼出的 SQL 与原先逐字相同。
+func sqlEscape(v string) string {
+	return strings.ReplaceAll(strings.ReplaceAll(v, "\\", "\\\\"), "'", "''")
+}
+
+// confineFilePath 文件表的行会被预览/下载/删除接口直接当磁盘路径用:
+// 新增时 file_path 必须在上传根目录内、file_name 必须是纯文件名;更新时不允许改 file_path。
+func confineFilePath(vals map[string]any, table string, add bool) string {
+	if table != "chain_common_file" && table != "chain_common_img" {
+		return ""
+	}
+	fp, _ := vals["file_path"].(string)
+	if !add {
+		delete(vals, "file_path")
+	}
+	if add && fp != "" {
+		root, rErr := filepath.Abs(externalRoot())
+		abs, aErr := filepath.Abs(fp)
+		if rErr != nil || aErr != nil || (abs != root && !strings.HasPrefix(abs, root+string(filepath.Separator))) {
+			return "文件路径无效"
+		}
+	}
+	if v, ok := vals["file_name"].(string); ok && (v == "" || v != filepath.Base(v) || v == ".." || v == ".") {
+		return "文件名无效"
+	}
+	return ""
 }

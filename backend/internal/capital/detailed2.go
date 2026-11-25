@@ -158,7 +158,11 @@ func (s *Service) dtCountDetail(w http.ResponseWriter, r *http.Request) {
 		platform.Unknown(w)
 		return
 	}
-	ms, _ := platform.ScanMaps(rows)
+	ms, errS := platform.ScanMaps(rows)
+	if errS != nil { // 迭代中断连时原先返回全 0 的"成功"
+		platform.Unknown(w)
+		return
+	}
 	st, et := str(m, "startTime"), str(m, "endTime")
 	sklb, fklb, ok2 := bucketSeries(series, ms, "detype", "1", "2", st, et)
 	if !ok2 {
@@ -191,22 +195,14 @@ func countSeries(m map[string]any, detail bool) (series []string, format string,
 	}
 	jg := (et.Year()-st.Year())*12 + int(et.Month()) - int(st.Month())
 	if !detail {
-		for i := 0; ; i++ {
-			t := st.AddDate(0, i, 0)
-			series = append(series, t.Format("2006-01"))
-			if t.Format("2006-01") == et.Format("2006-01") {
-				break
-			}
+		for i := 0; i <= jg; i++ { // 按年月推进并限次:AddDate 会把"1月31日+1月"进位成 3 月,漏掉 2 月后原循环永不退出直到 OOM
+			series = append(series, time.Date(st.Year(), st.Month()+time.Month(i), 1, 0, 0, 0, 0, time.Local).Format("2006-01"))
 		}
 		return series, "%Y-%m", true
 	}
 	if jg > 0 {
-		for i := 0; ; i++ {
-			t := st.AddDate(0, i, 0)
-			series = append(series, t.Format("2006-01"))
-			if t.Format("2006-01") == et.Format("2006-01") {
-				break
-			}
+		for i := 0; i <= jg; i++ { // 按年月推进并限次:AddDate 会把"1月31日+1月"进位成 3 月,漏掉 2 月后原循环永不退出直到 OOM
+			series = append(series, time.Date(st.Year(), st.Month()+time.Month(i), 1, 0, 0, 0, 0, time.Local).Format("2006-01"))
 		}
 		return series, "%Y-%m", true
 	}
@@ -270,19 +266,16 @@ func bucketSeries(series []string, rows []map[string]any, key, v1, v2, st, et st
 	if !ok1 || !ok2 {
 		return nil, nil, false
 	}
-	i := 1
-	for {
-		cur := stT.Format("2006-01")
+	for i := 1; ; i++ {
+		cur := time.Date(stT.Year(), stT.Month()+time.Month(i-1), 1, 0, 0, 0, 0, time.Local).Format("2006-01") // 原先每轮都取起点月:补月循环不推进
+		if cur > etT.Format("2006-01") {
+			break
+		}
 		if !strings.Contains(seen1, cur) {
 			l1 = append(l1, map[string]any{"date": cur, "sumPrice": 0})
 		}
 		if !strings.Contains(seen2, cur) {
 			l2 = append(l2, map[string]any{"date": cur, "sumPrice": 0})
-		}
-		cur = stT.AddDate(0, i, 0).Format("2006-01")
-		i++
-		if strings.ReplaceAll(cur, "-", "") > strings.ReplaceAll(etT.Format("2006-01"), "-", "") {
-			break
 		}
 	}
 	return l1, l2, true

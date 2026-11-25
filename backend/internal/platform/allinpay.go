@@ -124,7 +124,7 @@ func AllinpayPost(ctx context.Context, endpoint, inst, code string, request map[
 		return nil, "", "", err
 	}
 	defer res.Body.Close()
-	body, err := io.ReadAll(res.Body)
+	body, err := io.ReadAll(io.LimitReader(res.Body, 16<<20))
 	raw := string(body)
 	if err != nil {
 		return nil, signed, raw, err

@@ -140,6 +140,7 @@ func (q *Jobs) Run(ctx context.Context) error {
 	defer syscall.Flock(int(lock.Fd()), syscall.LOCK_UN)
 	ticker := time.NewTicker(250 * time.Millisecond)
 	defer ticker.Stop()
+	var swept time.Time
 	for {
 		paths, err := filepath.Glob(filepath.Join(q.dir, "*.json"))
 		if err != nil {
@@ -151,26 +152,57 @@ func (q *Jobs) Run(ctx context.Context) error {
 			}
 			raw, err := os.ReadFile(path)
 			var job persistedJob
-			if err != nil || json.Unmarshal(raw, &job) != nil {
-				log.Printf("后台消息无法读取: %s", filepath.Base(path))
-				continue
-			}
+			ok := err == nil && json.Unmarshal(raw, &job) == nil
 			q.mu.RLock()
 			handler := q.handlers[job.Name]
 			q.mu.RUnlock()
-			if handler == nil {
+			// 文件名形如 <纳秒时间戳>-<id>.json;不含 "-" 的杂散文件不能让下标越界带崩进程
+			id := ""
+			if parts := strings.SplitN(filepath.Base(path), "-", 2); len(parts) == 2 {
+				id = strings.TrimSuffix(parts[1], ".json")
+			}
+			if !ok || handler == nil || id == "" {
+				// 隔离成 .failed:否则每 250ms 重读一次并刷一行日志,永不停止
+				log.Printf("后台消息无法读取或没有处理器,已隔离: %s", filepath.Base(path))
+				_ = os.Rename(path, path+".failed")
 				continue
 			}
-			id := strings.TrimSuffix(strings.SplitN(filepath.Base(path), "-", 2)[1], ".json")
-			handler(id, job.Payload)
+			func() {
+				defer func() {
+					// 处理器 panic 照 Java"异常记录后确认消费":只记日志并照常删除消息。
+					// 不拦的话整个进程被带崩,且消息文件还在,重启后同一条再崩,起不来。
+					if r := recover(); r != nil {
+						log.Printf("后台消息处理崩溃: %s %v", job.Name, r)
+					}
+				}()
+				handler(id, job.Payload)
+			}()
 			if err := os.Remove(path); err != nil {
 				return err
 			}
+		}
+		if len(paths) == 0 && time.Since(swept) > 10*time.Minute {
+			swept = time.Now()
+			q.sweepSeen()
 		}
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
 		case <-ticker.C:
+		}
+	}
+}
+
+// sweepSeen 清理已过期的消费标记:只写不删会让队列目录无限变大。
+func (q *Jobs) sweepSeen() {
+	seen, _ := filepath.Glob(filepath.Join(q.dir, "*.seen"))
+	now := time.Now().UnixNano()
+	for _, path := range seen {
+		if data, err := os.ReadFile(path); err == nil {
+			var expiry int64
+			if json.Unmarshal(data, &expiry) == nil && now >= expiry {
+				_ = os.Remove(path)
+			}
 		}
 	}
 }

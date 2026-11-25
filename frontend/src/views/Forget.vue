@@ -140,7 +140,7 @@ export default {
                     this.active = 2;
                 }
                 if(res.data.code == 999){
-                    Message({
+                    this.$message({
                         message:'身份验证失败!',
                         type:'error',
                     })

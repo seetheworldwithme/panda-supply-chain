@@ -443,9 +443,9 @@ export default {
     },
     //搜索功能
     search() {
+      this.current = 1; // 先重置页码再查询,否则带着旧页码查不到数据
       this.tableData = [];
       this.getpurcon();
-      this.current = 1;
     },
     // 表格选中数据
     purChange(val) {
@@ -613,9 +613,9 @@ export default {
                     type: 'success',
                     message: '删除成功!'
                   });
+                  this.current = 1; // 先重置页码再查询,否则带着旧页码查不到数据
                   this.tableData = [];
                   this.getpurcon();
-                  this.current = 1;
                   if(this.tableData == []){
                     this.dataAva = true;
                   }

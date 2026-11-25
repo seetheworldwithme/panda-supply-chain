@@ -312,7 +312,7 @@ func (s *Service) usSearchSignDate(w http.ResponseWriter, r *http.Request) {
 	for _, sr := range srows {
 		st := str(sr, "sign_time")
 		if len(st) >= 10 {
-			signMap[st[:10]] = str(sr, "hjjNum")
+			signMap[st[:10]] = str(sr, "hjj_num") // 行键是下划线列名,原键名取不到值
 		}
 	}
 	today := now.Format("2006-01-02")

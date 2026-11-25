@@ -135,6 +135,10 @@ func (s *Service) loBillCountLogist(w http.ResponseWriter, r *http.Request) {
 	}
 	// num = jg+1(Java (jg==0?days:jg)+1;jg<0 → LIMIT 负数 → SQL 错误 999)
 	num := jg + 1
+	if num > 1200 { // 同 monthSeries 的防御:超大区间会拖垮 SQL 与补月循环
+		platform.Unknown(w)
+		return
+	}
 	endLit := "'" + endD.Format("2006-01-02") + "'"
 	sqlStr := "SELECT" +
 		"	date_c.*, IFNULL(sumPrice, 0) sumTonnage, 1 transMethod" +

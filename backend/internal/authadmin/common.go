@@ -18,7 +18,6 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/seetheworldwithme/panda-supply-chain/backend/internal/auth"
 	"github.com/seetheworldwithme/panda-supply-chain/backend/internal/platform"
@@ -442,7 +441,8 @@ func (s *Service) commonFileUpdate(r *http.Request, it any, m map[string]any, fi
 	if em == nil || em["id"] == nil {
 		return false
 	}
-	vals := pick(em, "file_real_name", "file_name", "file_description", "file_path", "f_type",
+	// file_path/file_name 不接受 body:它们会被预览/下载接口直接当磁盘路径,可改写成任意文件读
+	vals := pick(em, "file_real_name", "file_description", "f_type",
 		"trans_status", "association_id", "is_compressed_file", "source_id", "compressed_id")
 	vals["company_id"] = m["id"]
 	vals["file_type"] = fileType
@@ -718,10 +718,11 @@ func (s *Service) uploadBatch(w http.ResponseWriter, r *http.Request) {
 	}
 	apath := ""
 	if cu.EnterpriseCode == "" {
-		apath = str(user, "phone")
+		apath = filepath.Base(str(user, "phone")) // phone 用户可自改:带 ../ 会把上传写到根目录之外
 	}
 	dir := filepath.Join(uploadDir(), filepath.FromSlash(apath))
 	cfiles := []map[string]any{}
+	r.Body = http.MaxBytesReader(w, r.Body, 100<<20) // 营业执照/附件远小于 100MB;原先无上限,超大"图片"整读再 base64 能占数 GB 内存
 	if err := r.ParseMultipartForm(32 << 20); err != nil || r.MultipartForm == nil {
 		platform.Success(w, cfiles)
 		return
@@ -785,7 +786,7 @@ func (s *Service) uploadBatch(w http.ResponseWriter, r *http.Request) {
 				root = "data/uploads"
 			}
 			imgdir := filepath.Join(root, "convertFiles")
-			preview := strconv.FormatInt(time.Now().UnixMilli(), 10) + ".pdf"
+			preview := platform.PreviewName()
 			if err = platform.RenderDocumentPDF(r.Context(), filepath.Join(dir, fileName), filepath.Join(imgdir, preview)); err != nil {
 				break
 			}

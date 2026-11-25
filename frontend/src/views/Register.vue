@@ -439,7 +439,6 @@ export default {
     submitFormmanage(formName) {
       this.$refs[formName].validate((valid) => {
         if(valid){ 
-            console.log(this.manageForm)
             this.api.enterData.addNoAuth(this.manageForm)
             .then(res=>{
                 if(res.data.code == 200){
@@ -575,7 +574,7 @@ export default {
             "image/jpg"
         ];
         const isImg = types.indexOf(file.type) == -1;
-        const isLt3M = file.size / 1024 / 1024 /1024 < 3; 
+        const isLt3M = file.size / 1024 / 1024 < 3; 
         if (isImg) {
             this.$message.error("上传营业执照图片只能是 JPG PNG JPEG 格式!");
         }

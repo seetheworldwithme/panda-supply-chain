@@ -24,6 +24,7 @@ type CurrentUser struct {
 	Level          int
 	AccountType    string
 	EnterpriseCode string // 对照 Java JWTInfo.enterpriseCode(企业账号才有)
+	BankSigned     bool   // CMB-BodySign 经招行公钥 RSA 验签通过(回调 handler 据此判定)
 }
 
 type ctxKey int
@@ -70,6 +71,7 @@ ORDER BY CASE WHEN account_type!=4 AND handle_result=1 THEN 0 WHEN account_type=
 			}
 			if checkBankSignature(r) {
 				user.SignedAnon = true
+				user.BankSigned = true
 			}
 			if checkEsignSignature(r) {
 				user.SignedAnon = true
@@ -120,7 +122,7 @@ func checkSignature(r *http.Request, secretDB *sql.DB) bool {
 		signature = r.URL.Query().Get("Signature")
 		authorizationId = firstNonEmpty(r.Header.Get("AuthorizationId"), r.URL.Query().Get("AuthorizationId"))
 	}
-	if authorizationId == "" || signature == "" {
+	if authorizationId == "" || signature == "" || secretDB == nil {
 		return false
 	}
 	var secret string
