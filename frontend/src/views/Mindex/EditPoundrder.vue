@@ -470,6 +470,10 @@ export default {
         this.purTitle = this.$route.meta.title;
         // 接收主页单条数据
         this.AddData = JSON.parse(sessionStorage.getItem('queryAll'));
+        if(!this.AddData){
+            // 直接输入网址 / 后退进入时没有待编辑的磅单:回列表页,否则下面取字段就抛错
+            return this.$router.replace({name:'Poundrder'});
+        }
         // 文件上传请求头
         this.header = {Authorization:sessionStorage.getItem('Authorization')}
         this.http  = this.$store.state.http;                 // IP地址
@@ -515,6 +519,7 @@ export default {
                     this.api.Weighing.edit(this.AddData)
                     .then(res=>{
                         if(res.data.code == 200){
+                    this.delRemovedFiles();
                             var that = this
                             that.$message({
                                 type: "success",
@@ -557,12 +562,16 @@ export default {
         },
         // 附件上传文件成功
         resfile(response, file, fileList){
-            if(response.code == 200){
+            // HTTP 200 + code≠200 或 data 为空(例如后端转 pdf 失败)时拿不到附件号,文件不能留在列表里
+            if(response.code == 200 && response.data && response.data.length){
                 this.$message({
                     type: 'success',
                     message: '上传文件成功!'
                 });
                 this.enclosurefileList = fileList;
+            }else{
+                fileList.splice(fileList.indexOf(file), 1);
+                this.$message.error(response.msg || '上传文件失败!');
             }
         },
         // 点击附件文件列表下载
@@ -571,11 +580,19 @@ export default {
             window.open(url)
         },
         // 删除附件文件
+        // 保存成功后才删编辑期间移除的回显附件(原先一移除就删,取消编辑后记录指向已删文件)
+        delRemovedFiles(){
+            (this.removedFileIds || []).forEach(id => this.api.addfile.del({id}));
+            this.removedFileIds = [];
+        },
         fileRemove(file,fileList){
-            if(this.fileObj[file.name] == false){
-                return false;
-            }else if(fileList){
-                return  this.api.addfile.del({id:file.response.data[0].id})
+            this.enclosurefileList = fileList; // 列表与界面一致:原先删除接口失败时提交仍会带上
+            if(!this.fileObj[file.name]){
+                // 回显的附件没有经过 before-upload:先记下,等保存成功再删
+                this.removedFileIds = (this.removedFileIds || []).concat(file.response.data[0].id);
+                return;
+            }
+            return  this.api.addfile.del({id:file.response.data[0].id})
                         .then(res=>{
                             if(res.data.code == 200){
                                 this.$message({
@@ -585,7 +602,6 @@ export default {
                                 this.enclosurefileList = fileList;
                             }
                         })
-            }
         },
     },
 };

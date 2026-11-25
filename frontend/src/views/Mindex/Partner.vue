@@ -411,27 +411,27 @@
                         </li>
                         <li>
                             <label>企业性质：</label>
-                            <span v-if="seeDatass.enterpriseNature">{{seeDatass.enterpriseNature}}</span>
+                            <span v-if="customerData.enterpriseNature">{{customerData.enterpriseNature}}</span>
                             <span v-else>---</span>
                         </li>
                         <li>
                             <label>统一信用代码：</label>
-                            <span v-if="seeDatass.creditCode">{{seeDatass.creditCode}}</span>
+                            <span v-if="customerData.creditCode">{{customerData.creditCode}}</span>
                             <span v-else>---</span>
                         </li>
                         <li>
                             <label>经营地址：</label>
-                            <span v-if="seeDatass.businessAddress">{{seeDatass.businessAddress}}</span>
+                            <span v-if="customerData.businessAddress">{{customerData.businessAddress}}</span>
                             <span v-else>---</span>
                         </li>
                         <li>
                             <label>产品大类：</label>
-                            <span v-if="seeDatass.pro1">{{seeDatass.pro1}}</span>
+                            <span v-if="customerData.pro1">{{customerData.pro1}}</span>
                             <span v-else>---</span>
                         </li>
                         <li>
                             <label>产品小类：</label>
-                            <span v-if="seeDatass.pro2">{{seeDatass.pro2}}</span>
+                            <span v-if="customerData.pro2">{{customerData.pro2}}</span>
                             <span v-else>---</span>
                         </li>
                         <li>
@@ -617,8 +617,8 @@ export default {
         //供应商档案搜索功能
         search() {
             this.tableDatass = [];
-            this.getpurcon();
             this.current = 1;
+            this.getpurcon();
         },
         purChange(val) {
             // 供应商档案表格选中数据
@@ -685,8 +685,8 @@ export default {
                             message: '删除成功!'
                             });
                             this.tableDatass = [];
-                            this.getpurcon();
                             this.current = 1;
+                            this.getpurcon();
                             if(this.tableDatass == []){
                                 this.dataAva = true;
                             }

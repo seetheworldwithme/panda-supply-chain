@@ -436,7 +436,7 @@
                     <li>
                       <label>签章日期格式：</label>
                         <span v-if="seeData.format == 'yyyy年MM月dd日'">yyyy年MM月dd日</span>
-                        <span v-if="seeData.format == 'yyyy-MM-d'">yyyy-MM-d</span>
+                        <span v-if="seeData.format == 'yyyy-MM-dd'">yyyy-MM-dd</span> <!-- 少一位 d,永远不会显示 -->
                         <span v-if="seeData.format == 'yyyy/MM/dd'">yyyy/MM/dd</span>
                     </li>
                     <li>
@@ -644,7 +644,7 @@ export default {
       // console.log(tab)
       // 判断tab栏选中状态，请求相应的接口
       if (tab.label == "基本信息") {
-        this.allone(this.seeId,this.seeId);
+        // 本页没有 allone 方法:原先点「基本信息」页签就报错(基本信息在打开抽屉时已加载)
       }
       if (tab.label == "动态") {
         // console.log(2);

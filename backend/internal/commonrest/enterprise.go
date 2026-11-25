@@ -147,6 +147,13 @@ func (s *Service) enterpriseAdd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	vals := map[string]any{"company_id": cid, "account_type": "3", "account": m["account"], "handle_result": "0", "level": 1, "username": m["adminName"], "password": string(hashed)}
+	// 注册第三步只能认领"刚注册、尚未归属"的账号:原先 body 的 userId 任意,未登录即可把任何账号
+	//(含平台管理员)改成新企业的管理员并改掉密码。
+	var claimable bool
+	if err := d.QueryRow("SELECT EXISTS(SELECT 1 FROM chain_auth_user WHERE id=? AND company_id IS NULL AND level=0 AND account_type NOT IN (2,5) AND handle_result IS NULL)", m["userId"]).Scan(&claimable); err != nil || !claimable {
+		platform.Fail(w, 602, "无权限操作")
+		return
+	}
 	if _, err := platform.UpdateByID(d, "chain_auth_user", m["userId"], vals); err != nil {
 		platform.Unknown(w)
 		return

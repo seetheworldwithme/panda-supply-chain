@@ -987,8 +987,8 @@ export default {
             message: '删除草稿成功!'
           });
           this.DraftsDastas = [];
-          this.draftsPurcon();
           this.current = 1;
+          this.draftsPurcon();
         }
       })
     },
@@ -1185,27 +1185,27 @@ export default {
     // 搜索功能
     search() {
       this.tableData = [];
-      this.getpurcon();
       this.current = 1;
+      this.getpurcon();
     },
     // 时间搜索
     Times() {
         this.tableData = [];
-        this.getpurcon();
         this.current = 1;
+        this.getpurcon();
     },
     // 支付搜索
     signchange(){
         this.tableData = [];
-        this.getpurcon();
         this.current = 1;
+        this.getpurcon();
     },
     // 支付清空
     PaymentClear(){
       this.PaymentValue = "";  
       this.tableData = [];
-      this.getpurcon();
       this.current = 1;
+      this.getpurcon();
     },  
     // 合同搜索
 
@@ -1215,15 +1215,15 @@ export default {
     // 签署搜索
     Paymentchange(){
       this.tableData = [];
-      this.getpurcon();
       this.current = 1;
+      this.getpurcon();
     },
     // 签署清空
     signClear(){
       this.signValue = "";
       this.tableData = [];
-      this.getpurcon();
       this.current = 1;
+      this.getpurcon();
     },
     // 表格选中数据
     purChange(val) {
@@ -1288,6 +1288,7 @@ export default {
     allone(id){
       this.seeData = {};
       this.filelist = [];
+      this.enclosurefileList = []; // 不清会把上一份合同的补充协议带进来,删除时还会删掉别人的文件
       this.api.xsContract.one({id:id})
       .then(res=>{
         if(res.data.code == 200){
@@ -1444,13 +1445,15 @@ export default {
         }).then(() => {
           this.api.xsContract.del(this.delmul)
           .then(res=>{
+
+if(res.data.code != 200) return; // 删除失败不提示成功
             this.$message({
               type: 'success',
               message: '删除成功!'
             });
             this.tableData = [];
-            this.getpurcon();
             this.current = 1;
+            this.getpurcon();
             if(this.tableData == []){
               this.dataAva = true;
             }
@@ -1506,6 +1509,8 @@ export default {
       this.oneShow = true;
       this.twoShow = false;
       this.streeShow = false;
+      this.fourShow = false; // 不清的话:导入成功后关闭再打开,结果面板会和步骤一同屏
+      clearInterval(this.importTimer); // 关掉弹窗就不再继续导入
       this.pernav = "正在导入...";
       this.fileForm.importnav = "";
       this.$refs.upload.clearFiles();
@@ -1519,13 +1524,14 @@ export default {
           this.oneShow = false;
           this.twoShow = true;
           // 导入进度条
-          let f = setInterval(()=>{
-            this.perstep += 3;
-            if(this.perstep == 99){
-              this.perstep = 99;
-              this.$refs.upload.submit();
-              clearInterval(f);
-            }
+          clearInterval(this.importTimer); // 关闭后 5 秒内重开再导入会叠两个定时器
+          this.importTimer = setInterval(()=>{
+              this.perstep += 3;
+              if(this.perstep == 99){
+                  this.perstep = 99;
+                  clearInterval(this.importTimer); // 先停定时器再提交:提交抛错(例如已离开页面)时定时器会一直跑
+                  this.$refs.upload.submit();
+              }
           },150)
         }
       });
@@ -1563,8 +1569,8 @@ export default {
       this.fourShow = false;         // 成功
       this.pernav = "正在导入...";
       this.streeShow = false; 
-      this.getpurcon();
       this.current = 1;
+      this.getpurcon();
       this.$refs.upload.clearFiles();
       this.fileForm.importnav = "";
     },

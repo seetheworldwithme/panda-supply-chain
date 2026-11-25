@@ -174,7 +174,7 @@ export default {
         getpurcon(){
             this.loading = true; 
             let listByPageData;
-            var logisticsAll = JSON.parse(sessionStorage.getItem('queryAll'));
+            var logisticsAll = JSON.parse(sessionStorage.getItem('queryAll')) || []; // 直接输入网址 / 后退进入时为 null
             if(JSON.parse(sessionStorage.getItem('queryAlls'))){
                 let arrAll = JSON.parse(sessionStorage.getItem('queryAlls'));
                 // 传参
@@ -232,32 +232,32 @@ export default {
         // 搜索功能
         search() {
             this.tableData = [];
-            this.getpurcon();
             this.current = 1;
+            this.getpurcon();
         },
         // 发货地搜索功能
         searchone() {
             this.tableData = [];
-            this.getpurcon();
             this.current = 1;
+            this.getpurcon();
         },
         // 卸货地搜索功能
         searchtwo() {
             this.tableData = [];
-            this.getpurcon();
             this.current = 1;
+            this.getpurcon();
         },
         // 运单编号搜索功能
         searchtree() {
             this.tableData = [];
-            this.getpurcon();
             this.current = 1;
+            this.getpurcon();
         },
         // 日期搜索
         DataTime() {
             this.tableData = [];
-            this.getpurcon();
             this.current = 1;
+            this.getpurcon();
         },
         // 表格选中数据
         purChange(val) {

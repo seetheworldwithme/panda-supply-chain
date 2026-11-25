@@ -911,7 +911,8 @@ func (s *Service) delOnce(w http.ResponseWriter, r *http.Request) {
 		conds = append(conds, k+" = ?")
 		args = append(args, v)
 	}
-	if len(conds) == 0 { // 没有任何条件等于无条件清空 7 张业务表,任何情况下都不能执行
+	// 没有任何条件 = 无条件清空 7 张业务表;条件全是空值(如 {"im_batch_number":null})= 删光所有非导入数据。都不执行。
+	if len(conds) == 0 || len(args) == 0 {
 		platform.Unknown(w)
 		return
 	}

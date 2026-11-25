@@ -217,21 +217,21 @@ export default{
         }
     },
     created(){
-        setInterval(this.formatDate, 1000);
-        setInterval(this.scroll,3500) // 在钩子函数中调用我在method 里面写的scroll()方法
-        setInterval(this.scrollone,3000) // 在钩子函数中调用我在method 里面写的scroll()方法
+        (this.timers = this.timers || {}).formatDate = setInterval(this.formatDate, 1000);
+        (this.timers = this.timers || {}).scroll = setInterval(this.scroll, 3500) // 在钩子函数中调用我在method 里面写的scroll()方法
+        (this.timers = this.timers || {}).scrollone = setInterval(this.scrollone, 3000) // 在钩子函数中调用我在method 里面写的scroll()方法
         this.getPtSumPrices();                      // 结算金额累计
-        setInterval(this.getPtSumPrices, 10000);
+        (this.timers = this.timers || {}).getPtSumPrices = setInterval(this.getPtSumPrices, 10000);
         this.countSumContracts();                   // 合同份数
-        setInterval(this.countSumContracts, 15000);
+        (this.timers = this.timers || {}).countSumContracts = setInterval(this.countSumContracts, 15000);
         this.countYearBusess();                     // 资金流水累计
-        setInterval(this.countYearBusess, 200000);
+        (this.timers = this.timers || {}).countYearBusess = setInterval(this.countYearBusess, 200000);
         this.logisticsBill()                        // 物流量累计
-        setInterval(this.logisticsBill, 25000);
+        (this.timers = this.timers || {}).logisticsBill = setInterval(this.logisticsBill, 25000);
         this.taxartbarbox();                        // 注册企业数
-        setInterval(this.taxartbarbox, 30000);
+        (this.timers = this.timers || {}).taxartbarbox = setInterval(this.taxartbarbox, 30000);
         this.oneYearBusess();             // 统计本年度业务量金额累计
-        setInterval(this.oneYearBusess, 200000);
+        (this.timers = this.timers || {}).oneYearBusess = setInterval(this.oneYearBusess, 200000);
     },
     mounted() {
         this.paymentTaxes();                 // 淘煤网阳光竞价图
@@ -280,7 +280,7 @@ export default{
             this.api.bill.countYearBuses()
             .then(res=>{
                 if(res.data.code == 200){
-                    this.countYearBusesData =  (res.data.data.baseMoney/100000000).toFixed(2)*1;
+                    this.countYearBusesData =  ((res.data.data || {}).baseMoney/100000000).toFixed(2)*1;
                 }
             })
         },
@@ -291,7 +291,7 @@ export default{
             this.api.capital.getPtSumPrice()
             .then(res=>{
                 if(res.data.code == 200){
-                    this.getPtSumPricesData =  (res.data.data.sumPrice/100000000).toFixed(2)*1;
+                    this.getPtSumPricesData =  ((res.data.data || {}).sumPrice/100000000).toFixed(2)*1;
                 }
             })
         },
@@ -313,7 +313,7 @@ export default{
             this.api.chainCap.getPtSumPrice()
             .then(res=>{
                 if(res.data.code == 200){
-                    this.Capitalflow =  (res.data.data.sumMoney/100000000).toFixed(2)*1;
+                    this.Capitalflow =  ((res.data.data || {}).sumMoney/100000000).toFixed(2)*1;
                 }
             })
         },
@@ -754,6 +754,10 @@ export default{
     },
     // 销毁定时器
     beforeDestroy() {
+        // setInterval 的返回值原先没有保存:下面 clearInterval(this.函数名) 传的是函数而不是定时器号,一个也清不掉。
+        // 大屏每 60 秒换一屏,离开的页面里的刷新 / 滚动定时器会一直累积
+        Object.values(this.timers || {}).forEach(clearInterval);
+        this.$el.querySelectorAll('[_echarts_instance_]').forEach(el => echarts.getInstanceByDom(el).dispose()); // 图表实例都是局部变量,原先没人释放
         clearInterval(this.timer);
         if (this.formatDate || this.getPtSumPrices || this.countSumContracts || this.countYearBusess || this.logisticsBill || this.oneYearBusess || this.taxartbarbox) {
             clearInterval(this.formatDate); // 在Vue实例销毁前，清除时间定时器

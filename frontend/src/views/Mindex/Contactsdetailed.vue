@@ -425,6 +425,7 @@ export default {
         },
         // 核销明细选中条数
         settlementhandleCurrentChange(currentRow) {
+            if(!currentRow) return; // 列表刷新后原高亮行不在新数据里时,回调收到 null
             this.multiplesettlement = currentRow;
             if(this.multiplesettlement.type == 1){
                 this.tabs[0].width = "width:64px;"
@@ -471,14 +472,14 @@ export default {
         // 搜索全部功能
         jshxpurSearchs() {
             this.settlementtableData = [];
-            this.settlementgetpurcon();
             this.settlementcurrent = 1;
+            this.settlementgetpurcon();
         },
         // 日期搜索
         DataTime() {
             this.settlementtableData = [];
-            this.settlementgetpurcon();
             this.settlementcurrent = 1;
+            this.settlementgetpurcon();
         },
 
         /*
@@ -518,14 +519,14 @@ export default {
         // 供应商搜索
         ClickOppositeName() {
             this.tableData = [];
-            this.getpurcon();
             this.current = 1;
+            this.getpurcon();
         },
         // 全部搜索
         search() {
             this.tableData = [];
-            this.getpurcon();
             this.current = 1;
+            this.getpurcon();
         },
 
         /*
@@ -567,26 +568,26 @@ export default {
         // 银行名称搜索
         waterkeyupBanks() {
             this.watertableData = [];
-            this.watertgetpurcon();
             this.watertcurrent = 1;
+            this.watertgetpurcon();
         },
         // 日期搜索
         waterDataTime() {
             this.watertableData = [];
-            this.watertgetpurcon();
             this.watertcurrent = 1;
+            this.watertgetpurcon();
         },
         // 对方户名
         waterClickOppositeName() {
             this.watertableData = [];
-            this.watertgetpurcon();
             this.watertcurrent = 1;
+            this.watertgetpurcon();
         },
         // 全部搜索
         watersearch() {
             this.watertableData = [];
-            this.watertgetpurcon();
             this.watertcurrent = 1;
+            this.watertgetpurcon();
         },
     },
 };

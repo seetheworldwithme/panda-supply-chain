@@ -996,7 +996,7 @@ export default {
                 }else{
                     if(this.AddData.singers[i].signRole == 2){
                         this.AddData.signRole = this.AddData.singers[i].signRole;
-                        this.numbers = this.AddData.singers.length - 1
+                        this.numbers++; // 每个回显的签署方各用一个序号(原先共用同一个,再保存时会被合并)
                         this.AddData.domains.push(
                             {
                                 id:this.numbers,
@@ -1022,6 +1022,27 @@ export default {
                                 labelone:'',
                                 type:'signEtcName',
                                 message:'签署方企业名称'
+                            }
+                        );
+                    }else if(this.AddData.singers[i].signRole == 0){
+                        // 个人签署方同样要回显:原先没有还原,再次保存时会被丢掉
+                        this.AddData.domainsone.push(
+                            {
+                                id:++this.numbersone,
+                                signRole:0,
+                                label:'签署方姓名' + this.numbersone,
+                                value: this.AddData.singers[i].signName,
+                                labelone:'删除',
+                                type:'signName',
+                                message:'签署方姓名'
+                            },{
+                                id:this.numbersone,
+                                signRole:0,
+                                label:'签署方手机号' + this.numbersone,
+                                value: this.AddData.singers[i].signPhone,
+                                labelone:'',
+                                type:'signPhone',
+                                message:'签署方手机号'
                             }
                         );
                     }
@@ -1150,7 +1171,7 @@ export default {
         },
         // 企业动态增加input
         removeDomain(item) {
-            this.numbers--
+            // 签署方序号只增不减:回退后新加的签署方会与保留的重号,提交时被合并成一个
             var index = this.AddData.domains.indexOf(item);
             if (index !== -1) {
             this.AddData.domains.splice(index,3);
@@ -1188,7 +1209,6 @@ export default {
         },
         // 个人动态增加input
         removeDomainone(item) {
-            this.numbersone--;
             var index = this.AddData.domainsone.indexOf(item);
             if (index !== -1) {
             this.AddData.domainsone.splice(index,2);
@@ -1238,6 +1258,7 @@ export default {
         },
         // 所属月份回显
         clickTime(){
+            if(!this.AddData.signingTime) return; // 清空签定时间后取月份会抛错
             let strs = this.AddData.signingTime.substr(0,7);
             this.AddData.month = strs;
         },
@@ -1300,7 +1321,8 @@ export default {
                 this.api.xsContract.list({contract_code:data})
                 .then(res=>{
                     if(res.data.code == 200){
-                        if(res.data.data.length != 0){
+                        // 编辑 / 草稿时列表会查到自己:只有别的合同占用该编号才算重复
+                        if(res.data.data.some(row => row.id != this.AddData.id)){
                             this.$message({
                                 type: "warning",
                                 message: "合同编号已存在,请重新填写",
@@ -1426,7 +1448,7 @@ export default {
                                     var arrays = [];
                                     if(this.AddData.domains.length > 0){
                                         let a = {};
-                                        for(let i=1;i<=this.numbers;i++){
+                                        for(let i of new Set(this.AddData.domains.map(d => d.id))){ // 只遍历还在的签署方序号
                                             a = {}
                                             for(let key in this.AddData.domains){
                                                 if(this.AddData.domains[key].type == 'signName'){
@@ -1448,7 +1470,7 @@ export default {
                                     }
                                     if(this.AddData.domainsone.length > 0){
                                         let b ={};
-                                        for(let i=1;i<=this.numbersone;i++){
+                                        for(let i of new Set(this.AddData.domainsone.map(d => d.id))){
                                             b = {}
                                             for(let key in this.AddData.domainsone){
                                                 if(this.AddData.domainsone[key].type == 'signName'){
@@ -1481,6 +1503,7 @@ export default {
                                         type: "warning",
                                         message: "签署方信息不能少于一个签署方!"
                                     });
+                                    return; // 原先提示后仍继续提交,签章合同会没有签署方
                                 }
                             }
                             var arr = [];
@@ -1498,6 +1521,7 @@ export default {
                                 this.api.xsContract.edit(this.AddData)
                                 .then(res=>{
                                     if(res.data.code == 200){
+                                this.delRemovedFiles();
                                         let that = this;
                                         that.fullscreenLoading = false;
                                         that.$message({
@@ -1518,6 +1542,7 @@ export default {
                                 this.api.xsContract.add(this.AddData)
                                 .then(res=>{
                                     if(res.data.code == 200){
+                                this.delRemovedFiles();
                                         let that = this;
                                         that.fullscreenLoading = false;
                                         that.$message({
@@ -1558,7 +1583,7 @@ export default {
                                 var arrays = [];
                                 if(this.AddData.domains.length > 0){
                                     let a = {};
-                                    for(let i=1;i<=this.numbers;i++){
+                                    for(let i of new Set(this.AddData.domains.map(d => d.id))){ // 只遍历还在的签署方序号
                                         a = {}
                                         for(let key in this.AddData.domains){
                                             if(this.AddData.domains[key].type == 'signName'){
@@ -1580,7 +1605,7 @@ export default {
                                 }
                                 if(this.AddData.domainsone.length > 0){
                                     let b ={};
-                                    for(let i=1;i<=this.numbersone;i++){
+                                    for(let i of new Set(this.AddData.domainsone.map(d => d.id))){
                                         b = {}
                                         for(let key in this.AddData.domainsone){
                                             if(this.AddData.domainsone[key].type == 'signName'){
@@ -1630,6 +1655,7 @@ export default {
                             this.api.xsContract.edit(this.AddData)
                             .then(res=>{
                                 if(res.data.code == 200){
+                            this.delRemovedFiles();
                                     let that = this;
                                     that.fullscreenLoading = false;
                                     that.$message({
@@ -1650,6 +1676,7 @@ export default {
                             this.api.xsContract.add(this.AddData)
                             .then(res=>{
                                 if(res.data.code == 200){
+                            this.delRemovedFiles();
                                     let that = this;
                                     that.fullscreenLoading = false;
                                     that.$message({
@@ -1698,7 +1725,7 @@ export default {
                         var arrays = [];
                         if(this.AddData.domains.length > 0){
                             let a = {};
-                            for(let i=1;i<=this.numbers;i++){
+                            for(let i of new Set(this.AddData.domains.map(d => d.id))){ // 只遍历还在的签署方序号
                                 a = {}
                                 for(let key in this.AddData.domains){
                                     if(this.AddData.domains[key].type == 'signName'){
@@ -1720,7 +1747,7 @@ export default {
                         }
                         if(this.AddData.domainsone.length > 0){
                             let b ={};
-                            for(let i=1;i<=this.numbersone;i++){
+                            for(let i of new Set(this.AddData.domainsone.map(d => d.id))){
                                 b = {}
                                 for(let key in this.AddData.domainsone){
                                     if(this.AddData.domainsone[key].type == 'signName'){
@@ -1738,7 +1765,7 @@ export default {
                             }
                         }
                         this.AddData.eqbFlow.singers = arrays;
-                        this.AddData.eqbFlow.contractName = this.enclosurefileList[0].name;
+                        this.AddData.eqbFlow.contractName = (this.enclosurefileList[0] || {}).name; // 没传附件也能存草稿(原先抛错,草稿没存也没提示)
                         let newobj = {
                             signEtcName:this.AddData.etcName,
                             signPhone:this.AddData.phone,
@@ -1769,6 +1796,7 @@ export default {
                     this.api.xsContract.edit(this.AddData)
                     .then(res=>{
                         if(res.data.code == 200){
+                    this.delRemovedFiles();
                             let that = this;
                             that.$message({
                                 type: "success",
@@ -1785,6 +1813,7 @@ export default {
                     this.api.xsContract.add(this.AddData)
                     .then(res=>{
                         if(res.data.code == 200){
+                    this.delRemovedFiles();
                             let that = this;
                             that.$message({
                                 type: "success",
@@ -1836,12 +1865,16 @@ export default {
         },
         // 合同上传文件成功
         resfile(response, file, fileList){
-            if(response.code == 200){
+            // 后端转 pdf 失败时回 code 200 + 空 data:拿不到附件号的文件不能留在列表里
+            if(response.code == 200 && response.data && response.data.length){
                 this.$message({
                     type: 'success',
                     message: '上传文件成功!'
                 });
                 this.enclosurefileList = fileList;
+            }else{
+                fileList.splice(fileList.indexOf(file), 1);
+                this.$message.error(response.msg || '上传文件失败!');
             }
         },
         // 点击合同文件列表下载
@@ -1850,9 +1883,19 @@ export default {
             window.open(url)
         },
         // 删除合同文件
+        // 保存成功后才删编辑期间移除的回显附件(原先一移除就删,取消编辑后合同指向已删文件)
+        delRemovedFiles(){
+            (this.removedFileIds || []).forEach(id => this.api.addfile.del({id}));
+            this.removedFileIds = [];
+        },
         fileRemove(file,fileList){
-            if(this.fileObj[file.name]){
-                return  this.api.addfile.del({id:file.response.data[0].id})
+            this.enclosurefileList = fileList; // 列表与界面一致:原先删除接口失败时保存仍会带上
+            if(!this.fileObj[file.name]){
+                // 回显的附件没有经过 before-upload:先记下,等保存成功再删
+                this.removedFileIds = (this.removedFileIds || []).concat(file.response.data[0].id);
+                return;
+            }
+            return  this.api.addfile.del({id:file.response.data[0].id})
                         .then(res=>{
                             if(res.data.code == 200){
                                 this.$message({
@@ -1862,7 +1905,6 @@ export default {
                                 this.enclosurefileList = fileList;
                             }
                         })
-            }
         },
 
         /* 

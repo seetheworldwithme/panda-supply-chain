@@ -373,7 +373,7 @@ export default {
 
         // 企业动态增加input
         removeDomain(item) {
-            this.numbers--
+            // 签署方序号只增不减:回退后新加的签署方会与保留的重号,提交时被合并成一个
             var index = this.AddData.domains.indexOf(item);
             if (index !== -1) {
             this.AddData.domains.splice(index,3);
@@ -411,7 +411,6 @@ export default {
         },
         // 个人动态增加input
         removeDomainone(item) {
-            this.numbersone--;
             var index = this.AddData.domainsone.indexOf(item);
             if (index !== -1) {
             this.AddData.domainsone.splice(index,2);
@@ -447,10 +446,12 @@ export default {
        // 参与人切换功能
        prologistics(id){
             if(id == 2){
+                this.AddData.domainsone = []; // 个人签署方这一栏已隐藏:不清的话照常提交
                 this.logistics = true;          // 企业显示
                 this.bliLogistics = false;      // 个人隐藏
             }
             if(id == 0){
+                this.AddData.domains = []; // 企业签署方这一栏已隐藏:不清的话照常提交
                 this.logistics = false;         // 企业隐藏
                 this.bliLogistics = true;       // 个人显示
             }
@@ -482,7 +483,7 @@ export default {
                             var arrays = [];
                             if(this.AddData.domains.length > 0){
                                 let a = {};
-                                for(let i=1;i<=this.numbers;i++){
+                                for(let i of new Set(this.AddData.domains.map(d => d.id))){ // 只遍历还在的签署方序号
                                     a = {}
                                     for(let key in this.AddData.domains){
                                         if(this.AddData.domains[key].type == 'signName'){
@@ -503,7 +504,7 @@ export default {
                             }
                             if(this.AddData.domainsone.length > 0){
                                 let b ={};
-                                for(let i=1;i<=this.numbersone;i++){
+                                for(let i of new Set(this.AddData.domainsone.map(d => d.id))){
                                     b = {}
                                     for(let key in this.AddData.domainsone){
                                         if(this.AddData.domainsone[key].type == 'signName'){
@@ -608,7 +609,7 @@ export default {
         },
         // 附件上传文件成功
         resfile(response, file, fileList){
-            if(response.code == 200){
+            if(response.code == 200 && response.data && response.data.field){
                 this.fileShow = true;
                 this.$message({
                     type: 'success',
@@ -623,6 +624,10 @@ export default {
                     arr.push({id:itme.response.data.field});
                 }).join(',');
                 this.AddData.field = arr[0].id;
+            }else{
+                // 拿不到附件号的文件不能留在列表里:界面显示已上传,提交时却取不到附件号
+                fileList.splice(fileList.indexOf(file), 1);
+                this.$message.error(response.msg || '上传文件失败!');
             }
         },
         // 点击附件文件列表下载
@@ -632,8 +637,10 @@ export default {
         },
         // 删除附件文件
         fileRemove(file,fileList){
+            this.AddData.field = ''; // 附件删完后不能带附件号提交:列表已空,取文件名会抛错
+            this.enclosurefileList = fileList; // 列表与界面一致
             if(this.fileObj[file.name]){
-                return  this.api.addfile.del({id:file.response.data.id})
+            return  this.api.addfile.del({id:file.response.data.id})
                         .then(res=>{
                             if(res.data.code == 200){
                                 this.$message({

@@ -29,15 +29,41 @@ import (
 //	/code/image               大屏图形验证码(前端仅 DPLogin 使用,Java 版实际校验已注释,此处同不校验)
 //	/chainAuthUser/updatePwd  修改密码(BCrypt 原密码校验)
 type Service struct {
-	DB  *sql.DB // chain 库
-	KP  *KeyPair
-	mu  sync.Mutex
-	sms map[string]smsCode // account → 验证码(内存替代 Redis,60 秒过期,行为一致)
+	DB             *sql.DB // chain 库
+	KP             *KeyPair
+	mu             sync.Mutex
+	sms            map[string]smsCode   // account → 验证码(内存替代 Redis,60 秒过期,行为一致)
+	verifiedPhones map[string]time.Time // 手机号 → 刚通过短信码校验的时间(忘记密码第二步据此限定可改的账号)
 }
 
 type smsCode struct {
 	value  string
 	expire time.Time
+}
+
+const phoneVerifiedTTL = 10 * time.Minute
+
+// MarkPhoneVerified 记录"该手机号刚通过短信验证码校验"。忘记密码分两步:valCode 校验短信码并返回
+// 该手机号下的账号,updPwd 再按 id 改密码——第二步原先不核对 id 与已验证手机号的关系,
+// 未登录即可改任何账号(含平台管理员)的密码。
+func (s *Service) MarkPhoneVerified(phone string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	now := time.Now()
+	for p, t := range s.verifiedPhones {
+		if now.Sub(t) > phoneVerifiedTTL {
+			delete(s.verifiedPhones, p)
+		}
+	}
+	s.verifiedPhones[phone] = now
+}
+
+// PhoneVerifiedRecently 该手机号最近是否通过过短信码校验
+func (s *Service) PhoneVerifiedRecently(phone string) bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	t, ok := s.verifiedPhones[phone]
+	return ok && time.Since(t) <= phoneVerifiedTTL
 }
 
 // storeCode 写入验证码并清理过期项。键含客户端可控的 IP(X-Forwarded-For)/手机号,
@@ -55,7 +81,7 @@ func (s *Service) storeCode(key, code string) {
 }
 
 func NewService(db *sql.DB, kp *KeyPair) *Service {
-	return &Service{DB: db, KP: kp, sms: map[string]smsCode{}}
+	return &Service{DB: db, KP: kp, sms: map[string]smsCode{}, verifiedPhones: map[string]time.Time{}}
 }
 
 // chainAuthUser 用户行。列名与 chain_auth_user 表一致(MyBatis-Plus 驼峰映射规则)

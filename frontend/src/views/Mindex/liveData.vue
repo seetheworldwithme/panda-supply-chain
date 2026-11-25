@@ -234,22 +234,24 @@ export default {
       // 搜索功能
       search() {
           this.tableData = [];
-          this.getpurcon();
           this.current = 1;
+          this.getpurcon();
       },
       // 数据状态搜索功能
       prologistics(){
           this.tableData = [];
-          this.getpurcon();
           this.current = 1;
+          this.getpurcon();
       },
       // 清洗数据
       openPur() {
+        if(this.conversionloading) return; // 按钮在遮罩外,清洗进行中可以重复下发
         this.conversionloading = true; 
         this.api.logistihird.clearData()
         .then(res=>{
           if(res.data.code == 200){
             this.conversionloading = false; 
+      this.getpurcon(); // 刷新列表里的清洗标记
             this.$message({
               message: res.data.data,
               type: 'success'

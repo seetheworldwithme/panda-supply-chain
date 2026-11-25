@@ -69,8 +69,8 @@ func TestRedWithdrawalCallsProviderBeforeSavingOriginalRecords(t *testing.T) {
 		called = true
 		var body map[string]any
 		json.NewDecoder(r.Body).Decode(&body)
-		if r.URL.Path != "/v3/transfer/batches" || body["total_amount"] != float64(7) {
-			t.Error("未保留原 Java 客户端提现金额")
+		if r.URL.Path != "/v3/transfer/batches" || body["total_amount"] != float64(99) {
+			t.Error("提现金额必须取流水生成时的金额(99),而不是请求体里的金额")
 		}
 		var count int
 		d.QueryRow("SELECT count(*) FROM bus_red_envelope_record").Scan(&count)

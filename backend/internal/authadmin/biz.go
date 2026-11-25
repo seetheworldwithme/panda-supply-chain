@@ -168,6 +168,9 @@ func (s *Service) brelrgeList(w http.ResponseWriter, r *http.Request) {
 func (s *Service) brelrgeUpdBatch(w http.ResponseWriter, r *http.Request) {
 	var items []any
 	_ = json.NewDecoder(r.Body).Decode(&items)
+	if !s.requirePlatform(w, r) { // 红包金额范围是平台配置
+		return
+	}
 	if len(items) == 0 {
 		platform.Unknown(w)
 		return

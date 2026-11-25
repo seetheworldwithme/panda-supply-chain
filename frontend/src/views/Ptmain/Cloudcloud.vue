@@ -255,8 +255,8 @@ export default {
         // 搜索功能
         search() {
             this.tableData = [];
-            this.getpurcon();
             this.current = 1;
+            this.getpurcon();
         },
 
         // 一级选中
@@ -271,6 +271,10 @@ export default {
             this.editData.fstProId = arr[0]*1;
             this.editData.fstName = arr[1];
             this.editData.secName = null;
+            // 换了一级大类:二、三级一并清掉,否则显示为空、id 还是旧的,必填校验照样通过
+            this.AddData.bigProId = this.editData.bigProId = null;
+            this.AddData.threeProId = this.editData.threeProId = null;
+            this.AddData.threeName = this.editData.threeName = null;
             this.list(arr[0]*1);
         },
         // 二级选中
@@ -282,6 +286,9 @@ export default {
             this.AddData.secName = arr[1];
             this.editData.bigProId = arr[0]*1;
             this.editData.secName = arr[1];
+            // 换了二级:三级一并清掉(同上)
+            this.AddData.threeProId = this.editData.threeProId = null;
+            this.AddData.threeName = this.editData.threeName = null;
             this.twolists(arr[0]*1);
         },
         // 三级选中
@@ -359,8 +366,8 @@ export default {
                     });
                     this.AddData = {}
                     this.tableData = [];
-                    this.getpurcon();
                     this.current = 1;
+                    this.getpurcon();
                     this.paymentShow = false;
                 }else if(res.data.code == 602){
                     this.$message({
@@ -417,16 +424,17 @@ export default {
                     });
                     this.editData = {}
                     this.tableData = [];
-                    this.getpurcon();
                     this.current = 1;
+                    this.getpurcon();
                     this.editpaymentShow = false;
+                }else if(res.data.code == 602){
+                    // 原先这段挂在 if (valid) 上:表单校验不通过时 res 还不存在,直接抛 ReferenceError
+                    this.$message({
+                        type: 'warning',
+                        message: res.data.msg
+                    });
                 }
                 })
-            }else if(res.data.code == 602){
-                this.$message({
-                    type: 'warning',
-                    message: res.data.msg
-                });
             }
             });
         },
@@ -459,8 +467,8 @@ export default {
                         message: '删除成功!'
                     });
                     this.tableData = [];
-                    this.getpurcon();
                     this.current = 1;
+                    this.getpurcon();
                     if(this.tableData == []){
                         this.dataAva = true;
                     }

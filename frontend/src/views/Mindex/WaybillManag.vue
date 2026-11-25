@@ -706,12 +706,15 @@ export default {
         },
         // 协议文件上传文件成功
         resfiles(response, file, fileList){
-            if(response.code == 200){
+            if(response.code == 200 && response.data && response.data.length){ // 拿不到附件号的文件不能留在列表里
                 this.$message({
                     type: 'success',
                     message: '上传磅单成功!'
                 });
                 this.enclosurefileList = fileList;
+            }else{
+                fileList.splice(fileList.indexOf(file), 1);
+                this.$message.error(response.msg || '上传磅单失败!');
             }
         },
         // 点击协议文件列表下载
@@ -777,38 +780,38 @@ export default {
         // 搜索功能
         search() {
             this.tableData = [];
-            this.getpurcon();
             this.current = 1;
+            this.getpurcon();
         },
         // 发货地搜索功能
         searchone() {
             this.tableData = [];
-            this.getpurcon();
             this.current = 1;
+            this.getpurcon();
         },
         // 卸货地搜索功能
         searchtwo() {
             this.tableData = [];
-            this.getpurcon();
             this.current = 1;
+            this.getpurcon();
         },
         // 运单编号搜索功能
         searchtree() {
             this.tableData = [];
-            this.getpurcon();
             this.current = 1;
+            this.getpurcon();
         },
         // 日期搜索
         Times() {
             this.tableData = [];
-            this.getpurcon();
             this.current = 1;
+            this.getpurcon();
         },
        // 承运平台搜索功能
        prologistics(){
           this.tableData = [];
-          this.getpurcon();
           this.current = 1;
+          this.getpurcon();
        },
         // 表格选中数据
         purChange(val) {
@@ -820,6 +823,7 @@ export default {
         },
         // 查看基础信息函数
         allone(id){
+            this.enclosurefileList = []; // 不清会把上一条运单的附件带进来
             this.api.waybill.one({id:id})
             .then(res=>{
               if(res.data.code == 200){
@@ -937,6 +941,8 @@ export default {
             this.oneShow = true;
             this.twoShow = false;
             this.streeShow = false;
+            this.fourShow = false; // 不清的话:导入成功后关闭再打开,结果面板会和步骤一同屏
+            clearInterval(this.importTimer); // 关掉弹窗就不再继续导入
             this.pernav = "正在导入...";
             this.fileForm.importnav = "";
             this.$refs.upload.clearFiles();
@@ -950,12 +956,13 @@ export default {
               this.oneShow = false;
               this.twoShow = true;
               // 导入进度条
-              let f = setInterval(()=>{
+              clearInterval(this.importTimer); // 关闭后 5 秒内重开再导入会叠两个定时器
+              this.importTimer = setInterval(()=>{
                 this.perstep += 3;
                 if(this.perstep == 99){
                   this.perstep = 99;
+                  clearInterval(this.importTimer); // 先停定时器再提交:提交抛错时定时器会一直跑
                   this.$refs.upload.submit();
-                  clearInterval(f);
                 }
               },150)
             }
@@ -1020,8 +1027,8 @@ export default {
                         message: '删除成功!'
                     });
                     this.tableData = [];
-                    this.getpurcon();
                     this.current = 1;
+                    this.getpurcon();
                     if(this.tableData == []){
                         this.dataAva = true;
                     }

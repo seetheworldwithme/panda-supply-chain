@@ -1337,6 +1337,10 @@ export default {
         this.purTitle = this.$route.meta.title;
         // 接收主页单条数据
         this.AddData = JSON.parse(sessionStorage.getItem('queryAlls'));
+        if(!this.AddData){
+            // 直接输入网址 / 后退进入时没有待编辑的订单:回列表页,否则下面取字段就抛错
+            return this.$router.replace({name:'Waybill'});
+        }
         this.AddData.oldStartTime = [];
         this.AddData.oldStartTime.push(this.AddData.orderStartTime);
         this.AddData.oldStartTime.push(this.AddData.orderEndTime);
@@ -1368,33 +1372,27 @@ export default {
                 this.AddData.logistics = logistics  // 获取运单列表id,回显到表单
             }else{
                 let obj = JSON.parse(sessionStorage.getItem('queryAlls'))
-                this.tagsone = obj.logistics;
-                let logistics = [];
+                this.tagsone = obj.logistics || [];
+                this.AddData.logistics = this.tagsone.map(v => ({id:v.id}));  // 获取运单列表id,回显到表单
+            }
+            // 运单统计(重新关联进来的也要算:原先只在没有重新关联的分支里算,重新关联后合计还是旧值)
+            if(this.tagsone.length > 0){
+                let num = 0;
+                let numone = 0;
+                let numtwo = 0;
+                let numstr = 0;
+                // 车数
+                this.AddData.vehicles = this.tagsone.length;
                 for(let i=0;i<this.tagsone.length;i++){
-                    logistics.push({id:this.tagsone[i].id})
-                    this.AddData.logistics = logistics  // 获取运单列表id,回显到表单
+                    num += this.tagsone[i].freightAmount*1;                 // 运费金额合计
+                    numone += this.tagsone[i].subjectCount*1;               // 吨数合计
+                    numtwo += this.tagsone[i].originalTonnage*1;            // 原发吨数合计
+                    numstr += this.tagsone[i].tonnagePaid*1;                // 实收吨数合计
                 }
-                // 运单统计
-                if(this.tagsone.length > 0){
-                    let num = 0;
-                    let numone = 0;
-                    let numtwo = 0;
-                    let numstr = 0;
-                    // 车数
-                    this.AddData.vehicles = this.tagsone.length;
-                    for(let i=0;i<this.tagsone.length;i++){
-                        let obj = {id:this.tagsone[i].id};
-                        this.AddData.logistics.push(obj);
-                        num += this.tagsone[i].freightAmount*1;                     // 运费金额合计
-                        numone += this.tagsone[i].subjectCount*1;                   // 吨数合计
-                        numtwo += this.tagsone[i].originalTonnage*1;                // 原发吨数合计
-                        numstr += this.tagsone[i].tonnagePaid*1;                    // 实收吨数合计
-                    }
-                    this.AddData.freightAmount = num.toFixed(2)*1;                  // 运费金额合计
-                    this.AddData.subjectCount = numone.toFixed(2)*1;                // 吨数合计
-                    this.AddData.originalTonnage = numtwo.toFixed(2)*1;             // 原发吨数合计
-                    this.AddData.tonnagePaid = numstr.toFixed(2)*1;                 // 实收吨数合计
-                }
+                this.AddData.freightAmount = num.toFixed(2)*1;              // 运费金额合计
+                this.AddData.subjectCount = numone.toFixed(2)*1;            // 吨数合计
+                this.AddData.originalTonnage = numtwo.toFixed(2)*1;         // 原发吨数合计
+                this.AddData.tonnagePaid = numstr.toFixed(2)*1;             // 实收吨数合计
             }
             this.logistics = true;          // 承运平台显示
             this.bliLogistics = false;      // 物流公司隐藏
@@ -1638,6 +1636,7 @@ export default {
                         this.api.logistics.edit(this.AddData)
                         .then(res=>{
                             if(res.data.code == 200){
+                        this.delRemovedFiles();
                                 var that = this
                                 that.$message({
                                     type: "success",
@@ -1663,15 +1662,8 @@ export default {
                             for(let i=0;i<this.newtagesAll.length;i++){
                                 this.AddData.ids.push(this.newtagesAll[i].id)   // 获取地址名称,回显到表单
                             }
-                            // 运单关联信息
-                            if(sessionStorage.getItem('queryAll')){
-                                this.AddData.logistics = [];
-                                this.AddData.logistics = JSON.parse(sessionStorage.getItem('queryAll'));  // 获取运单列表id,回显到表单
-                            }else{
-                                this.AddData.logistics = [];
-                                let obj = JSON.parse(sessionStorage.getItem('queryAlls'));
-                                this.AddData.logistics = obj.logistics;  // 获取运单列表id,回显到表单
-                            }
+                            // 运单关联信息:只发运单号(原先重新读 queryAll 并回传整行快照,会盖掉运单在关联之后被改过的内容)
+                            this.AddData.logistics = this.tagsone.map(v => ({id:v.id}));
                             // 上传文件
                             var arr = [];
                             this.enclosurefileList.map((itme,index)=>{
@@ -1681,6 +1673,7 @@ export default {
                             this.api.logistics.edit(this.AddData)
                             .then(res=>{
                                 if(res.data.code == 200){
+                            this.delRemovedFiles();
                                     var that = this;
                                     that.$message({
                                         type: "success",
@@ -1735,12 +1728,16 @@ export default {
         },
         // 附件上传文件成功
         resfile(response, file, fileList){
-            if(response.code == 200){
+            // HTTP 200 + code≠200 或 data 为空(例如后端转 pdf 失败)时拿不到附件号,文件不能留在列表里
+            if(response.code == 200 && response.data && response.data.length){
                 this.$message({
                     type: 'success',
                     message: '上传文件成功!'
                 });
                 this.enclosurefileList = fileList;
+            }else{
+                fileList.splice(fileList.indexOf(file), 1);
+                this.$message.error(response.msg || '上传文件失败!');
             }
         },
         // 点击附件文件列表下载
@@ -1749,11 +1746,19 @@ export default {
             window.open(url)
         },
         // 删除附件文件
+        // 保存成功后才删编辑期间移除的回显附件(原先一移除就删,取消编辑后记录指向已删文件)
+        delRemovedFiles(){
+            (this.removedFileIds || []).forEach(id => this.api.addfile.del({id}));
+            this.removedFileIds = [];
+        },
         fileRemove(file,fileList){
-            if(this.fileObj[file.name] == false){
-                return false;
-            }else if(fileList){
-                return  this.api.addfile.del({id:file.response.data[0].id})
+            this.enclosurefileList = fileList; // 列表与界面一致:原先删除接口失败时提交仍会带上
+            if(!this.fileObj[file.name]){
+                // 回显的附件没有经过 before-upload:先记下,等保存成功再删
+                this.removedFileIds = (this.removedFileIds || []).concat(file.response.data[0].id);
+                return;
+            }
+            return  this.api.addfile.del({id:file.response.data[0].id})
                         .then(res=>{
                             if(res.data.code == 200){
                                 this.$message({
@@ -1763,7 +1768,6 @@ export default {
                                 this.enclosurefileList = fileList;
                             }
                         })
-            }
         },
 
         /* 
@@ -1885,8 +1889,8 @@ export default {
         },
         // 合同关联搜索功能
         contractsearch() {
-           this.contractall();
            this.contractcurrent = 1;
+           this.contractall();
         },
         // 合同编号选择表格
         contractgetCurrentRow(row){
@@ -1999,7 +2003,7 @@ export default {
         // 选择装货地 关闭弹窗
         pretendhandleClose() {
             this.pretendpurSearch = "",
-            this.pretendradio = "";        // 清空单选框
+            this.Placeradio = "";        // 清空单选框
             this.pretendtarea = "";        // 清空显示地址内容框
             this.pretendUnit = false;      // 关闭整个弹窗
         },
@@ -2007,7 +2011,7 @@ export default {
         pretendApplication(){
             this.AddData.loadingAddress = this.pretendtarea;   // 获取地址名称，回显到表单
             this.pretendUnit = false;                          // 关闭整个弹窗
-            this.pretendradio = "";                            // 清空单选框
+            this.Placeradio = "";                            // 清空单选框
             this.pretendtarea = "";                            // 清空显示地址内容框
         },
 

@@ -182,15 +182,15 @@
       created() {},
       mounted(){
           this.purTitle = this.$route.meta.title;
-          this.getpurcon();
+          this.usrTie(); // 进页面就要查累计金额:原先只在改日期时查,一进页面显示 0 元
       },
       methods: {
             // 日期搜搜
             usrTie() {
               this.nums = 0;
               this.tableData = [];
-              this.getpurcon();
               this.current = 1;
+              this.getpurcon();
               this.api.brelord.totoalMoney({
                 searchStr:'',
                 startTime:this.usrTimArray != null?this.usrTimArray[0]:"",
@@ -206,8 +206,8 @@
             prologistics(){
                 this.nums = 0;
                 this.tableData = [];
-                this.getpurcon();
                 this.current = 1;
+                this.getpurcon();
             },
             // 表格数据
             getpurcon(){
@@ -237,8 +237,8 @@
           search() {
               this.nums = 0;
               this.tableData = [];
-              this.getpurcon();
               this.current = 1;
+              this.getpurcon();
           },
       },
   };

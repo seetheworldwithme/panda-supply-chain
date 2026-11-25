@@ -725,7 +725,7 @@ export default {
     // 表格数据
     getpurcon(data) {
       this.tableData = [];
-      this.current = 1;
+      if (!data) this.current = 1; // 入参是翻页的页码:原先无条件置 1,第 2 页永远查不到
       this.loading = true;
       // 传参
       var listByPageData = {
@@ -754,25 +754,27 @@ export default {
     // 搜索功能
     search() {
       this.tableData = [];
-      this.getpurcon();
       this.current = 1;
+      this.getpurcon();
     },
     // 查询上下架搜索功能
     prologistics(data) {
       this.tableData = [];
       this.goodsStatus = data;
-      this.getpurcon();
       this.current = 1;
+      this.getpurcon();
     },
     changeType(data) {
       this.tableData = [];
       this.goodsCategory = data;
-      this.getpurcon();
       this.current = 1;
+      this.getpurcon();
     },
     // 编辑
     async editInfo(id) {
       this.editShow = true;
+      this.imgList = []; // 不清会残留上一条记录的证书图片,删它还会按旧下标删掉这条的附件
+      this.checkList = [];
       try {
         const res = await this.api.busEnterpriseLeasing.getById({ id });
         if (res.data.code == 200) {
@@ -993,7 +995,8 @@ export default {
         type: "warning",
       }).then(() => {
         this.api.busEnterpriseLeasing.del({id}).then((res) => {
-          if (res.data.cdoe == 200) {
+          // 字段名拼错(cdoe):删除成功后既不提示也不刷新
+          if (res.data.code == 200) {
             this.$message({
               type: "success",
               message: "删除成功!",

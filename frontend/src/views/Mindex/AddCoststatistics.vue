@@ -304,10 +304,10 @@ export default {
         inputinclud(){
             this.AddData.baseMoney = (Number(this.AddData.includMoney)/1.13).toFixed(2);
             this.AddData.taxAmount = (Number(this.AddData.baseMoney)*0.13).toFixed(2);
+            this.inputjxMoney(); // 销项税额变了,增值税与附加税要跟着重算
         },
         inputjxMoney(){
             let val = this.AddData;
-            if(val.jxMoney != 0){
                 this.AddData.zzMoney = (Number(val.taxAmount) - Number(val.jxMoney))>0?(Number(val.taxAmount) - Number(val.jxMoney)).toFixed(2):0;
                 if(this.AddData.zzMoney != 0){
                     this.AddData.cjMoney = (Number(val.zzMoney)*0.07).toFixed(2);
@@ -320,7 +320,6 @@ export default {
                     this.AddData.dfjyMoney = 0;
                     this.AddData.yhMoney = 0;
                 }
-            }
         },
     },
     watch:{

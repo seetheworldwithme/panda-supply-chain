@@ -1513,8 +1513,9 @@ export default {
                 if (res.data.code == 200) {
                     this.settlementtableData = res.data.data.records;
                     // console.log('展示图数据'+res.data.data.records)
-                    this.multiplesettlement = res.data.data.records[0];
-                    this.SelectValue = this.multiplesettlement.contractType*1;
+                    // ids 查不到合同时原先在这里抛错,path 不会被清,之后每次进本页都还按旧 ids 查
+                    this.multiplesettlement = res.data.data.records[0] || {};
+                    this.SelectValue = (this.multiplesettlement.contractType || 0)*1;
                     this.settlementtotal = res.data.data.total;
                     sessionStorage.setItem('path', '');
                     sessionStorage.setItem('pathID', '');
@@ -1738,14 +1739,14 @@ export default {
         // 搜索全部功能
         jshxpurSearchs() {
             this.settlementtableData = [];
-            this.settlementgetpurcon();
             this.settlementcurrent = 1;
+            this.settlementgetpurcon();
         },
         // 日期搜索
         DataTime() {
             this.settlementtableData = [];
-            this.settlementgetpurcon();
             this.settlementcurrent = 1;
+            this.settlementgetpurcon();
         },
 
         /*
@@ -1810,20 +1811,20 @@ export default {
         // 供应商搜索
         ClickOppositeName() {
             this.tableData = [];
-            this.getpurcon();
             this.current = 1;
+            this.getpurcon();
         },
         // 结算时间搜索
         Time() {
             this.tableData = [];
-            this.getpurcon();
             this.current = 1;
+            this.getpurcon();
         },
         // 全部搜索
         search() {
             this.tableData = [];
-            this.getpurcon();
             this.current = 1;
+            this.getpurcon();
         },
 
         /*
@@ -1872,20 +1873,20 @@ export default {
         // 日期搜索
         waterDataTime() {
             this.watertableData = [];
-            this.watertgetpurcon();
             this.watertcurrent = 1;
+            this.watertgetpurcon();
         },
         // 企业名称搜索
         waterClickOppositeName() {
             this.watertableData = [];
-            this.watertgetpurcon();
             this.watertcurrent = 1;
+            this.watertgetpurcon();
         },
         // 全部搜索
         watersearch() {
             this.watertableData = [];
-            this.watertgetpurcon();
             this.watertcurrent = 1;
+            this.watertgetpurcon();
         },
 
         /*
@@ -1935,26 +1936,26 @@ export default {
         // 银行名称搜索
         keyupBanks() {
             this.newwatertableData = [];
-            this.newwatertgetpurcon();
             this.newwatertcurrent = 1;
+            this.newwatertgetpurcon();
         },
         // 日期搜索
         newwaterDataTime() {
             this.newwatertableData = [];
-            this.newwatertgetpurcon();
             this.newwatertcurrent = 1;
+            this.newwatertgetpurcon();
         },
         // 企业名称搜索
         newwaterClickOppositeName() {
             this.newwatertableData = [];
-            this.newwatertgetpurcon();
             this.newwatertcurrent = 1;
+            this.newwatertgetpurcon();
         },
         // 全部搜索
         newwatersearch() {
             this.newwatertableData = [];
-            this.newwatertgetpurcon();
             this.newwatertcurrent = 1;
+            this.newwatertgetpurcon();
         },
 
         /*
@@ -1999,26 +2000,26 @@ export default {
         // 卸货地搜索
         keyupTonnage() {
             this.TonnagwatertableData = [];
-            this.Tonnagpurcon();
             this.Tonnagnewwatertcurrent = 1;
+            this.Tonnagpurcon();
         },
         // 日期搜索
         TonnageDataTime() {
             this.TonnagwatertableData = [];
-            this.Tonnagpurcon();
             this.Tonnagnewwatertcurrent = 1;
+            this.Tonnagpurcon();
         },
         // 装货地搜索
         TonnageOppositeName() {
             this.TonnagwatertableData = [];
-            this.Tonnagpurcon();
             this.Tonnagnewwatertcurrent = 1;
+            this.Tonnagpurcon();
         },
         // 全部搜索
         AllTonnageSearch() {
             this.TonnagwatertableData = [];
-            this.Tonnagpurcon();
             this.Tonnagnewwatertcurrent = 1;
+            this.Tonnagpurcon();
         },
         //查看合同
         purSee(row) {
@@ -2119,7 +2120,7 @@ export default {
             let arrs = ['.pdf', '.PDF', 'docx', 'DOCX', '.doc', '.DOC'];
             if (!arrs.includes(this.geshi)) {
                 this.itemshow = false;
-                this.api.file.preFIle({ file_id: this.oneData.id })
+                this.api.file.preFIle({ file_id: this.oneData.response.data[0].id }) // 附件是 {name, response} 包装对象,原先取不到文件号
                     .then(res => {
                         if (res.data.code == 200) {
                             this.loadingimg = false;

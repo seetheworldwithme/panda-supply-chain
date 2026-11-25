@@ -327,7 +327,7 @@
             </el-steps>
             <!-- 步骤一 -->
             <div class="importone" v-show="oneShow">
-            <el-form :model="fileForm" :rules="rules" ref="fileForm">
+            <el-form :model="fileForm" :rules="fileRules" ref="fileForm">
                 <el-col :span="3" style="margin-left:35px;">
                 <span style="color:red;">* </span>
                 <span style="line-height: 32px;">选择导入文件</span>
@@ -427,7 +427,7 @@ export default {
             fileForm:{
                 importnav:'',
             },
-            rules: {
+            fileRules: { // 导入表单专用:原先与下面的 rules 同名被覆盖,不选文件也能点「导入」
                 importnav: [
                     { required: true, message: '请上传xlsx 或 xls文件', trigger: 'blur' },
                 ],
@@ -597,6 +597,10 @@ export default {
         // 编辑开票金额失去焦点事件
         CollectionloseFcous(index,val){
             if(this.newbusCount != ''){
+                if(String(this.newbusCount).trim() === '' || !(Number(this.newbusCount) >= 0)){
+                    // 输入字母得 NaN(提交成 null)、空格存成 0,原先照样提示「编辑成功」
+                    return this.$message.warning('开票金额必须是不小于 0 的数字!');
+                }
                 val.jejustShow = false;
                 this.editAdjustForm = val;
                 if(this.editAdjustForm.busCount != this.newbusCount *1){
@@ -625,6 +629,10 @@ export default {
         // 编辑开票数量失去焦点事件
         logistloseFcous(index,val){
             if(this.newlogisticsCount != ''){
+                if(String(this.newlogisticsCount).trim() === '' || !(Number(this.newlogisticsCount) >= 0)){
+                    // 输入字母得 NaN(提交成 null)、空格存成 0,原先照样提示「编辑成功」
+                    return this.$message.warning('开票数量必须是不小于 0 的数字!');
+                }
                 val.sljustShow = false;
                 this.editAdjustForm = val;
                 if(this.editAdjustForm.logisticsCount != this.newlogisticsCount *1){
@@ -705,16 +713,16 @@ export default {
         // 搜索功能
         search() {
             this.tableData = [];
-            this.getpurcon();
             this.current = 1;
+            this.getpurcon();
             this.dialogVisibledata = false;
             this.AdjustForm = {};
         },
         // 搜索企业
         AdjustChang(){
             this.tableData = [];
-            this.getpurcon();
             this.current = 1;
+            this.getpurcon();
             this.dialogVisibledata = false;
             this.AdjustForm = {};
         },
@@ -734,8 +742,8 @@ export default {
                     message: '删除成功!'
                   });
                     this.tableData = [];
-                    this.getpurcon();
                     this.current = 1;
+                    this.getpurcon();
                     if(this.tableData == []){
                         this.dataAva = true;
                     }
@@ -785,6 +793,8 @@ export default {
             this.oneShow = true;
             this.twoShow = false;
             this.streeShow = false;
+            this.fourShow = false; // 不清的话:导入成功后关闭再打开,结果面板会和步骤一同屏
+            clearInterval(this.importTimer); // 关掉弹窗就不再继续导入
             this.pernav = "正在导入...";
             this.fileForm.importnav = "";
             this.$refs.upload.clearFiles();
@@ -798,12 +808,13 @@ export default {
                     this.oneShow = false;
                     this.twoShow = true;
                     // 导入进度条
-                    let f = setInterval(()=>{
+                    clearInterval(this.importTimer); // 关闭后 5 秒内重开再导入会叠两个定时器
+                    this.importTimer = setInterval(()=>{
                         this.perstep += 3;
                         if(this.perstep == 99){
-                        this.perstep = 99;
-                        this.$refs.upload.submit();
-                        clearInterval(f);
+                            this.perstep = 99;
+                            clearInterval(this.importTimer); // 先停定时器再提交:提交抛错(例如已离开页面)时定时器会一直跑
+                            this.$refs.upload.submit();
                         }
                     },150)
                 }
@@ -837,8 +848,8 @@ export default {
             this.fourShow = false;         // 成功
             this.pernav = "正在导入...";
             this.streeShow = false; 
-            this.getpurcon();
             this.current = 1;
+            this.getpurcon();
             this.$refs.upload.clearFiles();
             this.fileForm.importnav = "";
         },

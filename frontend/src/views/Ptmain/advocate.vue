@@ -96,37 +96,51 @@
       methods: {
           // 通过
           statsh(data){
-            data.status = 1;
-            this.api.busopin.edit(data)
-            .then(res=>{
-              that.$message({
-                  type: "success",
-                  message: "留言审核通过!",
-                  duration:500,  
-                  onClose(){
-                    this.tableData = [];
-                    this.getpurcon();
-                    this.current = 1;
+              data.status = 1;
+              this.api.busopin.edit(data)
+              .then(res=>{
+                  // 原先引用未定义的 that:审核后没有提示也不刷新,失败时这一行也已显示成「已审核」
+                  // $message 的 onClose 里 this 是消息组件自己,页面实例要先存下来
+                  if(res.data.code != 200){
+                      data.status = 0;
+                      return;
                   }
-              });
-            })
+                  const that = this;
+                  that.$message({
+                      type: "success",
+                      message: "留言审核通过!",
+                      duration:500,
+                      onClose(){
+                          that.tableData = [];
+                          that.current = 1;
+                          that.getpurcon();
+                      }
+                  });
+              })
           },
           // 拒绝
           nostat(data){
-            data.status = 2;
-            this.api.busopin.edit(data)
-            .then(res=>{
-              that.$message({
-                  type: "success",
-                  message: "留言审核拒绝!",
-                  duration:500,  
-                  onClose(){
-                    this.tableData = [];
-                    this.getpurcon();
-                    this.current = 1;
+              data.status = 2;
+              this.api.busopin.edit(data)
+              .then(res=>{
+                  // 原先引用未定义的 that:审核后没有提示也不刷新,失败时这一行也已显示成「已审核」
+                  // $message 的 onClose 里 this 是消息组件自己,页面实例要先存下来
+                  if(res.data.code != 200){
+                      data.status = 0;
+                      return;
                   }
-              });
-            })
+                  const that = this;
+                  that.$message({
+                      type: "success",
+                      message: "留言审核拒绝!",
+                      duration:500,
+                      onClose(){
+                          that.tableData = [];
+                          that.current = 1;
+                          that.getpurcon();
+                      }
+                  });
+              })
           },
           // 表格数据
           getpurcon(){
@@ -152,8 +166,8 @@
           // 搜索功能
           search() {
               this.tableData = [];
-              this.getpurcon();
               this.current = 1;
+              this.getpurcon();
           },
       },
   };

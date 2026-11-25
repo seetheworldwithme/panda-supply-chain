@@ -131,14 +131,14 @@ export default {
         // 搜索功能
         search() {
             this.tableData = [];
-            this.getpurcon();
             this.current = 1;
+            this.getpurcon();
         },
         // 时间搜索
         Times() {
             this.tableData = [];
-            this.getpurcon();
             this.current = 1;
+            this.getpurcon();
         },
     },
 };

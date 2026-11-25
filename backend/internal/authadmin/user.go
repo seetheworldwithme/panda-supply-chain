@@ -222,6 +222,9 @@ func (s *Service) userSupList(w http.ResponseWriter, r *http.Request) {
 // userAdd = controller.add:账号查重(602) + bcrypt + save,返回新 id
 func (s *Service) userAdd(w http.ResponseWriter, r *http.Request) {
 	m := bodyMap(r)
+	if !s.requirePlatform(w, r) { // 只用于创建平台账号(setup/PtUserList),原先任何登录用户可建 accountType=5 的账号
+		return
+	}
 	var one int
 	err := s.DB.Chain.QueryRow("SELECT 1 FROM chain_auth_user WHERE account = ? LIMIT 1", m["account"]).Scan(&one)
 	if err != nil && err != sql.ErrNoRows {
@@ -252,6 +255,9 @@ func (s *Service) userAdd(w http.ResponseWriter, r *http.Request) {
 func (s *Service) userUpdateById(w http.ResponseWriter, r *http.Request) {
 	m := bodyMap(r)
 	if m["isAcOperation"] == true {
+		if !s.requirePlatform(w, r) { // 企业认证通过是平台审批动作,原先任何人都能"自认证"
+			return
+		}
 		s.userAuthEtc(w, r, m)
 		return
 	}
@@ -260,10 +266,16 @@ func (s *Service) userUpdateById(w http.ResponseWriter, r *http.Request) {
 		platform.Unknown(w)
 		return
 	}
+	if !s.canManage(r, old) { // 原先按 body 的 id 直写:任何登录用户可改任何账号
+		deny(w)
+		return
+	}
 	vals := pick(m, userWriteCols...)
 	if str(m, "handleResult") == "1" {
 		vals["level"] = 1
 	}
+	scrubUserVals(auth.From(r.Context()), vals, s.isEnterpriseAdmin(r, auth.From(r.Context())))
+	scrubUserBody(auth.From(r.Context()), m)
 	err = platform.WithTx(s.DB.Chain, func(tx *sql.Tx) error {
 		if err := platform.TxUpdateByIDNoFill(tx, "chain_auth_user", m["id"], vals); err != nil {
 			return err
@@ -390,6 +402,10 @@ func (s *Service) userAuthEtc(w http.ResponseWriter, r *http.Request, m map[stri
 // userDeleteById = removeById + 文案
 func (s *Service) userDeleteById(w http.ResponseWriter, r *http.Request) {
 	m := bodyMap(r)
+	if !s.canManageID(r, m["id"]) {
+		deny(w)
+		return
+	}
 	if err := platform.DeleteByID(s.DB.Chain, "chain_auth_user", m["id"]); err != nil {
 		platform.Unknown(w)
 		return
@@ -400,6 +416,12 @@ func (s *Service) userDeleteById(w http.ResponseWriter, r *http.Request) {
 // userDelBatch = removeByIds + "删除成功"
 func (s *Service) userDelBatch(w http.ResponseWriter, r *http.Request) {
 	ids, _ := bodyMap(r)["ids"].([]any)
+	for _, id := range ids {
+		if !s.canManageID(r, id) {
+			deny(w)
+			return
+		}
+	}
 	if err := platform.DeleteByIDs(s.DB.Chain, "chain_auth_user", ids); err != nil {
 		platform.Unknown(w)
 		return
@@ -410,6 +432,10 @@ func (s *Service) userDelBatch(w http.ResponseWriter, r *http.Request) {
 // userCancelBuser = mapper.cancelBuser:清经纪人字段
 func (s *Service) userCancelBuser(w http.ResponseWriter, r *http.Request) {
 	id := bodyMap(r)["id"]
+	if !s.canManageID(r, id) {
+		deny(w)
+		return
+	}
 	if _, err := s.DB.Chain.Exec(
 		"UPDATE chain_auth_user SET ware_identity = NULL, servicer_url = NULL WHERE id = ?", id); err != nil {
 		platform.Unknown(w)
@@ -421,6 +447,10 @@ func (s *Service) userCancelBuser(w http.ResponseWriter, r *http.Request) {
 // userLogOffUser = service.logOffUser:删用户 + 5 张业务表级联删除(Java 无事务,Go 收 WithTx)
 func (s *Service) userLogOffUser(w http.ResponseWriter, r *http.Request) {
 	id := bodyMap(r)["id"]
+	if !s.canManageID(r, id) {
+		deny(w)
+		return
+	}
 	err := platform.WithTx(s.DB.Chain, func(tx *sql.Tx) error {
 		if err := platform.TxDeleteByMap(tx, "chain_auth_user", map[string]any{"id": id}); err != nil {
 			return err
@@ -493,6 +523,10 @@ func inviteCodeGet(key string) (string, bool) {
 // handleResult=1 时 level=1 并继承当前操作者的单库设置
 func (s *Service) userListUpdByList(w http.ResponseWriter, r *http.Request) {
 	m := bodyMap(r)
+	if !s.canManageID(r, m["id"]) {
+		deny(w)
+		return
+	}
 	vals := pick(m, userWriteCols...)
 	if str(m, "handleResult") == "1" {
 		vals["level"] = 1
@@ -508,6 +542,8 @@ func (s *Service) userListUpdByList(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
+	scrubUserVals(auth.From(r.Context()), vals, s.isEnterpriseAdmin(r, auth.From(r.Context())))
+	scrubUserBody(auth.From(r.Context()), m)
 	if _, err := platform.UpdateByIDNoFill(s.DB.Chain, "chain_auth_user", m["id"], vals); err != nil {
 		platform.Unknown(w)
 		return
@@ -519,6 +555,27 @@ func (s *Service) userListUpdByList(w http.ResponseWriter, r *http.Request) {
 func (s *Service) assignRole(w http.ResponseWriter, r *http.Request) {
 	m := bodyMap(r)
 	roles, _ := m["userRoles"].([]any)
+	if !s.canManageID(r, m["userId"]) { // 原先任何登录用户可给任何账号(含自己)分配任何角色
+		deny(w)
+		return
+	}
+	if !isPlatformAdmin(auth.From(r.Context())) {
+		roleIDs := []any{}
+		for _, row := range roles {
+			if rm, ok := row.(map[string]any); ok {
+				rm["user_id"] = m["userId"] // 只能写给目标账号,不能夹带别人的 user_id
+				roleIDs = append(roleIDs, rm["role_id"])
+			}
+		}
+		var n int
+		if len(roleIDs) > 0 {
+			marks := strings.TrimSuffix(strings.Repeat("?,", len(roleIDs)), ",")
+			if err := s.DB.Chain.QueryRow("SELECT COUNT(*) FROM chain_auth_role WHERE id IN ("+marks+") AND role_type=1", roleIDs...).Scan(&n); err != nil || n > 0 {
+				deny(w) // 平台角色只有平台管理员能分配
+				return
+			}
+		}
+	}
 	err := platform.WithTx(s.DB.Chain, func(tx *sql.Tx) error {
 		if _, err := tx.Exec("DELETE FROM chain_auth_use_role WHERE user_id = ?", m["userId"]); err != nil {
 			return err

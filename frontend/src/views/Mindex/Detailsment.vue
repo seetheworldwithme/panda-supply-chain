@@ -339,16 +339,16 @@ export default {
     methods: {
         // 关联记录表格选中数据
         purChange(val) {
-            for(let i=0;i<val.length;i++){
-                this.multipleSelection.push(val[i].id) 
-            }
+            this.multipleSelection = val.map(row => row.id); // 原先只追加不清:取消勾选的记录仍在 ids 里,会被一起解除关联
         },
         // 解除关联按钮
         detile(){ 
             if(this.multipleSelection.length > 0){
-                this.api.settRec.relieve({ids:this.multipleSelection})
+                this.$confirm("确定解除选中的 " + this.multipleSelection.length + " 条关联吗?", "提示", { type: 'warning' }) // 解除后不可恢复,原先没有确认
+                .then(() => this.api.settRec.relieve({ids:this.multipleSelection}))
                 .then(res=>{
                     if(res.data.code == 200){
+                        this.multipleSelection = []; // 不清的话下次不勾选直接点会重发旧 id
                         this.$message({
                             message: '取消关联成功',
                             type: 'success'
@@ -368,7 +368,7 @@ export default {
                         this.watertableData = [];
                         this.watertgetpurcon();                 // 票据列表 
                     }
-                })
+                }).catch(() => {}); // 取消确认
             }else{
                 this.$message({
                     message: '至少选中一条关联记录数据!',
@@ -382,6 +382,7 @@ export default {
         },
         // 关联记录信息tab选中条数
         settlementhandleCurrentChange(currentRow) {
+            if(!currentRow) return; // 列表刷新后原高亮行不在新数据里时,回调收到 null
             this.multiplesettlement = currentRow;
             if(this.multiplesettlement.type == 1){
                 this.tabs = [
@@ -448,14 +449,14 @@ export default {
         // 搜索全部功能
         jshxpurSearchs() {
             this.settlementtableData = [];
-            this.settlementgetpurcon();
             this.settlementcurrent = 1;
+            this.settlementgetpurcon();
         },
         // 日期搜索
         DataTime() {
             this.settlementtableData = [];
-            this.settlementgetpurcon();
             this.settlementcurrent = 1;
+            this.settlementgetpurcon();
         },
 
         /*
@@ -496,20 +497,20 @@ export default {
         // 供应商搜索
         ClickOppositeName() {
             this.tableData = [];
-            this.getpurcon();
             this.current = 1;
+            this.getpurcon();
         },
         // 结算时间搜索
         Time() {
             this.tableData = [];
-            this.getpurcon();
             this.current = 1;
+            this.getpurcon();
         },
         // 全部搜索
         search() {
             this.tableData = [];
-            this.getpurcon();
             this.current = 1;
+            this.getpurcon();
         },
 
         /*
@@ -566,20 +567,20 @@ export default {
         // 日期搜索
         waterDataTime() {
             this.watertableData = [];
-            this.watertgetpurcon();
             this.watertcurrent = 1;
+            this.watertgetpurcon();
         },
         // 企业名称搜索
         waterClickOppositeName() {
             this.watertableData = [];
-            this.watertgetpurcon();
             this.watertcurrent = 1;
+            this.watertgetpurcon();
         },
         // 全部搜索
         watersearch() {
             this.watertableData = [];
-            this.watertgetpurcon();
             this.watertcurrent = 1;
+            this.watertgetpurcon();
         },
     },
 };

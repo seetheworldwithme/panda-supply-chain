@@ -720,6 +720,10 @@ export default {
         this.username = sessionStorage.getItem('username');
         this.http  = this.$store.state.http;                 // IP地址
     },
+    beforeDestroy(){
+        // 各图表实例都是局部变量,离开页面时没人释放:按 echarts 在容器上打的标记逐个销毁
+        this.$el.querySelectorAll('[_echarts_instance_]').forEach(el => echarts.getInstanceByDom(el).dispose());
+    },
     mounted(){
         // 提示看板
         this.tskbAll();
@@ -823,6 +827,10 @@ export default {
                 }
                 b.push([{name:res.data.data[i].loadingArea}, {name:res.data.data[i].unloadingArea,value:res.data.data[i].logCount}])
                 d.push(b[i]);
+            }
+            if(d.length>0){ // 循环里只在切换发货地时入组,最后一组(或只有一个发货地)要补上
+                c.push([d[0][0].name,d])
+                color.push('rgb(166,200,76)')
             }
             for(let o=0;o<c.length;o++){
                 c[o][1].push([{name:''}, {name:c[o][0],value:100}])
@@ -1416,7 +1424,7 @@ export default {
             // 进项占比报警
             this.api.bill.selJxzb()
             .then(res=>{
-                if(res.data.code == 200 && res.data.data != []){
+                if(res.data.code == 200 && Array.isArray(res.data.data)){
                     for(let i=0;i<res.data.data.length;i++){
                         let str = res.data.data[i];
                         let att = str.substring(15,27);
@@ -1434,7 +1442,7 @@ export default {
             // 税负率报警
             this.api.bill.selZeroTax()
             .then(res=>{
-                if(res.data.code == 200 && res.data.data != []){
+                if(res.data.code == 200 && Array.isArray(res.data.data)){
                     for(let i=0;i<res.data.data.length;i++){
                     let str = res.data.data[i];
                     let att = str.substring(12,18);
@@ -1505,12 +1513,14 @@ export default {
         // 采购下拉菜单
         settlemenchange(name,type){
             this.settlementtime = name;
+            this.saletime = name; // 采购、销售两块数字出自同两个统计接口,口径是同一个:两处文案保持一致
             this.countCapital(type);
             this.countlistByPage(type);
         },
         // 销售下拉菜单
-        salechange(name){
-            this.saletime = name;
+        salechange(name,type){
+            // 原先只改文案、不重新查询:选了"本月",下面的数字还是上一个区间的
+            this.settlemenchange(name,type);
         },
 
         /* 
@@ -2475,6 +2485,8 @@ export default {
             this.oneShow = true;
             this.twoShow = false;
             this.streeShow = false;
+            this.fourShow = false; // 不清的话:导入成功后关闭再打开,结果面板会和步骤一同屏
+            clearInterval(this.importTimer); // 关掉弹窗就不再继续导入
             this.pernav = "正在导入...";
             this.fileForm.importnav = "";
             this.$refs.upload.clearFiles();
@@ -2488,12 +2500,13 @@ export default {
                 this.oneShow = false;
                 this.twoShow = true;
                 // 导入进度条
-                let f = setInterval(()=>{
+                clearInterval(this.importTimer); // 关闭后 5 秒内重开再导入会叠两个定时器
+                this.importTimer = setInterval(()=>{
                     this.perstep += 3;
                     if(this.perstep == 99){
-                    this.perstep = 99;
-                    this.$refs.upload.submit();
-                    clearInterval(f);
+                        this.perstep = 99;
+                        clearInterval(this.importTimer); // 先停定时器再提交:提交抛错(例如已离开页面)时定时器会一直跑
+                        this.$refs.upload.submit();
                     }
                 },150) 
             }

@@ -300,8 +300,8 @@ export default {
       // 下拉查询
       prologistics(){
           this.tableData = [];
-          this.getpurcon();
           this.current = 1;
+          this.getpurcon();
       },
       // 表格选中数据
       purChange(val) {
@@ -439,8 +439,8 @@ export default {
       // 搜索功能
       search() {
           this.tableData = [];
-          this.getpurcon();
           this.current = 1;
+          this.getpurcon();
       },
       // 删除企业信息
       delPurs(data){
@@ -457,8 +457,8 @@ export default {
                   message: '删除成功!'
                 });
                 this.tableData = [];
-                this.getpurcon();
                 this.current = 1;
+                this.getpurcon();
               }
             })
           }).catch(() => {
@@ -471,14 +471,14 @@ export default {
         memberChange(e){
           this.isMember = e
           this.tableData = [];
-          this.getpurcon();
           this.current = 1;
+          this.getpurcon();
         },
         signChange(e){
           this.isSign = e
           this.tableData = [];
-          this.getpurcon();
           this.current = 1;
+          this.getpurcon();
         }
     },
 };

@@ -192,6 +192,10 @@ export default {
     }
   },
   mounted() {},
+  beforeDestroy(){
+    // 回车登录的全局监听只在登录成功时清除:去注册页 / 忘记密码页后按回车会调到已销毁的实例
+    document.onkeydown = undefined;
+  },
   methods: {
     // select(item) {
     //   this.sel = item.id;
@@ -245,7 +249,7 @@ export default {
                 document.onkeydown = undefined;
                 if(res.data.data.level == 1){
                   // 企业路由刷新
-                  this.$store.dispatch('asynSetRoutes');
+                  this.routesReady = this.$store.dispatch('asynSetRoutes'); // 等动态路由注册完再跳转(见下面的 onClose)
                   sessionStorage.setItem('Authorization',"Bearer "+ res.data.data.token);
                   sessionStorage.setItem('companyName',res.data.data.companyName); 
                   sessionStorage.setItem('username',res.data.data.username);
@@ -261,7 +265,16 @@ export default {
                         message: "登录成功!",
                         duration:1000,
                         onClose:()=>{
-                          this.$router.push({name:"Main"});
+                          // 原先直接 push:菜单接口比提示框的 1 秒慢时,Main 还没注册就跳转(白屏 / 404)
+                          (this.routesReady || Promise.resolve()).then(() => {
+                            if(this.$store.state.newstate === false){
+                              // 没有分配到任何菜单:进了 Main 也是白屏
+                              sessionStorage.clear();
+                              this.$message.warning('管理员未分配权限,请尽快联系管理员!');
+                              return;
+                            }
+                            this.$router.push({name:"Main"});
+                          }, () => {}); // 菜单接口失败(例如登录态已失效,拦截器会整页刷新)时不跳转
                         }
                       })
                     // }else{
@@ -278,7 +291,7 @@ export default {
                 }
                 if(res.data.data.level == 2){
                   // 平台路由刷新
-                  this.$store.dispatch('asynSetplatformRoutes')
+                  this.routesReady = this.$store.dispatch('asynSetplatformRoutes') // 同上
                   sessionStorage.setItem('Authorization',"Bearer "+ res.data.data.token)
                   sessionStorage.setItem('companyName',res.data.data.companyName)
                   sessionStorage.setItem('username',res.data.data.username)
@@ -292,7 +305,16 @@ export default {
                         message: "登录成功!",
                         duration:1000,
                         onClose:()=>{
-                          this.$router.push({name:"Main"});
+                          // 原先直接 push:菜单接口比提示框的 1 秒慢时,Main 还没注册就跳转(白屏 / 404)
+                          (this.routesReady || Promise.resolve()).then(() => {
+                            if(this.$store.state.newstate === false){
+                              // 没有分配到任何菜单:进了 Main 也是白屏
+                              sessionStorage.clear();
+                              this.$message.warning('管理员未分配权限,请尽快联系管理员!');
+                              return;
+                            }
+                            this.$router.push({name:"Main"});
+                          }, () => {}); // 菜单接口失败(例如登录态已失效,拦截器会整页刷新)时不跳转
                         }
                       })
                     // }else{

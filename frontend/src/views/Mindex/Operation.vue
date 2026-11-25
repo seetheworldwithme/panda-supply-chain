@@ -655,20 +655,20 @@ export default {
         // 搜索供应商
         newwaterClickOppositeNameone() {
             this.settlementtableData = [];
-            this.settlementgetpurcon();
             this.settlementcurrent = 1;
+            this.settlementgetpurcon();
         },
         // 搜索全部功能
         jshxpurSearchs() {
             this.settlementtableData = [];
-            this.settlementgetpurcon();
             this.settlementcurrent = 1;
+            this.settlementgetpurcon();
         },
         // 日期搜索
         DataTime() {
             this.settlementtableData = [];
-            this.settlementgetpurcon();
             this.settlementcurrent = 1;
+            this.settlementgetpurcon();
         },
 
         /*
@@ -721,20 +721,20 @@ export default {
         // 日期搜索
         newwaterDataTime() {
             this.newwatertableData = [];
-            this.newwatertgetpurcon();
             this.newwatertcurrent = 1;
+            this.newwatertgetpurcon();
         },
         // 客户搜索
         newwaterClickOppositeName() {
             this.newwatertableData = [];
-            this.newwatertgetpurcon();
             this.newwatertcurrent = 1;
+            this.newwatertgetpurcon();
         },
         // 全部搜索
         newwatersearch() {
             this.newwatertableData = [];
-            this.newwatertgetpurcon();
             this.newwatertcurrent = 1;
+            this.newwatertgetpurcon();
         },
 
         /*
@@ -804,20 +804,20 @@ export default {
         // 供应商搜索
         ClickOppositeName() {
             this.tableData = [];
-            this.getpurcon();
             this.current = 1;
+            this.getpurcon();
         },
         // 结算时间搜索
         Time() {
             this.tableData = [];
-            this.getpurcon();
             this.current = 1;
+            this.getpurcon();
         },
         // 全部搜索
         search() {
             this.tableData = [];
-            this.getpurcon();
             this.current = 1;
+            this.getpurcon();
         },
 
         /*
@@ -885,8 +885,8 @@ export default {
         // 日期搜索
         waterDataTime() {
             this.watertableData = [];
-            this.watertgetpurcon();
             this.watertcurrent = 1;
+            this.watertgetpurcon();
         },
         // // 企业名称搜索
         // waterClickOppositeName() {
@@ -897,8 +897,8 @@ export default {
         // 全部搜索
         watersearch() {
             this.watertableData = [];
-            this.watertgetpurcon();
             this.watertcurrent = 1;
+            this.watertgetpurcon();
         },
     },
 };

@@ -616,7 +616,7 @@ export default {
             this.api.areaInfo.all({parentCode:id})
             .then(res=>{
                 if(res.data.code == 200){
-                    this.AddData.areaCode = [];                 // 县 区
+                    this.AddData.areaCode = '';                 // 县 区(原先置成数组,被提交到字符串字段)
                     this.AddData.countyCode = '';               // 乡
                     this.countyOptions = res.data.data;
                 }

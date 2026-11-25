@@ -309,7 +309,8 @@ export default new Vuex.Store({
     },
     // 登录设置企业路由菜单
     asynSetRoutes:(store)=>{
-      api.authMenu.selUserMenus()
+      // 把请求的 promise 交回去:登录页要等动态路由注册完再跳转
+      return api.authMenu.selUserMenus()
       .then(res=>{
         if(res.data.code == 200){
           let backMenus = res.data.data.menus;
@@ -477,7 +478,8 @@ export default new Vuex.Store({
     },
     // 登录设置平台路由菜单
     asynSetplatformRoutes:(store)=>{
-      api.authMenu.selUserMenus()
+      // 把请求的 promise 交回去:登录页要等动态路由注册完再跳转
+      return api.authMenu.selUserMenus()
       .then(res=>{
         if(res.data.code == 200){
           let PtbackMenus = res.data.data.menus;

@@ -676,20 +676,18 @@ export default {
       this.yeImgUrl = file.url;
       this.imgyeVisible = true;
     },
+    // 保存成功后删除被移除的旧 banner 文件
+    delRemovedFiles() {
+      (this.removedFileIds || []).forEach((id) => this.api.addfile.del({ id }));
+      this.removedFileIds = [];
+    },
     // 删除banner1
     yeRemove(file, fileList) {
-        this.api.addfile.del({id:this.editData.banner1})
-        .then(res=>{
-            if(res.data.code == 200){
-                this.$message({
-                    type: 'warning',
-                    message: '删除文件成功!'
-                });
+        // 先只从界面移除并记下旧文件,保存成功后再删:原先一点 × 就删服务器文件,随后点「取消」轮播图就裂了
+        (this.removedFileIds = this.removedFileIds || []).push(this.editData.banner1);
                 this.yeBtnDealImg = fileList.length >= 1;
                 this.editData.banner1 = "";
                 this.listyearr = [];
-            }
-        })
     },
     // 上传banner2
     addmplist(response, file, fileList) {
@@ -709,18 +707,11 @@ export default {
     },
     // 删除banner2
     mpRemove(file, fileList) {
-      this.api.addfile.del({id:this.editData.banner2})
-        .then(res=>{
-            if(res.data.code == 200){
-                this.$message({
-                    type: 'warning',
-                    message: '删除文件成功!'
-                });
+      // 先只从界面移除并记下旧文件,保存成功后再删:原先一点 × 就删服务器文件,随后点「取消」轮播图就裂了
+      (this.removedFileIds = this.removedFileIds || []).push(this.editData.banner2);
                 this.editData.banner2 = "";
                 this.listmparr = [];
                 this.mpBtnDealImg = fileList.length >= 1 ? true : false;
-            }
-        })
     },
     // 上传banner3
     addjclist(response, file, fileList) {
@@ -740,18 +731,11 @@ export default {
     },
     // 删除banner3
     jcRemove(file, fileList) {
-      this.api.addfile.del({id:this.editData.banner3})
-        .then(res=>{
-            if(res.data.code == 200){
-                this.$message({
-                    type: 'warning',
-                    message: '删除文件成功!'
-                });
+      // 先只从界面移除并记下旧文件,保存成功后再删:原先一点 × 就删服务器文件,随后点「取消」轮播图就裂了
+      (this.removedFileIds = this.removedFileIds || []).push(this.editData.banner3);
                 this.jcBtnDealImg = fileList.length >= 1;
                 this.editData.banner3 = "";
                 this.listjcarr = [];
-            }
-        })
     },
     // 上传banner4
     addselelist(response, file, fileList) {
@@ -771,18 +755,11 @@ export default {
     },
     // 删除banner4
     seleRemove(file, fileList) {
-        this.api.addfile.del({id:this.seleData.banner4})
-        .then(res=>{
-            if(res.data.code == 200){
-                this.$message({
-                    type: 'warning',
-                    message: '删除文件成功!'
-                });
+        // 先只从界面移除并记下旧文件,保存成功后再删:原先一点 × 就删服务器文件,随后点「取消」轮播图就裂了
+        (this.removedFileIds = this.removedFileIds || []).push(this.seleData.banner4);
                 this.seleDealImg = fileList.length >= 1;
                 this.seleData.banner4 = "";
                 this.selelistyear = [];
-            }
-        })
     },
     // 表格数据
     getpurcon() {
@@ -853,12 +830,14 @@ export default {
     },
     // 熊猫甄选会员配置信息取消
     selseShowClose() {
+  this.removedFileIds = []; // 取消 / 关闭:不清的话下次保存别的配置会把仍被引用的 banner 删掉
       this.selementShow = false;
       this.getpurcon();
       this.seleData = {};
     },
     // 取消熊猫甄选会员配置信息提交
     seleresetForm() {
+  this.removedFileIds = []; // 取消 / 关闭:不清的话下次保存别的配置会把仍被引用的 banner 删掉
       this.selementShow = false;
       this.getpurcon();
       this.seleData = {};
@@ -870,6 +849,7 @@ export default {
         if (valid) {
           this.api.busconfig.edit(this.seleData).then((res) => {
             if (res.data.code == 200) {
+              this.delRemovedFiles();
               this.$message({
                 type: "success",
                 message: "熊猫甄选会员信息配置成功!",
@@ -926,12 +906,14 @@ export default {
     },
     // 会员配置信息取消
     editpaymentShowClose() {
+  this.removedFileIds = []; // 取消 / 关闭:不清的话下次保存别的配置会把仍被引用的 banner 删掉
       this.editpaymentShow = false;
       this.getpurcon();
       this.editData = {};
     },
     // 取消会员配置信息提交
     editpaymentresetForm() {
+  this.removedFileIds = []; // 取消 / 关闭:不清的话下次保存别的配置会把仍被引用的 banner 删掉
       this.editpaymentShow = false;
       this.getpurcon();
       this.editData = {};
@@ -942,6 +924,7 @@ export default {
         if (valid) {
           this.api.busconfig.edit(this.editData).then((res) => {
             if (res.data.code == 200) {
+              this.delRemovedFiles();
               this.$message({
                 type: "success",
                 message: "会员信息配置成功!",
@@ -950,12 +933,13 @@ export default {
               this.tableData = [];
               this.getpurcon();
               this.editpaymentShow = false;
+            }else if(res.data.code == 602){
+                // 原先这段挂在 if (valid) 上:表单校验不通过时 res 还不存在,直接抛 ReferenceError
+                this.$message({
+                    type: "warning",
+                    message: res.data.msg,
+                });
             }
-          });
-        } else if (res.data.code == 602) {
-          this.$message({
-            type: "warning",
-            message: res.data.msg,
           });
         }
       });

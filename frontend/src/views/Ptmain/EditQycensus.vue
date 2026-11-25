@@ -1070,19 +1070,19 @@ export default {
             rules: {
                 jcoalSilo: [
                     // { required: true, message: '请输入精煤仓数量', trigger: 'blur' },
-                    { pattern: /^[0-9]*[0-9][0-9]*$/, message: '数量格式不正确', trigger: 'blur'}
+                    { pattern: /^\d+$/, message: '数量格式不正确', trigger: 'blur'}
                 ],  
                 jcoalSiloCapacity: [
                     // { required: true, message: '请输入精煤仓储容量', trigger: 'blur' }
-                    { pattern: /^[0-9]*[0-9][0-9]*$/, message: '容量格式不正确', trigger: 'blur'}
+                    { pattern: /^\d+$/, message: '容量格式不正确', trigger: 'blur'}
                 ],    
                 ycoalSilo: [
                     // { required: true, message: '请输入原煤仓数量', trigger: 'blur' }
-                    { pattern: /^[0-9]*[0-9][0-9]*$/, message: '数量格式不正确', trigger: 'blur'}
+                    { pattern: /^\d+$/, message: '数量格式不正确', trigger: 'blur'}
                 ],     
                 ycoalSiloCapacity: [
                     // { required: true, message: '请输入原煤仓储容量', trigger: 'blur' }
-                    { pattern: /^[0-9]*[0-9][0-9]*$/, message: '容量格式不正确', trigger: 'blur'}
+                    { pattern: /^\d+$/, message: '容量格式不正确', trigger: 'blur'}
                 ], 
                 signFreeCount: [
                     { required: true, message: '请输入签章免费份数', trigger: 'blur' }
@@ -1160,6 +1160,10 @@ export default {
         // videojs("my-video",()=>{this.play();});
         // 接收主页单条数据
         this.AddData = JSON.parse(sessionStorage.getItem('queryAll'));
+        if(!this.AddData){
+            // 直接输入网址 / 后退进入时没有待编辑的记录:回列表页,否则下面取字段就抛错
+            return this.$router.replace({name:'Qycensus'});
+        }
         // 模块标题
         this.purTitle = this.AddData.enterpriseName;
         this.getpurcon(this.AddData.id);  // 查询评星数据
@@ -1753,6 +1757,9 @@ export default {
             }) 
             if(!arr.includes(phone)){
                 this.urcommontags.push(row)
+            }else if(!selection.includes(row)){
+                // @select 在取消勾选时同样触发:原先只增不减,取消的用户点「应用」后仍被关联
+                this.urcommontags = this.urcommontags.filter(item => item.phone != phone)
             }
         },
         urkeyId(row){

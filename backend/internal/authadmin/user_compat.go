@@ -25,7 +25,8 @@ func (s *Service) registerUserCompat(reg func(string, http.HandlerFunc)) {
 	})
 	reg("/chainAuthUser/updHeadImg", func(w http.ResponseWriter, r *http.Request) {
 		m := bodyMap(r)
-		if _, err := s.DB.Chain.Exec("UPDATE chain_auth_user SET wx_face_img=? WHERE phone=?", m["wxFaceImg"], m["phone"]); err != nil {
+		// 只能改自己的头像:原先按 body 的 phone 直写
+		if _, err := s.DB.Chain.Exec("UPDATE chain_auth_user SET wx_face_img=? WHERE phone=? AND id=?", m["wxFaceImg"], m["phone"], auth.From(r.Context()).UserID); err != nil {
 			platform.Unknown(w)
 			return
 		}
@@ -88,6 +89,7 @@ func (s *Service) userValidateCode(w http.ResponseWriter, r *http.Request) {
 		platform.FailMsg(w, "验证失败")
 		return
 	}
+	s.Auth.MarkPhoneVerified(str(m, "phone")) // 忘记密码第二步(updPwd)只允许改这个手机号下的账号
 	where, args := getSqlEq(m, userExcelCols, nil, map[string]bool{"singleDatabase": true, "isAgreeCall": true, "memberType": false})
 	rows, err := queryRows(s.DB.Chain, "SELECT id,account FROM chain_auth_user "+where+" AND handle_result=1 ORDER BY create_time DESC", args...)
 	if err != nil {
@@ -109,6 +111,8 @@ func (s *Service) userSetAccount(w http.ResponseWriter, r *http.Request) {
 	}
 	vals := pick(m, userWriteCols...)
 	delete(vals, "id")
+	// 注册接口未登录可调:不能靠 body 带出 accountType=5 / level=2 的"管理员"。
+	scrubUserVals(&auth.CurrentUser{}, vals, false)
 	// Java chainAuthUserService.save(user) 原样入库(明文密码),1:1 复刻,不做加密。
 	id, err := platform.InsertNoFill(s.DB.Chain, "chain_auth_user", vals)
 	if err != nil {
@@ -215,6 +219,9 @@ func (s *Service) userCarList(w http.ResponseWriter, r *http.Request) {
 // Vehicle account and terminal assignments share the Java service transaction.
 func (s *Service) userCarWrite(w http.ResponseWriter, r *http.Request, create bool) {
 	m := bodyMap(r)
+	if !s.requirePlatform(w, r) { // 车辆账号与终端分配是平台操作
+		return
+	}
 	vals := pick(m, userWriteCols...)
 	delete(vals, "id")
 	id := m["id"]
@@ -266,6 +273,20 @@ func (s *Service) userCarWrite(w http.ResponseWriter, r *http.Request, create bo
 
 func (s *Service) userSetPwd(w http.ResponseWriter, r *http.Request) {
 	m := bodyMap(r)
+	// 原先请求体里写谁的 id 就改谁的密码。现在只允许:改自己、平台管理员 / 企业管理员改其管理的账号、
+	// 忘记密码流程(未登录)且目标账号的手机号刚在 valCode 通过短信码校验。
+	cu := auth.From(r.Context())
+	verifiedOwner := func() bool {
+		if s.Auth == nil {
+			return false
+		}
+		target, err := platform.GetByID(s.DB.Chain, "chain_auth_user", m["id"])
+		return err == nil && target != nil && s.Auth.PhoneVerifiedRecently(str(target, "phone"))
+	}
+	if !(cu.UserID != 0 && str(m, "id") == strconv.FormatInt(cu.UserID, 10)) && !s.canManageID(r, m["id"]) && !verifiedOwner() {
+		platform.Fail(w, 602, "请先完成身份验证")
+		return
+	}
 	password, ok := m["newPassword"].(string)
 	if !ok {
 		platform.Unknown(w)
@@ -277,6 +298,7 @@ func (s *Service) userSetPwd(w http.ResponseWriter, r *http.Request) {
 		platform.Unknown(w)
 		return
 	}
+	scrubUserVals(auth.From(r.Context()), vals, s.isEnterpriseAdmin(r, auth.From(r.Context())))
 	if _, err := platform.UpdateByIDNoFill(s.DB.Chain, "chain_auth_user", m["id"], vals); err != nil {
 		platform.Unknown(w)
 		return
@@ -285,8 +307,13 @@ func (s *Service) userSetPwd(w http.ResponseWriter, r *http.Request) {
 }
 func (s *Service) userResetPwd(w http.ResponseWriter, r *http.Request) {
 	m := bodyMap(r)
+	if !s.canManageID(r, m["id"]) { // 原先任何登录用户可把任何账号(含平台管理员)的密码重置为 123456
+		deny(w)
+		return
+	}
 	vals := pick(m, userWriteCols...)
 	vals["password"] = auth.HashPassword("123456") // original Java resetPwd contract
+	scrubUserVals(auth.From(r.Context()), vals, s.isEnterpriseAdmin(r, auth.From(r.Context())))
 	if _, err := platform.UpdateByIDNoFill(s.DB.Chain, "chain_auth_user", m["id"], vals); err != nil {
 		platform.Unknown(w)
 		return
@@ -329,10 +356,21 @@ func (s *Service) userUpdateBatch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if len(users) > 0 {
+		for _, m := range users {
+			if !s.canManageID(r, m["id"]) {
+				deny(w)
+				return
+			}
+		}
+		cu, ent := auth.From(r.Context()), false
+		if cu.UserID != 0 {
+			ent = s.isEnterpriseAdmin(r, cu)
+		}
 		err := platform.WithTx(s.DB.Chain, func(tx *sql.Tx) error {
 			for _, m := range users {
 				vals := pick(m, userWriteCols...)
 				delete(vals, "id")
+				scrubUserVals(cu, vals, ent)
 				if err := platform.TxUpdateByIDNoFill(tx, "chain_auth_user", m["id"], vals); err != nil {
 					return err
 				}
@@ -379,7 +417,17 @@ func (s *Service) userJoinCompany(w http.ResponseWriter, r *http.Request) {
 		platform.Unknown(w)
 		return
 	}
+	// 只能认领"刚注册、尚未归属"的账号:原先 body 的 id 任意,任何登录用户拿着邀请码
+	// 就能改掉别人(含平台管理员)的密码、账号和归属。
+	if target, err := platform.GetByID(s.DB.Chain, "chain_auth_user", m["id"]); err != nil || target == nil ||
+		num(target["company_id"]) != 0 || num(target["level"]) != 0 || num(target["account_type"]) != 1 || str(target, "handle_result") != "" {
+		platform.Fail(w, 602, "无权限操作")
+		return
+	}
 	vals := pick(m, userWriteCols...)
+	for _, c := range []string{"account_type", "level", "applys", "member_type", "expiration_time", "activate_type", "package_id", "broker_start_date", "servicer_url", "single_database", "single_database_name"} {
+		delete(vals, c) // 加入企业只写账号、密码和归属,带不出平台属性或会员
+	}
 	vals["company_id"] = cid
 	vals["handle_result"] = "0"
 	vals["password"] = auth.HashPassword(str(m, "password"))

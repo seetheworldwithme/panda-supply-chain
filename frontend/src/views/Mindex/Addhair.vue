@@ -112,7 +112,8 @@ export default {
                                 message: "保存成功!",
                                 duration:500,  
                                 onClose(){
-                                    that.$router.push({name:"Address",query:{sel:that.AddData.type}})
+                                    // 列表页签 1 是发货地(type 2)、2 是收货地(type 1),其余与 type 相同:原先按 type 直传,新建后落到错的页签
+                                    that.$router.push({name:"Address",query:{sel:that.AddData.type == 1 ? 2 : that.AddData.type == 2 ? 1 : that.AddData.type}})
                                 }
                             });
                         }

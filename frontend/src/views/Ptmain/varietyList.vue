@@ -1582,42 +1582,42 @@ export default {
         // 更新时间搜索
         renewTime(){
           this.tableData = [];
-          this.getpurcon();
           this.current = 1;
+          this.getpurcon();
         },
         // 更新煤种价格时间搜索
         moenyTime(){
           this.tableData = [];
-          this.getpurcon();
           this.current = 1;
+          this.getpurcon();
         },
         // 上架日期搜索
         Times() {
           this.tableData = [];
-          this.getpurcon();
           this.current = 1;
+          this.getpurcon();
         },
         // 是否是平台认证
         attestationstics(e){
           // this.attestation = e;
           this.tableData = [];
-          this.getpurcon();
           this.current = 1;
+          this.getpurcon();
         },
         // 煤炭区别二级选中
         changeClassify(){
           this.breedmlns = [];
           this.breed = null;
           this.tableData = [];
-          this.getpurcon();
           this.current = 1;
+          this.getpurcon();
           this.boredlist(this.classify);
         },
         // 煤炭三级分类选中
         changeBreed(){
           this.tableData = [];
-          this.getpurcon();
           this.current = 1;
+          this.getpurcon();
         },
         // 煤炭区别 煤炭品种三级分类
         boredlist(ids){
@@ -1638,8 +1638,8 @@ export default {
             this.cityOptions = [];
             this.countyOptions = [];
             this.tableData = [];
-            this.getpurcon();
             this.current = 1;
+            this.getpurcon();
             this.api.areaInfo.all({parentCode:this.provinceCode})
             .then(res=>{
                 if(res.data.code == 200){
@@ -1653,8 +1653,8 @@ export default {
             this.cityOptions = [];
             this.countyOptions = [];               // 乡
             this.tableData = [];
-            this.getpurcon();
             this.current = 1;
+            this.getpurcon();
             this.api.areaInfo.all({parentCode:this.cityCode})
             .then(res=>{
                 if(res.data.code == 200){
@@ -1666,8 +1666,8 @@ export default {
         // 选择县 区
         countys(){
             this.tableData = [];
-            this.getpurcon();
             this.current = 1;
+            this.getpurcon();
             // this.api.areaInfo.all({parentCode:this.areaCode})
             // .then(res=>{
             //     if(res.data.code == 200){
@@ -1678,14 +1678,14 @@ export default {
       // 经纪人
         brokertics(e){
           this.tableData = [];
-          this.getpurcon();
           this.current = 1;
+          this.getpurcon();
         },
         // 公司性质
         naturstics(e){
           this.tableData = [];
-          this.getpurcon();
           this.current = 1;
+          this.getpurcon();
         },
         /*
         编辑煤种信息
@@ -1760,7 +1760,7 @@ export default {
             .then(res => {
               if (res.data.code == 200) {
                 this.listtwo.map((item,key)=>{
-                  if(item == file.response.data[0].id){
+                  if(item.id == file.response.data[0].id){ // listtwo 的元素是 {id, compressedId} 对象:原先拿对象跟 id 比永远不相等,照片删了 id 还留着
                     this.listtwo.splice(key, 1);
                   }
                 })
@@ -1946,8 +1946,8 @@ export default {
               if (res.data.code == 200) {
                   this.editData = {}
                   this.tableData = [];
-                  this.getpurcon();
                   this.current = 1;
+                  this.getpurcon();
                   this.editpaymentShow = false;
                   this.$message({
                     type: 'success',
@@ -2005,7 +2005,9 @@ export default {
                   })
                   this.editData.imgIds = this.listarr.join(',');
                   this.editData.imgList = this.listtwo;
-                  this.editData.coverId = this.listtwo[0].compressedId;
+                  if(this.listtwo.length > 0){ // 没有煤棚照片的煤种(导入 / 老数据)原先在这里抛错,遮罩不消
+                      this.editData.coverId = this.listtwo[0].compressedId;
+                  }
                   this.editData.wareIdentity = this.sel;
                   this.editData.user = {
                     id:this.editData.createUserId,
@@ -2021,8 +2023,8 @@ export default {
                         });
                         this.editData = {}
                         this.tableData = [];
-                        this.getpurcon();
                         this.current = 1;
+                        this.getpurcon();
                         this.YuncangShow = false;
                         this.editpaymentShow = false;
                         this.mzloading = false;
@@ -2117,8 +2119,8 @@ export default {
               if(res.data.code == 200){
                   this.editData = {}
                   this.tableData = [];
-                  this.getpurcon();
                   this.current = 1;
+                  this.getpurcon();
                   this.editpaymentShow = false;
                   this.$message({
                   type: 'success',
@@ -2181,8 +2183,8 @@ export default {
                     });
                     this.associationData = {}
                     this.tableData = [];
-                    this.getpurcon();
                     this.current = 1;
+                    this.getpurcon();
                     this.baymentShow = false;
                 }
               })
@@ -2244,8 +2246,8 @@ export default {
                           message: '上架云仓成功!'
                       });
                       this.tableData = [];
-                      this.getpurcon();
                       this.current = 1;
+                      this.getpurcon();
                     }
                 })
               }
@@ -2275,8 +2277,8 @@ export default {
                 });
                 this.dialoshelf = false;
                 this.tableData = [];
-                this.getpurcon();
                 this.current = 1;
+                this.getpurcon();
               }
           })
         },
@@ -2308,18 +2310,18 @@ export default {
         // 查询上下架搜索功能
         prologistics(){
           this.tableData = [];
-          this.getpurcon();
           this.current = 1;
+          this.getpurcon();
         },
         prtics(){
           this.tableData = [];
-          this.getpurcon();
           this.current = 1;
+          this.getpurcon();
         },
         verifyChange(){
           this.tableData = [];
-          this.getpurcon();
           this.current = 1;
+          this.getpurcon();
         },
         
 
@@ -2347,6 +2349,7 @@ export default {
                 // isUpDown:true,
                 status:this.carriageName,
                 isRelationEtc:this.caeName,
+                isRealCheck:this.verifyStatus, // 原先这两个分支不带企业核实筛选,未核实企业会混进结果
                 page:{
                     current:this.current,
                     size:this.size
@@ -2374,6 +2377,7 @@ export default {
                 searchStr:this.purSearch,
                 status:this.carriageName,
                 isRelationEtc:this.caeName,
+                isRealCheck:this.verifyStatus, // 原先这两个分支不带企业核实筛选,未核实企业会混进结果
                 page:{
                     current:this.current,
                     size:this.size
@@ -2454,8 +2458,8 @@ export default {
         // 搜索功能
         search() {
             this.tableData = [];
-            this.getpurcon();
             this.current = 1;
+            this.getpurcon();
         },
         // 表格选中数据
         purChange(val) {
@@ -2500,6 +2504,8 @@ export default {
             this.oneShow = true;
             this.twoShow = false;
             this.streeShow = false;
+            this.fourShow = false; // 不清的话:导入成功后关闭再打开,结果面板会和步骤一同屏
+            clearInterval(this.importTimer); // 关掉弹窗就不再继续导入
             this.pernav = "正在导入...";
             this.fileForm.importnav = "";
             this.$refs.upload.clearFiles();
@@ -2513,13 +2519,14 @@ export default {
                   this.oneShow = false;
                   this.twoShow = true;
                   // 导入进度条
-                  let f = setInterval(()=>{
-                    this.perstep += 3;
-                    if(this.perstep == 99){
-                      this.perstep = 99;
-                      this.$refs.upload.submit();
-                      clearInterval(f);
-                    }
+                  clearInterval(this.importTimer); // 关闭后 5 秒内重开再导入会叠两个定时器
+                  this.importTimer = setInterval(()=>{
+                      this.perstep += 3;
+                      if(this.perstep == 99){
+                          this.perstep = 99;
+                          clearInterval(this.importTimer); // 先停定时器再提交:提交抛错(例如已离开页面)时定时器会一直跑
+                          this.$refs.upload.submit();
+                      }
                   },150)
               }
             });
@@ -2557,8 +2564,8 @@ export default {
             this.fourShow = false;         // 成功
             this.pernav = "正在导入...";
             this.streeShow = false; 
-            this.getpurcon();
             this.current = 1;
+            this.getpurcon();
             this.$refs.upload.clearFiles();
             this.fileForm.importnav = "";
         },
@@ -2590,8 +2597,8 @@ export default {
                             message: '删除成功!'
                         });
                         this.tableData = [];
-                        this.getpurcon();
                         this.current = 1;
+                        this.getpurcon();
                         if(this.tableData == []){
                             this.dataAva = true;
                         }

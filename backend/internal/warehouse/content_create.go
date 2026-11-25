@@ -155,6 +155,11 @@ func (s *Service) updateVideo(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
+	// 视频审核(通过 1 / 拒绝 2、审核备注)是平台操作,原先任何登录用户可审任意视频并触发奖励;提交审核(status=0)不限制。
+	if st := num(m["status"]); (st == 1 || st == 2 || m["checkRemark"] != nil) && !isPtAdmin(currentUser(r)) {
+		platform.Fail(w, 602, "无权限操作")
+		return
+	}
 	d := s.pick(r)
 	values := pick(m, entBusVideos.dbcols)
 	delete(values, "id")
@@ -227,6 +232,11 @@ func (s *Service) updateOpinion(w http.ResponseWriter, r *http.Request) {
 		platform.Unknown(w)
 		return
 	}
+	if body["status"] != nil && !isPtAdmin(currentUser(r)) {
+		// 审核意见(通过 / 拒绝)是平台操作:原先任何登录用户都能"采纳"任意意见,并把奖励指给自己。
+		platform.Fail(w, 602, "无权限操作")
+		return
+	}
 	tx, err := s.pick(r).BeginTx(r.Context(), nil)
 	if err != nil {
 		platform.Unknown(w)
@@ -234,9 +244,10 @@ func (s *Service) updateOpinion(w http.ResponseWriter, r *http.Request) {
 	}
 	defer tx.Rollback()
 	var withdrawal map[string]any
-	var before sql.NullInt64
+	var before, author sql.NullInt64
+	var authorPhone sql.NullString
 	id := body["id"]
-	if err := tx.QueryRowContext(r.Context(), "SELECT status FROM bus_opinion WHERE id=? FOR UPDATE", id).Scan(&before); err != nil || !before.Valid {
+	if err := tx.QueryRowContext(r.Context(), "SELECT status, user_id, phone FROM bus_opinion WHERE id=? FOR UPDATE", id).Scan(&before, &author, &authorPhone); err != nil || !before.Valid {
 		platform.Unknown(w)
 		return
 	}
@@ -267,7 +278,9 @@ func (s *Service) updateOpinion(w http.ResponseWriter, r *http.Request) {
 					return
 				}
 				// 原 Java 从请求取收款人，生成流水却记在审核人名下。
-				withdrawal = map[string]any{"clogId": clogID, "receiveType": opinionReward, "receiveAmount": amount, "userId": body["userId"], "phone": body["phone"]}
+				if author.Valid { // 奖励归意见提交人(审核前的意见行),不再取请求体里的 userId / phone
+					withdrawal = map[string]any{"clogId": clogID, "receiveType": opinionReward, "receiveAmount": amount, "userId": author.Int64, "userPhone": authorPhone.String}
+				}
 			}
 		}
 	}

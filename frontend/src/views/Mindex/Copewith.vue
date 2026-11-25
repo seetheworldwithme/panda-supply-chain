@@ -1010,7 +1010,11 @@ export default {
         AddDatasubmitForm(formName) {
             this.$refs[formName].validate((valid) => {
                 if (valid) {
-                    if(Math.abs(this.settlementmoeny) === Math.abs(this.contmoeny)){
+                    if(Math.abs(Math.abs(this.settlementmoeny) - Math.abs(this.contmoeny)) < 0.005){ // 金额是浮点连加出来的,不能用 === 比较(1000.02+2000.01 != 3000.03)
+                        if(this.settlementmoeny == 0 || this.contmoeny == 0){ // 与应收核销页一致:金额为零直接拦截
+                            this.$message({ type: 'warning', message: '核销金额不能为零，请重新操作' });
+                            return;
+                        }
                         let res;
                         if(this.settlementmoeny){
                             let num = this.settlementmoeny.toFixed(2);
@@ -1130,26 +1134,26 @@ export default {
         // 银行名称搜索
         keyupBanks() {
             this.tableData = [];
-            this.getpurcon();
             this.current = 1;
+            this.getpurcon();
         },
         // 日期搜索
         DataTime() {
             this.tableData = [];
-            this.getpurcon();
             this.current = 1;
+            this.getpurcon();
         },
         // 对方户名
         ClickOppositeName() {
             this.tableData = [];
-            this.getpurcon();
             this.current = 1;
+            this.getpurcon();
         },
         // 全部搜索
         search() {
             this.tableData = [];
-            this.getpurcon();
             this.current = 1;
+            this.getpurcon();
         },
         // 采购结算详情关闭按钮
         drawerssClose(){
@@ -1284,14 +1288,14 @@ export default {
         // 所属月份搜索
         ClickOppositeNameone() {
             this.settlementtableData = [];
-            this.settlementgetpurcon();
             this.settlementcurrent = 1;
+            this.settlementgetpurcon();
         },
         // 搜索全部功能
         jshxpurSearchs() {
             this.settlementtableData = [];
-            this.settlementgetpurcon();
             this.settlementcurrent = 1;
+            this.settlementgetpurcon();
         },
         // 采购付款单详情关闭按钮
         settlementdrawerssClose(){
@@ -1547,8 +1551,8 @@ export default {
             this.dialogSelectUnit = false;                          // 关闭整个弹窗
             this.radio = "";                                        // 清空单选框
             this.dialogtextarea = "";                               // 清空显示单位内容框
-            this.settlementgetpurcon();
             this.settlementcurrent = 1;
+            this.settlementgetpurcon();
         },
         // 关联供应商单位 关闭弹窗
         BuyerhandleClose() {

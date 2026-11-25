@@ -156,8 +156,8 @@
           // 搜索功能
           search() {
               this.tableData = [];
-              this.getpurcon();
               this.current = 1;
+              this.getpurcon();
           },
           // 编辑标签信息
           EditPurs(data){
@@ -189,16 +189,17 @@
                       });
                       this.editData = {}
                       this.tableData = [];
-                      this.getpurcon();
                       this.current = 1;
+                      this.getpurcon();
                       this.editpaymentShow = false;
+                  }else if(res.data.code == 602){
+                      // 原先这段挂在 if (valid) 上:表单校验不通过时 res 还不存在,直接抛 ReferenceError
+                      this.$message({
+                          type: 'warning',
+                          message: res.data.msg
+                      });
                   }
                   })
-              }else if(res.data.code == 602){
-                  this.$message({
-                      type: 'warning',
-                      message: res.data.msg
-                  });
               }
               });
           },

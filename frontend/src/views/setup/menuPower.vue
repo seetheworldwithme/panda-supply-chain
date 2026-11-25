@@ -368,16 +368,16 @@ export default {
         },  
         rules: {
             menuType: [
-                { required: true, message: '请选择菜单类型', trigger: 'chang' }
+                { required: true, message: '请选择菜单类型', trigger: 'change' }
             ],
             pid: [
-                { required: true, message: '请选择父级菜单', trigger: 'chang' }
+                { required: true, message: '请选择父级菜单', trigger: 'change' }
             ],
             name: [
-                { required: true, message: '请输入菜单名称', trigger: 'chang' }
+                { required: true, message: '请输入菜单名称', trigger: 'change' }
             ],
             routeName: [
-                { required: true, message: '请输入路由名称', trigger: 'chang' }
+                { required: true, message: '请输入路由名称', trigger: 'change' }
             ]
         },
         projectName:[],   // 父级菜单列表
@@ -392,16 +392,16 @@ export default {
         editAdjustForm:{},  
         editrules: {
             menuType: [
-                { required: true, message: '请选择菜单类型', trigger: 'chang' }
+                { required: true, message: '请选择菜单类型', trigger: 'change' }
             ],
             pid: [
-                { required: true, message: '请选择父级菜单', trigger: 'chang' }
+                { required: true, message: '请选择父级菜单', trigger: 'change' }
             ],
             name: [
-                { required: true, message: '请输入菜单名称', trigger: 'chang' }
+                { required: true, message: '请输入菜单名称', trigger: 'change' }
             ],
             routeName: [
-                { required: true, message: '请输入路由名称', trigger: 'chang' }
+                { required: true, message: '请输入路由名称', trigger: 'change' }
             ]
         },
         editprojectName:[],   // 父级菜单列表
@@ -478,6 +478,7 @@ export default {
         this.checkAll = false;
         this.isIndeterminate = false;
         this.AdjustForm = {}
+        this.checkedCities = []; // 不清的话下次新建菜单还勾着上一次的操作按钮,并随 ids 提交
     },
     // 新建菜单信息弹窗(取消)
     dialogVisibledatass(){
@@ -485,6 +486,7 @@ export default {
         this.checkAll = false;
         this.isIndeterminate = false;
         this.AdjustForm = {}
+        this.checkedCities = []; // 不清的话下次新建菜单还勾着上一次的操作按钮,并随 ids 提交
     },
     // 新建全选不全选逻辑
       handleCheckAllChange(val) {
@@ -516,6 +518,7 @@ export default {
                         this.checkAll = false;
                         this.isIndeterminate = false;
                         this.AdjustForm = {}
+                        this.checkedCities = []; // 同上
                         this.getpurcon();
                         this.$store.dispatch("asynSetMenus");
                     }

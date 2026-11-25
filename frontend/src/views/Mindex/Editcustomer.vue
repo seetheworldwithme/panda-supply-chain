@@ -207,6 +207,10 @@ export default {
         this.purTitle = this.$route.meta.title;
         // 接收主页单条数据
         this.AddData = JSON.parse(sessionStorage.getItem('queryAll'));
+        if(!this.AddData){
+            // 直接输入网址 / 后退进入时没有待编辑的记录:回列表页,否则整页报错
+            return this.$router.replace({name:"Partner",query:{sel: 2}});
+        }
         //基础维护数据  渲染扩展信息内容
         this.api.basics.all({template_id:1})
         .then(res=>{

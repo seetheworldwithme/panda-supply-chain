@@ -545,13 +545,16 @@ export default {
         AddDatasubmitForm(formName) {
             this.$refs[formName].validate((valid) => {
                 if (valid) {
-                    this.AddData.noticetype = this.AddData.noticetype.join(",");
-                    this.AddData.personavailableauthtypes = this.AddData.personavailableauthtypes.toString();
-                    this.AddData.willtypes = this.AddData.willtypes.toString();
-                    this.AddData.orgavailableauthtypes = this.AddData.orgavailableauthtypes.toString();
-                    this.AddData.signplatform = this.AddData.signplatform.toString();
-                    this.AddData.sealtype = this.AddData.sealtype.toString();
-                    this.api.eqbconfig.edit(this.AddData)
+                    // 用副本提交:原先把复选框绑定的数组原地改写成字符串,失败后留在页面时复选框全空、再点保存就报错
+                    const data = Object.assign({}, this.AddData, {
+                        noticetype: String(this.AddData.noticetype),
+                        personavailableauthtypes: String(this.AddData.personavailableauthtypes),
+                        willtypes: String(this.AddData.willtypes),
+                        orgavailableauthtypes: String(this.AddData.orgavailableauthtypes),
+                        signplatform: String(this.AddData.signplatform),
+                        sealtype: String(this.AddData.sealtype),
+                    });
+                    this.api.eqbconfig.edit(data)
                     .then(res=>{
                         if(res.data.code == 200){
                             var that = this

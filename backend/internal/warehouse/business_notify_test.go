@@ -37,7 +37,7 @@ func TestBusinessSendsOriginalSMSAfterDatabaseWrites(t *testing.T) {
 		}
 	}
 	for _, q := range []string{
-		"INSERT INTO chain_auth_user(id,account,phone,channel,handle_result,level,account_type) VALUES(1,'fixture','00000001121','2',1,1,1)",
+		"INSERT INTO chain_auth_user(id,account,phone,channel,handle_result,level,account_type) VALUES(1,'fixture','00000001121','2',1,1,1),(2,'fixture-admin','00000001129','2',1,2,2)",
 		"INSERT INTO bus_product(id,warehouse_nb,enterprise_name,notice_time,ex_factory_price) VALUES(1,'fixture-warehouse','fixture-enterprise',0,100)",
 		"INSERT INTO bus_config(id,admin_phone,msg_type) VALUES(1,'00000001122',1)",
 		"INSERT INTO chain_common_file(id,file_name) VALUES(1,'fixture.mp4')",
@@ -62,20 +62,21 @@ func TestBusinessSendsOriginalSMSAfterDatabaseWrites(t *testing.T) {
 	key, _ := rsa.GenerateKey(rand.Reader, 2048)
 	kp := &auth.KeyPair{Private: key, Public: &key.PublicKey}
 	token, _ := kp.Generate(auth.JWTClaims{Account: "fixture", UserID: "1"})
+	adminToken, _ := kp.Generate(auth.JWTClaims{Account: "fixture-admin", UserID: "2"})
 	s := NewService(&db.DB{Chain: d, Zjjg: d})
 	mux := http.NewServeMux()
 	Register(mux, s)
-	for _, tc := range []struct{ path, body, template string }{
-		{"/busCustManage/noticeCust", `{"proId":1,"phones":["00000001123","00000001124"]}`, "2115763"},
-		{"/busOrder/placeOrder", `{"proId":1}`, "1990680"},
-		{"/busVideos/add", `{"videoId":1}`, "1792052"},
-		{"/busVideos/updateById", `{"id":1,"status":0}`, "1792052"},
-		{"/busVideos/updateById", `{"id":1,"status":2}`, "1794840"},
+	for _, tc := range []struct{ path, body, template, as string }{
+		{"/busCustManage/noticeCust", `{"proId":1,"phones":["00000001123","00000001124"]}`, "2115763", "author"},
+		{"/busOrder/placeOrder", `{"proId":1}`, "1990680", "author"},
+		{"/busVideos/add", `{"videoId":1}`, "1792052", "author"},
+		{"/busVideos/updateById", `{"id":1,"status":0}`, "1792052", "author"}, // 作者提交审核
+		{"/busVideos/updateById", `{"id":1,"status":2}`, "1794840", "admin"},  // 审核拒绝:平台管理员
 	} {
 		t.Run(tc.template, func(t *testing.T) {
 			before := len(received)
 			r := httptest.NewRequest("POST", "/saas-warehouse"+tc.path, strings.NewReader(tc.body))
-			r.Header.Set("Authorization", "Bearer "+token)
+			r.Header.Set("Authorization", "Bearer "+map[string]string{"author": token, "admin": adminToken}[tc.as])
 			w := httptest.NewRecorder()
 			auth.Middleware(kp, d)(mux).ServeHTTP(w, r)
 			if !strings.Contains(w.Body.String(), `"code":200`) {

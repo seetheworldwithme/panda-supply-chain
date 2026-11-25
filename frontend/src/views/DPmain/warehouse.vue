@@ -365,7 +365,7 @@ export default{
         this.road();
         // 跳转
         // this.routerboday = setInterval(this.routername,60000);
-        setInterval(this.formatDate, 1000);
+        (this.timers = this.timers || {}).formatDate = setInterval(this.formatDate, 1000);
         this.interone = setInterval(this.scrollone,16000) // 在钩子函数中调用我在method 里面写的scroll()方法
         this.getprop({fstProId:'',bigProId:'',threeProId:''});
     },
@@ -695,6 +695,11 @@ export default{
     },
     // 销毁定时器
     beforeDestroy() {
+        // setInterval 的返回值原先没有保存:下面 clearInterval(this.函数名) 传的是函数而不是定时器号,一个也清不掉。
+        // 大屏每 60 秒换一屏,离开的页面里的刷新 / 滚动定时器会一直累积
+        Object.values(this.timers || {}).forEach(clearInterval);
+        clearInterval(this.interone);
+        clearInterval(this.inter);
         clearInterval(this.routerboday);
         if (this.formatDate) {
             clearInterval(this.formatDate); // 在Vue实例销毁前，清除时间屏幕的定时器

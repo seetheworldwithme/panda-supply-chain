@@ -14,6 +14,7 @@ import (
 	"time"
 	"unicode/utf16"
 
+	"github.com/seetheworldwithme/panda-supply-chain/backend/internal/auth"
 	"github.com/seetheworldwithme/panda-supply-chain/backend/internal/platform"
 )
 
@@ -153,7 +154,7 @@ func (s *Service) callJSON(r *http.Request, path string, body any) (any, error) 
 	if err != nil {
 		return nil, err
 	}
-	req := r.Clone(r.Context())
+	req := r.Clone(auth.WithInternalCall(r.Context()))
 	url := *r.URL
 	url.Path = path
 	url.RawQuery = ""

@@ -185,7 +185,7 @@ export default{
         //     startTime:(year - 1) + '-01-01',
         //     endTime:adate
         // };
-        setInterval(this.formatDate, 1000);
+        (this.timers = this.timers || {}).formatDate = setInterval(this.formatDate, 1000);
     },
     mounted() {
         // 客户统计工作
@@ -726,9 +726,9 @@ export default{
                 ]
             };
             this.optionpayment && myChartpayment.setOption(this.optionpayment);
-            window.addEventListener('resize', () => {
-                myChartpayment.resize();
-            });  
+            const onResize = () => { myChartpayment.resize(); }; // 具名保存,销毁时移除:原先匿名监听一直留在 window 上,图表销毁后还会被调到
+            (this.resizeHandlers = this.resizeHandlers || []).push(onResize);
+            window.addEventListener('resize', onResize);
             this.timerone = setInterval(() => {
                 myChartpayment.dispatchAction({
                     type: 'showTip',
@@ -1004,9 +1004,9 @@ export default{
                 ]
             };
             this.optionLogins && chartsmyChartLoginsn.setOption(this.optionLogins);
-            window.addEventListener('resize', () => {
-                chartsmyChartLoginsn.resize();
-            });  
+            const onResize = () => { chartsmyChartLoginsn.resize(); }; // 具名保存,销毁时移除:原先匿名监听一直留在 window 上,图表销毁后还会被调到
+            (this.resizeHandlers = this.resizeHandlers || []).push(onResize);
+            window.addEventListener('resize', onResize);
             this.timer = setInterval(() => {
                 chartsmyChartLoginsn.dispatchAction({
                     type: 'showTip',
@@ -1295,11 +1295,11 @@ export default{
                 ],
             };
             this.optionLogins && chartsmyChartLogins.setOption(this.optionLogins);
-            window.addEventListener('resize', () => {
-                chartsmyChartLogins.resize();
-            });  
+            const onResize = () => { chartsmyChartLogins.resize(); }; // 具名保存,销毁时移除:原先匿名监听一直留在 window 上,图表销毁后还会被调到
+            (this.resizeHandlers = this.resizeHandlers || []).push(onResize);
+            window.addEventListener('resize', onResize);
 
-            this.timer = setInterval(() => {
+            this.timerthree = setInterval(() => { // 另一个图表也用 this.timer 存,会把前一个的句柄盖掉
                 chartsmyChartLogins.dispatchAction({
                     type: 'showTip',
                     seriesIndex: 0,
@@ -1318,6 +1318,12 @@ export default{
     },
     // 销毁定时器
     beforeDestroy() {
+        // setInterval 的返回值原先没有保存:下面 clearInterval(this.函数名) 传的是函数而不是定时器号,一个也清不掉。
+        // 大屏每 60 秒换一屏,离开的页面里的刷新 / 滚动定时器会一直累积
+        Object.values(this.timers || {}).forEach(clearInterval);
+        this.$el.querySelectorAll('[_echarts_instance_]').forEach(el => echarts.getInstanceByDom(el).dispose()); // 图表实例都是局部变量,原先没人释放
+        (this.resizeHandlers || []).forEach(h => window.removeEventListener('resize', h));
+        clearInterval(this.timerthree);
         clearInterval(this.routerboday);
         clearInterval(this.timer);
         clearInterval(this.timerone);

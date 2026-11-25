@@ -349,16 +349,16 @@
         usrTie() {
             if(this.sel == 1){
                 this.hairtableData = [];
-                this.hairgetpurcon();
                 this.haircurrent = 1;
+                this.hairgetpurcon();
             }else if(this.sel == 2){
                 this.collecttableData = [];
-                this.collectgetpurcon();
                 this.collectcurrent = 1;
+                this.collectgetpurcon();
             }else if(this.sel == 3){
                 this.pretendtableData = [];
-                this.pretendgetpurcon();
                 this.pretendcurrent = 1;
+                this.pretendgetpurcon();
             }
         },
         openphone(data){

@@ -439,6 +439,10 @@ export default {
         this.username = sessionStorage.getItem('username');
         this.http  = this.$store.state.http;                 // IP地址
     },
+    beforeDestroy(){
+        // 各图表实例都是局部变量,离开页面时没人释放:按 echarts 在容器上打的标记逐个销毁
+        this.$el.querySelectorAll('[_echarts_instance_]').forEach(el => echarts.getInstanceByDom(el).dispose());
+    },
     mounted(){
         // 行政区划
         this.api.statistics.enterData({countyCode:sessionStorage.getItem('xzqhCode'),searchStr:''})
@@ -949,6 +953,8 @@ export default {
             })
         },
         burdenLogins(){
+            // 容器 #burdenLogins 在模板里已注释掉:原先对 null 调 removeAttribute,每次进首页都抛错
+            if(!document.getElementById('burdenLogins')) return;
             let a = document.getElementById("burdenLogins").removeAttribute("burdenLogins",'');
             let chartsmyChartLogins = echarts.init(document.getElementById('burdenLogins'));
             let optionLogins = {
@@ -1366,6 +1372,7 @@ export default {
             this.loading = true;
             this.api.statistics.countMonData(type)
             .then(res=>{
+                this.loading = false; // 原先从不复位:只要查了这张图,整页一直「加载中」
                 if(res.data.code == 200){
                     this.countMonment = [];     // 图表时间
                     let newdate = [];           // 组装时间

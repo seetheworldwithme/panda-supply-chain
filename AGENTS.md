@@ -45,3 +45,15 @@ MariaDB datadir 不能被 MySQL 8 直接挂载，再迁移必须走 SQL 导出�
 
 ① 停 Redis 必须 `redis-cli shutdown`——其进程标题会改写为 `redis-server 127.0.0.1:6379`，pkill 匹配不到配置路径（本次孤儿进程躲过三轮搬迁、一直在旧目录写 AOF，已优雅切换到数据盘）。
 ② rsync `--exclude='logs'` 匹配**任意层级**同名目录，find `-not -path './logs/*'` 只排顶层，混用会漏文件——核对此类搬迁必须用 `comm` 名单比对且「原目录独有文件=0」为准。
+
+## 7. Go 对 Java 的刻意收紧（2026-11-26 第二轮评审后）
+
+按 `docs/plans/2026-11-19-java-go-business-parity.md` 第 4 条，迁移默认保留 Java 的问题、不擅自修复。第二轮评审经徐先生决定，下列几处**有意偏离 Java**，对照 Java 验收时不要当成回归：
+
+- **账号 / 角色 / 平台配置写接口有权限边界**（`backend/internal/authadmin/guard.go`）：仅平台管理员（`account_type` 2 / 5）能建用户、审批、改菜单 / 平台角色 / 全局配置 / e签宝配置 / 红包金额范围；企业管理员只能管本企业的非平台账号。Java 任何登录用户都能做。
+- **红包提现**（`warehouse/member2.go` `rrReceiveAmount`）：金额、类型、收款人取流水而不是请求体，只能提自己的。**意见 / 视频审核**仅平台管理员。
+- **公开签名的匿名请求只放行登录前白名单**（`auth/middleware.go` `anonAllowed`），白名单外的路径回未授权。小程序登录前要调新接口时用 `PANDA_ANON_ALLOW` 追加（逗号分隔，末尾 `/` 表示前缀）。
+- **`chainContract/delOnce` 条件全为空值时拒绝**；**忘记密码的 `updPwd`**：未登录时只能改「10 分钟内通过短信校验的手机号」名下的账号。
+- `warehouse/content_bespoke.go` 的 7 个端点：积分不足回 602、扣分数取商品表、核实附件必须是自己上传的（Java 分别是照样成功、取请求体、可以挂别人的）。
+
+明细、测试和仍未修的清单见 `docs/review.md` §8。「知道手机号就能登录」一族（`authentication/mobile`、`loginByAccount` 等）按决定**保留未修**。

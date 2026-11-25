@@ -842,6 +842,8 @@ export default {
       this.oneShow = true;
       this.twoShow = false;
       this.streeShow = false;
+      this.fourShow = false; // 不清的话:导入成功后关闭再打开,结果面板会和步骤一同屏
+      clearInterval(this.importTimer); // 关掉弹窗就不再继续导入
       this.pernav = "正在导入...";
       this.fileForm.importnav = "";
       this.$refs.upload.clearFiles();
@@ -855,13 +857,14 @@ export default {
           this.oneShow = false;
           this.twoShow = true;
           // 导入进度条
-          let f = setInterval(()=>{
-            this.perstep += 3;
-            if(this.perstep == 99){
-              this.perstep = 99;
-              this.$refs.upload.submit();
-              clearInterval(f);
-            }
+          clearInterval(this.importTimer); // 关闭后 5 秒内重开再导入会叠两个定时器
+          this.importTimer = setInterval(()=>{
+              this.perstep += 3;
+              if(this.perstep == 99){
+                  this.perstep = 99;
+                  clearInterval(this.importTimer); // 先停定时器再提交:提交抛错(例如已离开页面)时定时器会一直跑
+                  this.$refs.upload.submit();
+              }
           },150)
         }
       });
@@ -899,8 +902,8 @@ export default {
       this.fourShow = false;         // 成功
       this.pernav = "正在导入...";
       this.streeShow = false; 
-      this.getpurcon();
       this.current = 1;
+      this.getpurcon();
       this.$refs.upload.clearFiles();
       this.fileForm.importnav = "";
     },
@@ -1043,14 +1046,14 @@ export default {
     //搜索功能
     search() {
       this.tableData = [];
-      this.getpurcon();
       this.current = 1;
+      this.getpurcon();
     },
     // 时间搜索
     Times() {
         this.tableData = [];
-        this.getpurcon();
         this.current = 1;
+        this.getpurcon();
     },
     // 表格选中数据
     purChange(val) {
@@ -1162,8 +1165,8 @@ export default {
                     message: '删除成功!'
                   });
                   this.tableData = [];
-                  this.getpurcon();
                   this.current = 1;
+                  this.getpurcon();
                   if(this.tableData == []){
                     this.dataAva = true;
                   }

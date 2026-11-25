@@ -84,7 +84,7 @@ export default {
                 },
                 { 
                     value: 4,
-                    label: '收货地'
+                    label: '卸货地' // 4 是卸货地:标签写错,改了类型记录会从原列表消失
                 }
             ], 
             AddData: {
@@ -98,6 +98,10 @@ export default {
         this.purTitle = this.$route.meta.title;
         // 接收主页单条数据
         this.AddData = JSON.parse(sessionStorage.getItem('queryAll'));
+        if(!this.AddData){
+            // 直接输入网址 / 后退进入时没有待编辑的记录:回列表页,否则整页报错
+            return this.$router.replace({name:"Address",query:{sel:2}});
+        }
     },
     mounted () {},
     methods: {

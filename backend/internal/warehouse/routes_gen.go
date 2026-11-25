@@ -1,6 +1,8 @@
 // routes_gen.go 由 /tmp/api-cmp/phase6-routes.py 生成,勿手改。
 // 每控制器十件套注册配置:family A/B/C(listByPage 三族)、delBatch 是否带 data、
 // exportExcel 是否 GET;skip 为 bespoke/重复注册的端点路径。
+// 七个定制写端点(busBusinessCard/busContacts/busEnterpriseIntroduction/busScoreExchangeLog/busVisitorLog 的 add、
+// busVerifyInfo 的 add+updateById)由 content_bespoke.go 接管,对应 Skip 条目为手工追加。
 package warehouse
 
 var tplCtls = []tplCtl{
@@ -9,14 +11,14 @@ var tplCtls = []tplCtl{
 	{"/busAppConfig", entBusAppConfig, 'C', true, false, false, true, []string{}},
 	{"/busBiddingInfo", entBusBiddingInfo, 'C', true, false, false, true, []string{}},
 	{"/busBigProdect", entBusBigProdect, 'A', true, false, false, false, []string{"/list"}},
-	{"/busBusinessCard", entBusBusinessCard, 'A', true, false, false, false, []string{}},
+	{"/busBusinessCard", entBusBusinessCard, 'A', true, false, false, false, []string{"/add"}},
 	{"/busCommonFile", entBusCommonFile, 'A', true, false, false, false, []string{}},
 	{"/busCommonLog", entBusCommonLog, 'A', true, false, false, false, []string{"/listByPage"}},
 	{"/busConfig", entBusConfig, 'A', true, false, false, false, []string{}},
-	{"/busContacts", entBusContacts, 'A', true, false, false, false, []string{}},
+	{"/busContacts", entBusContacts, 'A', true, false, false, false, []string{"/add"}},
 	{"/busCustManage", entBusCustManage, 'A', true, false, false, false, []string{}},
 	{"/busDelProduct", entBusDelProduct, 'C', true, false, false, true, []string{}},
-	{"/busEnterpriseIntroduction", entBusEnterpriseIntroduction, 'A', true, false, false, false, []string{}},
+	{"/busEnterpriseIntroduction", entBusEnterpriseIntroduction, 'A', true, false, false, false, []string{"/add"}},
 	{"/busEnterpriseLeasing", entBusEnterpriseLeasing, 'C', true, false, false, true, []string{"/listByPage", "/add", "/updateById"}},
 	{"/busEtcProduct", entBusEtcProduct, 'B', true, false, false, false, []string{}},
 	{"/busEventPro", entBusEventPro, 'A', true, false, false, false, []string{}},
@@ -48,7 +50,7 @@ var tplCtls = []tplCtl{
 	{"/busRedEnvelopeRange", entBusRedEnvelopeRange, 'B', true, false, false, true, []string{"/list", "/updBatch"}},
 	{"/busRedEnvelopeRecord", entBusRedEnvelopeRecord, 'C', true, false, false, true, []string{}},
 	{"/busRedMoneyClog", entBusRedMoneyClog, 'B', true, false, false, true, []string{}},
-	{"/busScoreExchangeLog", entBusScoreExchangeLog, 'C', true, false, false, true, []string{}},
+	{"/busScoreExchangeLog", entBusScoreExchangeLog, 'C', true, false, false, true, []string{"/add"}},
 	{"/busScoreLog", entBusScoreLog, 'B', true, false, false, false, []string{}},
 	{"/busScorePro", entBusScorePro, 'A', true, false, false, false, []string{}},
 	{"/busScoreRule", entBusScoreRule, 'A', true, false, false, false, []string{}},
@@ -62,9 +64,9 @@ var tplCtls = []tplCtl{
 	{"/busUserScore", entBusUserScore, 'A', true, false, false, false, []string{}},
 	{"/busUserSign", entBusUserSign, 'A', true, false, false, false, []string{}},
 	{"/busUserVideoLc", entBusUserVideoLc, 'A', true, false, false, false, []string{}},
-	{"/busVerifyInfo", entBusVerifyInfo, 'C', true, false, false, true, []string{}},
+	{"/busVerifyInfo", entBusVerifyInfo, 'C', true, false, false, true, []string{"/add", "/updateById"}},
 	{"/busVideos", entBusVideos, 'A', true, false, false, false, []string{"/add", "/getById", "/deleteById", "/listByPage"}},
-	{"/busVisitorLog", entBusVisitorLog, 'A', true, false, false, false, []string{"/list"}},
+	{"/busVisitorLog", entBusVisitorLog, 'A', true, false, false, false, []string{"/list", "/add"}},
 	{"/busVisitorRecord", entBusVisitorRecord, 'A', true, false, false, false, []string{"/listByPage"}},
 	{"/busWarehouse", entBusWarehouse, 'A', true, false, false, false, []string{}},
 	{"/xmmcCoalInfo", entXmmcCoalInfo, 'A', true, false, false, true, []string{"/importExcel"}},

@@ -544,14 +544,14 @@ export default {
         // 搜索功能
         search() {
             this.tableData = [];
-            this.getpurcon();
             this.current = 1;
+            this.getpurcon();
         },
         // 日期搜索
         Times() {
             this.tableData = [];
-            this.getpurcon();
             this.current = 1;
+            this.getpurcon();
         },
         // 查看合同
         purSee(row) {
@@ -638,8 +638,8 @@ export default {
                     message: '操作成功，请稍后查看!'
                   });
                   this.tableData = [];
-                  this.getpurcon();
                   this.current = 1;
+                  this.getpurcon();
                   this.paymentShow = false;
                   this.AddData = {};
                   this.codephone="获取验证码";
@@ -746,8 +746,8 @@ export default {
                       message: '退款成功，请稍后查看!'
                     });
                     this.tableData = [];
-                    this.getpurcon();
                     this.current = 1;
+                    this.getpurcon();
                     this.refundShow = false;
                     this.refundData = {};
                     this.refundcodephone="获取验证码";

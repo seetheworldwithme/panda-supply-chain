@@ -224,6 +224,12 @@ func (s *Service) rrGenerateAmount(w http.ResponseWriter, r *http.Request) {
 		platform.Fail(w, 602, "今日已达领取上限")
 		return
 	}
+	// 2 发布煤种审核通过 / 7 意见被采纳 / 10 视频审核通过 / 11 首次分享 的红包由服务端在对应动作里生成,
+	// 客户端不能自己造这几类流水再来提现。
+	if n := int(num(typeValue)); n == 2 || n == 7 || n == 10 || n == 11 {
+		platform.Fail(w, 603, "")
+		return
+	}
 	d := s.pick(r)
 	amount, err := randomRedAmount(d, typeValue)
 	if err != nil {
@@ -281,7 +287,30 @@ func (s *Service) rrReceiveAmount(w http.ResponseWriter, r *http.Request) {
 		platform.Fail(w, 603, "活动已结束")
 		return
 	}
-	code, msg, err := s.redReceive(r, body)
+	// 提现只认流水本身:金额、类型、收款人都是生成流水时写死的,而且只能提自己的。
+	// 原先整个请求体透传,任意登录用户可给自己发起任意金额的商家转账。
+	clogID := body["clogId"]
+	if red, ok := body["redMoneyClog"].(map[string]any); clogID == nil && ok {
+		clogID = red["id"]
+	}
+	clog, err := platform.GetByID(s.pick(r), "bus_red_money_clog", clogID)
+	if err != nil {
+		platform.Unknown(w)
+		return
+	}
+	if clog == nil || num(clog["user_id"]) != float64(currentUser(r).UserID) || clog["create_amount"] == nil || clog["receive_type"] == nil {
+		platform.Fail(w, 603, "红包不存在或不可领取")
+		return
+	}
+	kind := int(num(clog["receive_type"]))
+	if kind != 1 && kind != 6 && kind != 11 && kind != 12 { // 其余类型原先没有次数上限
+		var count int
+		if err := s.pick(r).QueryRow("SELECT count(*) FROM bus_red_envelope_record WHERE user_id=? AND receive_type=? AND TO_DAYS(create_time)=TO_DAYS(now())", clog["user_id"], kind).Scan(&count); err != nil || count >= 3 {
+			platform.Fail(w, 603, "今日领取次数已达上限")
+			return
+		}
+	}
+	code, msg, err := s.redReceive(r, map[string]any{"clogId": clog["id"], "receiveType": clog["receive_type"], "userId": clog["user_id"], "receiveAmount": clog["create_amount"]})
 	if err != nil {
 		platform.Fail(w, 603, "")
 		return

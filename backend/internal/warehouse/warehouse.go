@@ -93,6 +93,8 @@ func num(v any) float64 {
 		return parseF(t)
 	case json.Number:
 		return parseF(string(t))
+	case int: // 服务端代码自己塞进 map 的整数(如红包类型):原先被当成 0,意见 / 视频 / 首次分享奖励因此永远"类型不一致"而发不出
+		return float64(t)
 	case int64:
 		return float64(t)
 	case float64:
@@ -291,4 +293,9 @@ func mapShapeRows(d *sql.DB, table string, rows []map[string]any) []map[string]a
 // 照搬就是 SQL 注入;良性输入转义后拼出的 SQL 与原先逐字相同。
 func sqlEscape(v string) string {
 	return strings.ReplaceAll(strings.ReplaceAll(v, "\\", "\\\\"), "'", "''")
+}
+
+// isPtAdmin 平台管理员(account_type 2/5,与 authadmin 的口径一致)。审核类操作只允许平台管理员。
+func isPtAdmin(cu *auth.CurrentUser) bool {
+	return cu.UserID != 0 && (cu.AccountType == "2" || cu.AccountType == "5")
 }

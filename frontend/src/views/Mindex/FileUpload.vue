@@ -83,6 +83,7 @@
                   <el-col :span="18">
                     <el-form-item>
                     <el-upload
+                    ref="upload"
                     :action="http + '/saas-common/upload/uploadFiles'"
                     :file-list="enclosurefileList"
                     :headers="header"
@@ -269,8 +270,8 @@ export default {
         // 搜索功能
         search() {
             this.tableData = [];
-            this.getpurcon();
             this.current = 1;
+            this.getpurcon();
         },
         // 表格选中数据
         purChange(val) {
@@ -290,6 +291,10 @@ export default {
         AddDatasubmitForm(formName) {
           this.$refs[formName].validate((valid) => {
             if (valid) {
+              if(this.$refs.upload.uploadFiles.some(f => f.status !== 'success')){
+                  // 还有文件没传完:此时确定只提交已传完的,其余的传完也不会被关联
+                  return this.$message({ type: 'warning', message: '文件还在上传,请等传完再确定' });
+              }
               // 文件上传
               var arr = [];
               this.enclosurefileList.map((itme,index)=>{
@@ -363,12 +368,15 @@ export default {
         },
         // 附件上传文件成功
         resfile(response, file, fileList){
-            if(response.code == 200){
+            if(response.code == 200 && response.data && response.data.length){ // 被服务端拒收的文件不能留在列表里
                 this.$message({
                     type: 'success',
                     message: '上传文件成功!'
                 });
                 this.enclosurefileList = fileList;
+            }else{
+                fileList.splice(fileList.indexOf(file), 1);
+                this.$message.error(response.msg || '上传文件失败!');
             }
         },
         // 点击文件下载
@@ -418,8 +426,8 @@ export default {
                         message: '删除成功!'
                       });
                       this.tableData = [];
-                      this.getpurcon();
                       this.current = 1;
+                      this.getpurcon();
                       if(this.tableData == []){
                         this.dataAva = true;
                       }

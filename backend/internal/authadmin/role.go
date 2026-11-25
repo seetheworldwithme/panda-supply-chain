@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"net/http"
 
+	"github.com/seetheworldwithme/panda-supply-chain/backend/internal/auth"
 	"github.com/seetheworldwithme/panda-supply-chain/backend/internal/platform"
 )
 
@@ -114,6 +115,13 @@ func (s *Service) selAuthyByMenu(w http.ResponseWriter, r *http.Request) {
 func (s *Service) addEtcRole(w http.ResponseWriter, r *http.Request) {
 	m := bodyMap(r)
 	vals := pick(m, "name", "role_type", "company_id", "remark1", "remark2", "remark3", "remark4", "remark5")
+	if cu := auth.From(r.Context()); !isPlatformAdmin(cu) { // 非平台管理员只能建本企业的企业角色,不能带出平台角色
+		if !s.isEnterpriseAdmin(r, cu) {
+			deny(w)
+			return
+		}
+		vals["role_type"], vals["company_id"] = 2, cu.CompanyID
+	}
 	if _, ok := vals["role_type"]; !ok {
 		vals["role_type"] = 2
 	}
@@ -127,6 +135,9 @@ func (s *Service) addEtcRole(w http.ResponseWriter, r *http.Request) {
 // addPtRole 新增平台角色:roleType 强制 1
 func (s *Service) addPtRole(w http.ResponseWriter, r *http.Request) {
 	m := bodyMap(r)
+	if !s.requirePlatform(w, r) {
+		return
+	}
 	vals := pick(m, "name", "company_id", "remark1", "remark2", "remark3", "remark4", "remark5")
 	vals["role_type"] = 1
 	if _, err := platform.Insert(s.DB.Chain, "chain_auth_role", vals); err != nil {
@@ -141,6 +152,10 @@ func (s *Service) addPtRole(w http.ResponseWriter, r *http.Request) {
 func (s *Service) saveEtcAuths(w http.ResponseWriter, r *http.Request) {
 	m := bodyMap(r)
 	roleID := m["roleId"]
+	if !s.canManageRole(r, roleID) { // 原先任何登录用户可改任何角色的权限
+		deny(w)
+		return
+	}
 	authRoles, _ := m["authRoles"].([]any)
 	menuRoles, _ := m["menuRoles"].([]any)
 	err := platform.WithTx(s.DB.Chain, func(tx *sql.Tx) error {
@@ -179,6 +194,9 @@ func (s *Service) saveEtcAuths(w http.ResponseWriter, r *http.Request) {
 // 重插 menu_user;auth_user 逐行先删后插(Java 循环里每行删一次,幂等)
 func (s *Service) savePtAuths(w http.ResponseWriter, r *http.Request) {
 	m := bodyMap(r)
+	if !s.requirePlatform(w, r) { // 平台用户的菜单 / 权限分配
+		return
+	}
 	userID := m["userId"]
 	menuUsers, _ := m["menuUsers"].([]any)
 	authUsers, _ := m["authUsers"].([]any)
@@ -221,6 +239,10 @@ func (s *Service) savePtAuths(w http.ResponseWriter, r *http.Request) {
 // 删角色行 + 删 use_role where role_id(Java 两步无事务,Go 收 WithTx)
 func (s *Service) delRoleById(w http.ResponseWriter, r *http.Request) {
 	id := bodyMap(r)["id"]
+	if !s.canManageRole(r, id) {
+		deny(w)
+		return
+	}
 	err := platform.WithTx(s.DB.Chain, func(tx *sql.Tx) error {
 		if err := platform.TxDeleteByMap(tx, "chain_auth_role", map[string]any{"id": id}); err != nil {
 			return err
@@ -238,6 +260,14 @@ func (s *Service) delRoleById(w http.ResponseWriter, r *http.Request) {
 func (s *Service) roleUpdateById(w http.ResponseWriter, r *http.Request) {
 	m := bodyMap(r)
 	vals := pick(m, "name", "role_type", "company_id", "remark1", "remark2", "remark3", "remark4", "remark5")
+	if !s.canManageRole(r, m["id"]) {
+		deny(w)
+		return
+	}
+	if !isPlatformAdmin(auth.From(r.Context())) { // 不能把企业角色改成平台角色或换归属
+		delete(vals, "role_type")
+		delete(vals, "company_id")
+	}
 	if _, err := platform.UpdateByID(s.DB.Chain, "chain_auth_role", m["id"], vals); err != nil {
 		platform.Unknown(w)
 		return
@@ -248,6 +278,9 @@ func (s *Service) roleUpdateById(w http.ResponseWriter, r *http.Request) {
 // updRoleForPt 平台改角色 = mapper.updRoleForPt 命名列 UPDATE,返回请求体实体
 func (s *Service) updRoleForPt(w http.ResponseWriter, r *http.Request) {
 	m := bodyMap(r)
+	if !s.requirePlatform(w, r) {
+		return
+	}
 	if _, err := s.DB.Chain.Exec(
 		"UPDATE chain_auth_role SET name=?, role_type=? WHERE id=?",
 		m["name"], m["roleType"], m["id"]); err != nil {
@@ -260,6 +293,12 @@ func (s *Service) updRoleForPt(w http.ResponseWriter, r *http.Request) {
 // roleDelBatch 批量删除 = MP removeByIds;返回文案 "删除成功"
 func (s *Service) roleDelBatch(w http.ResponseWriter, r *http.Request) {
 	ids, _ := bodyMap(r)["ids"].([]any)
+	for _, id := range ids {
+		if !s.canManageRole(r, id) {
+			deny(w)
+			return
+		}
+	}
 	if err := platform.DeleteByIDs(s.DB.Chain, "chain_auth_role", ids); err != nil {
 		platform.Unknown(w)
 		return

@@ -238,8 +238,8 @@ export default {
         // 日期搜索
         Times() {
             this.tableData = [];
-            this.getpurcon();
             this.current = 1;
+            this.getpurcon();
         },
     },
 };

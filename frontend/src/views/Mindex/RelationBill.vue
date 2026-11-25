@@ -164,7 +164,7 @@ export default {
         // 表格数据
         getpurcon(){
             this.loading = true;
-            var logisticsAll = JSON.parse(sessionStorage.getItem('queryAll'));
+            var logisticsAll = JSON.parse(sessionStorage.getItem('queryAll')) || []; // 直接输入网址 / 后退进入时为 null
             // 传参
             var listByPageData = {
                 orderId:logisticsAll.id?logisticsAll.id:null,
@@ -234,32 +234,32 @@ export default {
         // 搜索功能
         search() {
             this.tableData = [];
-            this.getpurcon();
             this.current = 1;
+            this.getpurcon();
         },
         // 运单编号搜索功能
         searchtree() {
             this.tableData = [];
-            this.getpurcon();
             this.current = 1;
+            this.getpurcon();
         },
         // 日期搜索
         DataTime() {
             this.tableData = [];
-            this.getpurcon();
             this.current = 1;
+            this.getpurcon();
         },
         // 发货地搜索功能
         searchone() {
             this.tableData = [];
-            this.getpurcon();
             this.current = 1;
+            this.getpurcon();
         },
         // 卸货地搜索功能
         searchtwo() {
             this.tableData = [];
-            this.getpurcon();
             this.current = 1;
+            this.getpurcon();
         },
         // 表格选中数据
         purChange(val) {

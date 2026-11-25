@@ -719,6 +719,10 @@ export default {
         this.purTitle = this.$route.meta.title;
         // 接收主页单条数据
         this.AddData = JSON.parse(sessionStorage.getItem('queryAll'));
+        if(!this.AddData){
+            // 直接输入网址 / 后退进入时没有待编辑的记录:回列表页,否则下面取字段就抛错
+            return this.$router.replace({name:'InBillStatistics'});
+        }
         // 关联采购结算数据集合回显
         this.api.jxbill.oneAll({id:this.AddData.id})
         .then(res=>{
@@ -806,6 +810,7 @@ export default {
                     this.api.jxbill.edit(this.AddData)
                     .then(res=>{
                         if(res.data.code == 200){
+                    this.delRemovedFiles();
                             var that = this
                             that.$message({
                                 type: "success",
@@ -850,12 +855,16 @@ export default {
         },
         // 附件上传文件成功
         resfile(response, file, fileList){
-            if(response.code == 200){
+            // HTTP 200 + code≠200 或 data 为空(例如后端转 pdf 失败)时拿不到附件号,文件不能留在列表里
+            if(response.code == 200 && response.data && response.data.length){
                 this.$message({
                     type: 'success',
                     message: '上传文件成功!'
                 });
                 this.enclosurefileList = fileList;
+            }else{
+                fileList.splice(fileList.indexOf(file), 1);
+                this.$message.error(response.msg || '上传文件失败!');
             }
         },
         // 点击附件文件列表下载
@@ -864,11 +873,19 @@ export default {
             window.open(url)
         },
         // 删除附件文件
+        // 保存成功后才删编辑期间移除的回显附件(原先一移除就删,取消编辑后记录指向已删文件)
+        delRemovedFiles(){
+            (this.removedFileIds || []).forEach(id => this.api.addfile.del({id}));
+            this.removedFileIds = [];
+        },
         fileRemove(file,fileList){
-            if(this.fileObj[file.name] == false){
-                return false;
-            }else if(fileList){
-                return  this.api.addfile.del({id:file.response.data[0].id})
+            this.enclosurefileList = fileList; // 列表与界面一致:原先删除接口失败时提交仍会带上
+            if(!this.fileObj[file.name]){
+                // 回显的附件没有经过 before-upload:先记下,等保存成功再删
+                this.removedFileIds = (this.removedFileIds || []).concat(file.response.data[0].id);
+                return;
+            }
+            return  this.api.addfile.del({id:file.response.data[0].id})
                         .then(res=>{
                             if(res.data.code == 200){
                                 this.$message({
@@ -878,7 +895,6 @@ export default {
                                 this.enclosurefileList = fileList;
                             }
                         })
-            }
         },
 
         // 弹窗表单提示语
@@ -923,8 +939,8 @@ export default {
         },
         // 合同关联搜索功能
         contractsearch() {
-           this.contractall();
            this.contractcurrent = 1;
+           this.contractall();
         },
         // 合同编号选择表格
         contractgetCurrentRow(row){
@@ -950,6 +966,10 @@ export default {
         },
         // 合同数据应用按钮 事件
         contractNumberApplication(){
+            if(!this.placecontent || !this.placecontent.id){
+                // 没选行就点「应用」:原先取 id 抛错,表单里留下空值
+                return this.$message({ type: "warning", message: "请先选择一条合同" });
+            }
             this.AddData.contractId = this.placecontent.id;
             this.AddData.contractCode = this.contracttarea                      // 采购合同
             this.AddData.companyName = this.placecontent.salesUnit              // 采购合同的供应商
@@ -1125,7 +1145,7 @@ export default {
         },
         // 关联供应商单位应用按钮事件
         salesUnitApplication(){
-            this.AddData.supplierName = this.dialogtextarea;    // 获取单位名称，回显到表单
+            this.AddData.companyName = this.dialogtextarea;    // 获取单位名称，回显到表单
             this.dialogSelectUnit = false;                      // 关闭整个弹窗
             this.radio = "";                                    // 清空单选框
             this.dialogtextarea = "";                           // 清空显示单位内容框

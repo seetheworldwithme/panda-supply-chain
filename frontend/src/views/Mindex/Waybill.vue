@@ -682,8 +682,8 @@ export default {
       // 搜索功能
       search() {
         this.tableData = [];
-        this.getpurcon();
         this.current = 1;
+        this.getpurcon();
       },
       // 表格选中数据
       purChange(val) {
@@ -781,8 +781,8 @@ export default {
                     message: '删除成功!'
                   });
                   this.tableData = [];
-                  this.getpurcon();
                   this.current = 1;
+                  this.getpurcon();
                   if(this.tableData == []){
                     this.dataAva = true;
                   }

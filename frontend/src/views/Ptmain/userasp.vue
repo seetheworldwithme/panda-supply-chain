@@ -877,8 +877,8 @@ export default {
       .then(res=>{
           if(res.data.code == 200){
             this.tableData = [];
-            this.getpurcon();
             this.current = 1;
+            this.getpurcon();
             this.$message({
                 message: '取消会员成功！',
                 type: 'success'
@@ -913,8 +913,8 @@ export default {
             expirationTime:'',
           }
           this.tableData = [];
-          this.getpurcon();
           this.current = 1;
+          this.getpurcon();
           this.$message({
               message: '开通会员成功！',
               type: 'success'
@@ -926,8 +926,8 @@ export default {
     selectIhy(val){
       this.hyvalue = val
       this.tableData = [];
-      this.getpurcon();
       this.current = 1;
+      this.getpurcon();
     },
     // 设为管理员
     uplserc(data){
@@ -938,8 +938,8 @@ export default {
       }).then(res=>{
         if(res.data.code == 200){
           this.tableData = [];
-          this.getpurcon();
           this.current = 1;
+          this.getpurcon();
           this.$message({
               message: '设为熊猫煤仓管理员成功，请提醒用户退出重新登录！',
               type: 'success'
@@ -956,8 +956,8 @@ export default {
       }).then(res=>{
         if(res.data.code == 200){
           this.tableData = [];
-          this.getpurcon();
           this.current = 1;
+          this.getpurcon();
           this.$message({
               message: '已取消熊猫煤仓管理员！',
               type: 'success'
@@ -968,8 +968,8 @@ export default {
     // 注册日期搜搜
     usrTie() {
       this.tableData = [];
-      this.getpurcon();
       this.current = 1;
+      this.getpurcon();
     },
     // 拨打次数列表
     girtusr(proId, targetUserPhone) {
@@ -1052,7 +1052,8 @@ export default {
     Editserc(data,index) {
       // console.log(data,index)
       this.editphow = true;
-      this.edituser = data;
+      // 深拷贝:原先直接绑列表行,改完点取消列表行也已被改写
+      this.edituser = JSON.parse(JSON.stringify(data));
       this.sel = data.wareIdentity;
       this.editIndex = index;
     },
@@ -1080,8 +1081,8 @@ export default {
               // console.log(this.edituser,'this.edituser');
               this.edituser = {};
               this.tableData = [];
-              this.getpurcon();
               this.current = 1;
+              this.getpurcon();
               // this.tableData[this.editIndex] = {
               //   ...this.tableData[this.editIndex],
               //   username:this.edituser.username,
@@ -1112,8 +1113,8 @@ export default {
                 message: "取消经纪人成功!",
               });
               this.tableData = [];
-              this.getpurcon();
               this.current = 1;
+              this.getpurcon();
             }
           });
         })
@@ -1159,8 +1160,8 @@ export default {
               });
               this.editData = {};
               this.tableData = [];
-              this.getpurcon();
               this.current = 1;
+              this.getpurcon();
               this.editpaymentShow = false;
             }
           });
@@ -1210,14 +1211,14 @@ export default {
     // 搜索功能
     search() {
       this.tableData = [];
-      this.getpurcon();
       this.current = 1;
+      this.getpurcon();
     },
     // 查询经纪人
     prologistics() {
       this.tableData = [];
-      this.getpurcon();
       this.current = 1;
+      this.getpurcon();
     },
     // 查看核实信息
     verifychange(data) {
@@ -1248,8 +1249,8 @@ export default {
         .then(res=>{
           if(res.data.code == 200){
             this.tableData = [];
-            this.getpurcon();
             this.current = 1;
+            this.getpurcon();
             this.$message({
               type: 'success',
               message: '注销账号成功!'

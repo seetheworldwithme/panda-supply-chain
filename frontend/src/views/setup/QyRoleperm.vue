@@ -284,12 +284,14 @@ export default {
         this.treedata = this.$store.state.menus;
         this.currentCheckIdx = index;
         this.roleID = id;
+        const seq = this.roleSeq = (this.roleSeq || 0) + 1; // 丢弃过期响应:快速切换角色时,晚到的旧响应会把树刷成别的角色的权限
         // let f = [{id:3}];
         // this.$refs.addtree.setCheckedNodes(f);
         // console.log('角色列表选中id为' + id);
         // 根据角色id回显权限列表
         this.api.roleList.selAuthyByRole({roleId:id})
         .then(res=>{
+          if(seq !== this.roleSeq) return;
           if(res.data.code == 200){
             // console.log(res.data.data)
             let obj = {};
@@ -349,7 +351,8 @@ export default {
             this.newArr = [];
             this.newArr = newArr;
             this.$refs.addtree.setCheckedNodes(newArr);
-            this.setmenudata(this.treedata);
+            // 回显勾选会触发 check-change,把刚勾上的叶子的可用操作全部追加进去、盖掉已保存的选择:等树更新完再按已保存的权限重设一遍
+            this.$nextTick(() => this.setmenudata(this.treedata));
           }
         })
       },
@@ -359,7 +362,7 @@ export default {
                   return v.id == treedata[i].id;
               });
               if(data.length>0){
-                  treedata[i].button=data[0].button;
+                  treedata[i].button=data[0].button.slice(); // 用副本:直接引用的话,上面的追加会改到已保存的权限本身
               }
               if(treedata[i].children){
                   this.setmenudata(treedata[i].children)
@@ -408,7 +411,7 @@ export default {
                               onClose(){
                                   that.roleListAll();          // 刷新角色列表
                                   that.RoleListVisible = false;  
-                                  that.RoleListData = {};
+                                  that.RoleListData = {roleType:3}; // 重置时丢掉 roleType:之后新增的角色不带它,不进本页列表
                               }
                           });
                       }

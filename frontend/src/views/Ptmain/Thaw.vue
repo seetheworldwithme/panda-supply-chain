@@ -420,8 +420,8 @@ export default {
         // 搜索功能
         search() {
             this.tableData = [];
-            this.getpurcon();
             this.current = 1;
+            this.getpurcon();
         },
         // // 发货地搜索功能
         // searchone() {

@@ -152,6 +152,15 @@ func (s *Service) entGetById(w http.ResponseWriter, r *http.Request) {
 // 无事务:Java 各语句独立提交,后段失败前段保留
 func (s *Service) entUpdateById(w http.ResponseWriter, r *http.Request) {
 	m := bodyMap(r)
+	if cu := auth.From(r.Context()); !isPlatformAdmin(cu) {
+		// 原先按 body 的 id 直写:任何登录用户可改任何企业。非平台管理员只能改本企业档案,
+		// 且不能重绑用户(urcs)、调整集团 / 子公司(etcs)和通联对手方(saleEtcs)。
+		if cu.UserID == 0 || cu.CompanyID == 0 || num(m["id"]) != float64(cu.CompanyID) ||
+			m["urcs"] != nil || m["etcs"] != nil || m["saleEtcs"] != nil {
+			deny(w)
+			return
+		}
+	}
 	// ── try 段:异常统一 602"操作失败,企业名称或信用代码重复" ──
 	if err := s.entUpdateTry(r, m); err != nil {
 		platform.Fail(w, 602, "操作失败，企业名称或信用代码重复")
@@ -381,6 +390,11 @@ func (s *Service) entUpdateTry(r *http.Request, m map[string]any) error {
 	vals := pick(m, entCols...)
 	vals["qua_cert_score"] = qua
 	vals["bas_info_score"] = bas
+	if !isPlatformAdmin(auth.From(r.Context())) {
+		for _, c := range entPlatformOnly {
+			delete(vals, c) // 认证状态、签章份数、服务期、评分、商户配置由平台维护
+		}
+	}
 	if _, err := platform.UpdateByIDNoFill(s.DB.Chain, "chain_basic_enterprise", m["id"], vals); err != nil {
 		return err
 	}
@@ -543,6 +557,9 @@ func (s *Service) glconfigList(w http.ResponseWriter, r *http.Request) {
 // glconfigUpdateById = service.updateById:非空列更新,返回 success()
 func (s *Service) glconfigUpdateById(w http.ResponseWriter, r *http.Request) {
 	m := bodyMap(r)
+	if !s.requirePlatform(w, r) { // 全局支付 / 会员开关
+		return
+	}
 	if _, err := platform.UpdateByID(s.DB.Chain, "chain_global_configuration", m["id"], pick(m, glconfigWriteCols...)); err != nil {
 		platform.Unknown(w)
 		return
@@ -676,6 +693,9 @@ func (s *Service) eqbGetById(w http.ResponseWriter, r *http.Request) {
 
 func (s *Service) eqbAdd(w http.ResponseWriter, r *http.Request) {
 	m := bodyMap(r)
+	if !s.requirePlatform(w, r) { // e签宝 / 通联商户配置
+		return
+	}
 	id, err := platform.InsertNoFill(s.DB.Chain, "chain_eqb_config", pick(m, eqbCols...))
 	if err != nil {
 		platform.Unknown(w)
@@ -686,6 +706,9 @@ func (s *Service) eqbAdd(w http.ResponseWriter, r *http.Request) {
 
 func (s *Service) eqbUpdateById(w http.ResponseWriter, r *http.Request) {
 	m := bodyMap(r)
+	if !s.requirePlatform(w, r) { // e签宝 / 通联商户配置
+		return
+	}
 	if _, err := platform.UpdateByIDNoFill(s.DB.Chain, "chain_eqb_config", m["id"], pick(m, eqbCols...)); err != nil {
 		platform.Unknown(w)
 		return
@@ -695,6 +718,9 @@ func (s *Service) eqbUpdateById(w http.ResponseWriter, r *http.Request) {
 
 func (s *Service) eqbDelBatch(w http.ResponseWriter, r *http.Request) {
 	m := bodyMap(r)
+	if !s.requirePlatform(w, r) { // e签宝 / 通联商户配置
+		return
+	}
 	ids, _ := m["ids"].([]any)
 	if err := platform.DeleteByIDs(s.DB.Chain, "chain_eqb_config", ids); err != nil {
 		platform.Unknown(w)

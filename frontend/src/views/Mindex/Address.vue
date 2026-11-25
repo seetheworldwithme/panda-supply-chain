@@ -471,8 +471,8 @@ export default {
     //发货地搜索功能
     hairsearch() {
       this.hairtableData = [];
-      this.hairgetpurcon();
       this.haircurrent = 1;
+      this.hairgetpurcon();
     },
     hairChange(val) {
       // 发货地表格选中数据val
@@ -504,8 +504,8 @@ export default {
                     message: '删除成功!'
                     });
                     this.hairtableData = [];
-                    this.hairgetpurcon();
                     this.haircurrent = 1;
+                    this.hairgetpurcon();
                     if(this.hairtableData == []){
                       this.dataAva = true;
                     }
@@ -565,8 +565,8 @@ export default {
     //收货地搜索功能
     collectsearch() {
       this.collecttableData = [];
-      this.collectgetpurcon();
       this.collectcurrent = 1;
+      this.collectgetpurcon();
     },
     collectChange(val) {
       this.collectAddressval = val;
@@ -597,8 +597,8 @@ export default {
                     message: '删除成功!'
                     });
                     this.collecttableData = [];
-                    this.collectgetpurcon();
                     this.collectcurrent = 1;
+                    this.collectgetpurcon();
                     if(this.collecttableData == []){
                         this.dataAvahair = true;
                     }
@@ -658,8 +658,8 @@ export default {
     //装货地点搜索功能
     pretendsearch() {
       this.pretendtableData = [];
-      this.pretendgetpurcon();
       this.pretendcurrent = 1;
+      this.pretendgetpurcon();
     },
     pretendChange(val) {
       this.pretendAddressval = val;
@@ -690,8 +690,8 @@ export default {
                     message: '删除成功!'
                     });
                     this.pretendtableData = [];
-                    this.pretendgetpurcon();
                     this.pretendcurrent = 1;
+                    this.pretendgetpurcon();
                     if(this.pretendtableData == []){
                         this.dataAvapretend = true;
                     }
@@ -751,8 +751,8 @@ export default {
     //卸货地点搜索功能
     dischargesearch() {
       this.dischargetableData = [];
-      this.dischargegetpurcon();
       this.dischargecurrent = 1;
+      this.dischargegetpurcon();
     },
     dischargeChange(val) {
       this.dischargeAddressval = val;
@@ -783,8 +783,8 @@ export default {
                     message: '删除成功!'
                     });
                     this.dischargetableData = [];
-                    this.dischargegetpurcon();
                     this.dischargecurrent = 1;
+                    this.dischargegetpurcon();
                     if(this.dischargetableData == []){
                         this.dataAvacharge = true;
                     }

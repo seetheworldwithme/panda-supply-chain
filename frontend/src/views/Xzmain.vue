@@ -366,6 +366,10 @@
             };
             this.http  = this.$store.state.http;                 // IP地址
         },
+        beforeDestroy(){
+            // 各图表实例都是局部变量,离开页面时没人释放:按 echarts 在容器上打的标记逐个销毁
+            this.$el.querySelectorAll('[_echarts_instance_]').forEach(el => echarts.getInstanceByDom(el).dispose());
+        },
         mounted(){
             // 行政区划
             if(sessionStorage.getItem('level') == 3){
@@ -620,7 +624,7 @@
                     if(newIndex == 1 || newIndex == 3 || newIndex == 5 || newIndex == 7 || newIndex == 8){
                         this.topYeartwo = [this.yearValues + '-0' + newIndex +'-01',this.yearValues + '-0' + newIndex +'-31'];
                     }else if(newIndex == 2){
-                        this.topYeartwo = [this.yearValues + '-0' + newIndex +'-01',this.yearValues + '-0' + newIndex +'-28'];
+                        this.topYeartwo = [this.yearValues + '-0' + newIndex +'-01',this.yearValues + '-0' + newIndex + '-' + new Date(this.yearValues, 2, 0).getDate()]; // 二月最后一天按当年算:闰年是 29
                     }else{
                         this.topYeartwo = [this.yearValues + '-0' + newIndex +'-01',this.yearValues + '-0' + newIndex +'-30'];
                     }

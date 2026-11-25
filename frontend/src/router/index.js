@@ -1237,7 +1237,25 @@ const router = new VueRouter({
   base: process.env.BASE_URL,
   routes:staticRouterMap
 })
+// queryAll 是"带数据跳转"的一次性载荷:各页面都是写完立刻 push 到目标页。
+// 目标页离开时若不清(只有取消 / 保存成功才清),之后打开别的"新建 / 编辑"页就会把它当成自己的编辑数据读走:
+// 表单被别的单据灌满,保存还会按那个 id 覆盖同号的无关数据。这里统一收口:
+// 写入后的第一次跳转携带,之后的跳转不再携带;浏览器前进 / 后退除外(回到原页还要用)。
+// 初值为 0 而不是 Infinity:页面刷新(编辑页按 F5)时模块重新加载,刷新后的首次路由解析要保留已有的 queryAll,
+// 否则编辑页一刷新就读不到数据。
+let queryAllNavs = 0
+const rawSetItem = sessionStorage.setItem.bind(sessionStorage)
+sessionStorage.setItem = function (key, value) {
+  if (key === 'queryAll') queryAllNavs = 0
+  return rawSetItem(key, value)
+}
+let viaHistory = false
+window.addEventListener('popstate', () => { viaHistory = true }) // 先于路由初始化注册,保证守卫里能读到
+router.afterEach(() => { viaHistory = false })
+
 router.beforeEach((to, from, next) => {
+  if (!viaHistory && sessionStorage.getItem('queryAll') && queryAllNavs >= 1) sessionStorage.removeItem('queryAll')
+  queryAllNavs++
   var Authorization = sessionStorage.getItem('Authorization');
   // 注册申请   || to.name =='Register'
       if(Authorization || to.name =='Login'|| to.name == 'NotFont' || to.name =='Policy' || to.name =='Service' || to.name =='Forget' || to.name =='DPLogin' || to.name =='ELogin' || to.name == 'Sponsor' || to.name == 'Unknown' || to.name == 'Paymentyes' || to.name =='Register' || to.name =='wxindex' || to.name =='privacys' || to.name =='sergrent'){

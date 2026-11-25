@@ -49,7 +49,7 @@ export default{
     created(){
         // 跳转
         this.routerboday = setInterval(this.routername,60000);
-        setInterval(this.formatDate, 1000);
+        (this.timers = this.timers || {}).formatDate = setInterval(this.formatDate, 1000);
     },
     mounted() {
         this.getMapsEchart();                      // 山西地图图表
@@ -283,7 +283,7 @@ export default{
             var c = [];
             var color = []; // 航线的颜色
             var d = [];
-            for(let i=0;i<res.data.data.length;i++){
+            for(let i=0;i<(Array.isArray(res.data.data) ? res.data.data : []).length;i++){ // 无数据时后端返回 null
                 a[res.data.data[i].loadingArea] = res.data.data[i].loadingLnglog.split(",").map(Number);
                 a[res.data.data[i].unloadingArea] = res.data.data[i].unloadingLnglog.split(",").map(Number);
                 if(d.length>0 && d[d.length-1][0].name != res.data.data[i].loadingArea){
@@ -298,6 +298,10 @@ export default{
                 }
                 b.push([{name:res.data.data[i].loadingArea}, {name:res.data.data[i].unloadingArea,value:res.data.data[i].logCount}])
                 d.push(b[i]);
+            }
+            if(d.length>0){ // 循环里只在切换发货地时入组,最后一组(或只有一个发货地)要补上
+                c.push([d[0][0].name,d])
+                color.push('rgb(166,200,76)')
             }
             for(let o=0;o<c.length;o++){
                 c[o][1].push([{name:''}, {name:c[o][0],value:100}])
@@ -489,6 +493,10 @@ export default{
     },
     // 销毁定时器
     beforeDestroy() {
+        // setInterval 的返回值原先没有保存:下面 clearInterval(this.函数名) 传的是函数而不是定时器号,一个也清不掉。
+        // 大屏每 60 秒换一屏,离开的页面里的刷新 / 滚动定时器会一直累积
+        Object.values(this.timers || {}).forEach(clearInterval);
+        this.$el.querySelectorAll('[_echarts_instance_]').forEach(el => echarts.getInstanceByDom(el).dispose()); // 图表实例都是局部变量,原先没人释放
         clearInterval(this.routerboday);
         if (this.formatDate) {
             clearInterval(this.formatDate); // 在Vue实例销毁前，清除时间定时器(大屏时间)
